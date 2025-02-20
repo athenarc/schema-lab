@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import TaskForm from "./TaskForm";
+import WorkflowTaskForm from "./TaskForm";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import { Container } from "react-bootstrap";
@@ -12,8 +12,8 @@ export const useTaskFilters = () => {
     return useContext(TaskFilterContext);
 }
  
-const RunTask = () => {
-    const { userDetails } = useContext(UserDetailsContext); // Ensure this context provides `userDetails`
+const RunWorkflowTask = () => {
+    const { userDetails } = useContext(UserDetailsContext);
     const [projectName, setProjectName] = useState(null);
 
     useEffect(() => {
@@ -33,12 +33,12 @@ const RunTask = () => {
         <Container className="flex-grow-1">
             <Row>
                 <Col>
-                    <h1 className="display-6 mb-4">Setup a Task</h1>
+                    <h1 className="display-6 mb-4">Setup a Workflow Task</h1>
                     <p className="display-7">
-                        Submit task for project: <strong>{projectName}</strong>.
+                        Submit workflow task for project: <strong>{projectName}</strong>.
                     </p>
                     <Container>
-                        <TaskForm />
+                        <WorkflowTaskForm />
                     </Container>
                 </Col>
             </Row>
@@ -47,6 +47,6 @@ const RunTask = () => {
     );
 };
 
-export default RunTask;
+export default RunWorkflowTask;
 
 

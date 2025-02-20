@@ -15,18 +15,33 @@ const ExperimentListing = ({ name, creator, created_at, onActionSelect }) => (
         <td className="text-center">{creator}</td>
         <td className="text-center">{new Date(created_at).toLocaleString("en")}</td>
         <td className="text-center">
-            <DropdownButton
-                variant="primary"
-                size="sm"
-                title="Select..."
-                drop="auto"
-                renderMenuOnMount
-                container="body"
-                onSelect={(action) => onActionSelect(action, { name, creator })}
-            >
-                <Dropdown.Item eventKey="edit">Edit</Dropdown.Item>
-                <Dropdown.Item eventKey="delete">Delete</Dropdown.Item>
-            </DropdownButton>
+            <OverlayTrigger
+                placement="top"
+                overlay={
+                    <Tooltip id={`tooltip-${name}`}>
+                        Select an action for this experiment.
+                    </Tooltip>
+                }
+                >
+                <DropdownButton
+                    variant="primary"
+                    size="sm"
+                    title="Select..."
+                    drop="auto"
+                    renderMenuOnMount
+                    container="body"
+                    onSelect={(action) => onActionSelect(action, { name, creator })}
+                >
+                    <Dropdown.Item eventKey="edit">Edit</Dropdown.Item>
+                    <Dropdown.Item eventKey="delete">Delete</Dropdown.Item>
+                    <Dropdown.Item eventKey="export" disabled>
+                        Export RO-crates
+                    </Dropdown.Item>
+                    <Dropdown.Item eventKey="publish" disabled>
+                        Publish RO-hub
+                    </Dropdown.Item>
+                </DropdownButton>
+            </OverlayTrigger>
         </td>
     </tr>
 );
@@ -65,7 +80,7 @@ const PreviewExperiments = () => {
     const handleSearchInput = (evt) => setSearchName(evt.target.value);
 
     const applyFilters = (evt) => {
-        if (evt.key === "Enter" && searchName.length >= 2) {
+        if (evt.key === "Enter" && searchName.length >= 2) {            
             setExperimentFilters({ ...ExperimentFilters, token: searchName, page: 0 });
         }
     };
@@ -104,14 +119,8 @@ const PreviewExperiments = () => {
         }
     };
 
-    if (!ExperimentData || !ExperimentData.results.length) {
-        return <div>Loading...</div>;
-    }
 
     const filteredData = ExperimentData.results
-        .filter((experiment) =>
-            experiment.name.toLowerCase().includes(searchName.toLowerCase())
-        )
         .sort((a, b) => {
             const order = ExperimentFilters.order;
             const isDescending = order && order.startsWith("-");
@@ -140,7 +149,7 @@ const PreviewExperiments = () => {
                                     </span>
                                     <OverlayTrigger
                                         placement="bottom"
-                                        overlay={<Tooltip>Type at least 2 characters to search.</Tooltip>}
+                                        overlay={<Tooltip>Type at least 2 characters and push Enter.</Tooltip>}
                                     >
                                         <input
                                             type="text"
@@ -181,9 +190,9 @@ const PreviewExperiments = () => {
                     </tbody>
                 </Table>
             </Col>
-            {filteredData.length === 0 && (
+            {filteredData.length === 0 && searchName.length >= 2 && (
                 <div className="alert alert-warning text-center">
-                    No experiments match your search criteria.
+                    No experiments match <b>{searchName}</b> your search criteria.
                 </div>
             )}
 

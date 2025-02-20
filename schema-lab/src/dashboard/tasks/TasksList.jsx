@@ -1,39 +1,74 @@
 import React, { useState, useContext, useEffect } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import { Link } from "react-router-dom";
-import { Tooltip, OverlayTrigger, Dropdown, DropdownButton, Button, Alert } from 'react-bootstrap';
-import { faArrowDownAZ, faArrowDownZA } from '@fortawesome/free-solid-svg-icons';
+import { Link, useNavigate } from "react-router-dom";
+import { Tooltip, OverlayTrigger, Dropdown, DropdownButton, Button, Alert, Modal } from 'react-bootstrap';
+import { faArrowDownAZ, faArrowDownZA, faXmark, faArrowRotateRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Table from "react-bootstrap/Table";
 import { useTaskData, useTaskFilters } from "./TasksListProvider";
 import { cloneDeep } from "lodash";
 import TaskStatus from "./TaskStatus";
-import { cancelTaskPost } from "../../api/v1/actions";
+import { cancelTaskPost, retrieveTaskDetails } from "../../api/v1/actions";
 import { UserDetailsContext } from "../../utils/components/auth/AuthProvider";
 
 const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggleSelection }) => {
     const { userDetails } = useContext(UserDetailsContext);
     const [alertMessage, setAlertMessage] = useState(null);
     const [isAlertActive, setIsAlertActive] = useState(false);
+    const navigate = useNavigate();
+    const [error, setError] = useState(null); 
 
     const handleCheckboxChange = () => {
         toggleSelection(uuid);
+    };
+
+    const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
+
+    const confirmCancelTask = () => {
+        // Execute the cancel task only when confirmed
+        handleCancelTask(uuid, userDetails.apiKey);
+        setShowCancelConfirmation(false); // Close the modal after confirmation
     };
 
     const handleCancelTask = (taskUUID, auth) => {
         cancelTaskPost({ taskUUID, auth })
             .then(response => {
                 if (!response.ok) {
-                    setAlertMessage(`Canceling ${taskUUID} failed! Please try again.`);
+                    setAlertMessage(<span>Canceling <strong>{taskUUID}</strong> task failed! Please try again.</span>);
                     setIsAlertActive(true);
                     setTimeout(() => {
                         setAlertMessage(null);
                         setIsAlertActive(false);
-                    }, 1000);
+                    }, 3000);
                 }
             });
     };
+
+    const handleRerunButtonClick = async () => {
+        try {
+            const response = await retrieveTaskDetails({
+                taskUUID: uuid,
+                auth: userDetails.apiKey
+            });
+            if (!response.ok) {
+                throw new Error(`Error network response.. Status: ${response.status}, Status Text: ${response.statusText}`);
+            }
+            const data = await response.json();
+            // Navigating to /runtask with the retrieved data
+            navigate('/runtask', { state: { taskData: data } });
+        } catch (error) {
+            setError(error.toString());
+        }
+    };
+
+    const nonCancelableStatuses = ["COMPLETED", "ERROR", "CANCELED", "REJECTED"];
+    const canCancel = !nonCancelableStatuses.includes(status.toUpperCase());
+    // Handle runnable tasks
+    const rerunnableStatuses = ["COMPLETED", "ERROR", "CANCELED", "REJECTED"];
+    const nonRerunnableStatuses = ["SUBMITTED", "APPROVED", "RUNNING"];
+    const canRerun = rerunnableStatuses.includes(status.toUpperCase());
+    const cannotRerun = nonRerunnableStatuses.includes(status.toUpperCase());
 
     return (
         <>
@@ -47,21 +82,75 @@ const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggl
                 </tr>
             ) : (
                 <tr className={isSelected ? 'table-active' : ''}>
-                    <td><Link to={`/task-details/${uuid}/executors`}>{uuid}</Link></td>
+                    <td><Link to={`/task-details/${uuid}/executors`}state={{ from: 'tasks' }}>{uuid}</Link></td>
                     <td><TaskStatus status={status} /></td>
                     <td>{new Date(submitted_at).toLocaleString('en')}</td>
                     <td>{new Date(updated_at).toLocaleString('en')}</td>
                     <td>
-                        <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => handleCancelTask(uuid, userDetails.apiKey)}
+                        {canCancel && (
+                            <OverlayTrigger
+                                placement="bottom"
+                                overlay={<Tooltip id="cancel-tooltip">Cancel</Tooltip>}
+                            >
+                                <Button
+                                    variant="primary"
+                                    size="sm"
+                                    onClick={() => setShowCancelConfirmation(true)}
+                                    className="cancel-button"
+                                >
+                                    <FontAwesomeIcon icon={faXmark} />
+                                </Button>
+                            </OverlayTrigger>
+                        )}
+
+                        <OverlayTrigger
+                            placement="bottom"
+                            overlay={
+                                <Tooltip id="retry-tooltip">
+                                    {canRerun ? "Rerun" : "Rerun not available for this status"}
+                                </Tooltip>
+                            }
                         >
-                            Cancel
-                        </Button>
+                            <span className="d-inline-block">
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={canRerun ? handleRerunButtonClick : undefined}
+                                    className="retry-button ms-2"
+                                    disabled={cannotRerun}
+                                    style={cannotRerun ? { pointerEvents: "none" } : {}}
+                                >
+                                    <FontAwesomeIcon icon={faArrowRotateRight} />
+                                </Button>
+                            </span>
+                        </OverlayTrigger>
                     </td>
                 </tr>
             )}
+
+            {/* Cancel Confirmation Modal */}
+            <Modal
+                show={showCancelConfirmation}
+                onHide={() => setShowCancelConfirmation(false)}
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirm Cancellation</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Are you sure you want to cancel this task?
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        variant="primary"
+                        onClick={() => setShowCancelConfirmation(false)}
+                    >
+                        No
+                    </Button>
+                    <Button variant="success" onClick={confirmCancelTask}>
+                        Yes
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </>
     );
 };
@@ -229,9 +318,9 @@ const TaskList = () => {
                                     </DropdownButton>
                                 </th>
                                 <th>
-                                    Submission time <ColumnOrderToggle columnName={"submitted_at"} currentOrder={orderBy} setOrder={setOrderBy} />
+                                    Submission <ColumnOrderToggle columnName={"submitted_at"} currentOrder={orderBy} setOrder={setOrderBy} />
                                 </th>
-                                <th>Update time</th>
+                                <th>Last Update</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>

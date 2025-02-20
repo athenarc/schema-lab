@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import PatchExperiment from "./ExperimentEdit";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import { Container } from "react-bootstrap";
 
 const EditExperiment = () => {
-    const [nextClicked, setNextClicked] = useState(true);
 
     return (
         <div className="d-flex flex-column min-vh-100">

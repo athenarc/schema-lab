@@ -98,7 +98,7 @@ const ExperimentDetails = () => {
                                                 </th>
                                                 {/* <th className="col-4 text-start">Submission Time</th> */}
                                                 <th className="col-4 text-start">
-                                                    Update Time
+                                                    Last Update
                                                 </th>
                                             </tr>
                                         </thead>
@@ -115,7 +115,9 @@ const ExperimentDetails = () => {
                                                 tasks.map((task) => (
                                                     <tr key={task.uuid}>
                                                         <td>
-                                                            <Link to={`/task-details/${task.uuid}/executors`}>{task.uuid}</Link>
+                                                            <Link
+                                                            to={`/task-details/${task.uuid}/executors`} state={{ from: 'experiments', creator: `${experimentDetails.creator}`, name: `${experimentDetails.name}` }}>
+                                                            {task.uuid}</Link>
                                                         </td>
                                                         <td><TaskStatus status={task.state.status} /></td>
                                                         {/* <td>{new Date(task.submitted_at).toLocaleString('en')}</td> */}
@@ -135,7 +137,7 @@ const ExperimentDetails = () => {
             )}
 
             <div className="mt-3">
-                <Button variant="primary" onClick={() => navigate(-1)}>
+                <Button variant="primary" onClick={() => navigate("/preview")}>
                     Back
                 </Button>
             </div>

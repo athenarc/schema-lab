@@ -34,7 +34,19 @@ const ExperimentTaskListing = ({ uuid, status, submitted_at, updated_at, isSelec
             ) : (
                 <tr className={isSelected ? 'table-active' : ''}>
                     <td>
-                        <input className="form-check-input" type="checkbox" checked={isSelected} onChange={handleCheckboxChange} />
+                        <OverlayTrigger
+                            placement="top"
+                            overlay={<Tooltip id="checkbox-tooltip">Select a task to be added in the experiment</Tooltip>}
+                            trigger={['hover']}
+                        >
+                            <input
+                                className="form-check-input"
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={handleCheckboxChange}
+                            />
+                        </OverlayTrigger>
+                        {/* <input className="form-check-input" type="checkbox" checked={isSelected} onChange={handleCheckboxChange} /> */}
                     </td>
                     <td><Link to={`/task-details/${uuid}/executors`}>{uuid}</Link></td>
                     <td><TaskStatus status={status} /></td>
@@ -173,7 +185,14 @@ const ExperimentTaskList = () => {
                         <thead>
                             <tr>
                                 <th>
-                                    <input className="form-check-input" type="checkbox" onChange={handleSelectAll} />
+                                    <OverlayTrigger
+                                        placement="top"
+                                        overlay={<Tooltip id="checkbox-tooltip">Select all tasks to be added in the experiment</Tooltip>}
+                                        trigger={['hover']}
+                                    >
+                                        <input className="form-check-input" type="checkbox" onChange={handleSelectAll} />
+                                    </OverlayTrigger>
+                                    {/* <input className="form-check-input" type="checkbox" onChange={handleSelectAll} /> */}
                                 </th>
                                 <th className="col-4">
                                     <div className="input-group">
@@ -230,9 +249,9 @@ const ExperimentTaskList = () => {
                                     </DropdownButton>
                                 </th>
                                 <th>
-                                    Submission time <ColumnOrderToggle columnName={"submitted_at"} currentOrder={orderBy} setOrder={setOrderBy} />
+                                    Submission <ColumnOrderToggle columnName={"submitted_at"} currentOrder={orderBy} setOrder={setOrderBy} />
                                 </th>
-                                <th>Update time</th>
+                                <th>Last Update</th>
                             </tr>
                         </thead>
                         <tbody>

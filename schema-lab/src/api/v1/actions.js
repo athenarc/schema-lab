@@ -28,6 +28,7 @@ export const listTasks = options => {
     );
 }
 
+// Get Task details
 export const retrieveTaskDetails = ({taskUUID, auth}) => {
     const qualifiedUrl=`${config.api.url}/api/tasks/${taskUUID}`
     return fetch(
@@ -269,6 +270,31 @@ export const editExperiment = async (creator, name, apiKey, experimentdata) => {
                 'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify(experimentdata)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`Error ${response.status}: ${errorData.message || response.statusText}`);
+        }
+        
+        return response;
+    } catch (error) {
+        console.error('Error during fetch:', error);
+        throw error;
+    }
+};
+
+
+// POST a workflow task
+export const runWorkflowTaskPost = async (apiKey, requestData) => {
+    try {
+        const response = await fetch(`${config.api.url}/api/workflows`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify(requestData)
         });
         
         if (!response.ok) {

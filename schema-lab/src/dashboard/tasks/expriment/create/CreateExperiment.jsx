@@ -138,8 +138,8 @@ const CreateExperiment = () => {
                                         <tr>
                                             <th>Name/UUID</th>
                                             <th>Status</th>
-                                            <th>Submission Time</th>
-                                            <th>Update Time</th>
+                                            <th>Submission</th>
+                                            <th>Last Update</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -176,7 +176,7 @@ const CreateExperiment = () => {
                                 Clear All
                             </Button>
                             <Button variant="success" type="submit">
-                                Submit
+                                Save
                             </Button>
                         </div>
                     </Form>
@@ -185,18 +185,15 @@ const CreateExperiment = () => {
 
             {/* Confirmation Modal */}
             <Modal show={showConfirmModal} onHide={handleCancelBack}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Confirm Experiment Submission</Modal.Title>
-                </Modal.Header>
                 <Modal.Body>
-                    Are you sure you want to submit this experiment?
+                    Are you sure you want to save this experiment?
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={handleCancelBack}>
+                    <Button variant="danger" onClick={handleCancelBack}>
                         Cancel
                     </Button>
                     <Button variant="success" onClick={handleConfirmSubmit}>
-                        Confirm
+                        Save
                     </Button>
                 </Modal.Footer>
             </Modal>

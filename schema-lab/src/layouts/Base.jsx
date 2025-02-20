@@ -4,7 +4,7 @@ import { Link, Outlet } from "react-router-dom";
 import { UserDetailsContext } from "../utils/components/auth/AuthProvider";
 import Footer from './Footer';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChevronDown, faRightToBracket } from "@fortawesome/free-solid-svg-icons";
+import { faChevronDown, faRightToBracket, faFlask, faCodeBranch, faDiagramProject } from "@fortawesome/free-solid-svg-icons";
 import { getProjectName } from "../api/v1/actions";
 import config from "../config/config.json";
 
@@ -23,11 +23,9 @@ const ClickableNavDropdown = ({ id, title, items }) => {
     };
 
     useEffect(() => {
-        // Add event listener for clicks outside
         document.addEventListener("mousedown", handleClickOutside);
 
         return () => {
-            // Cleanup event listener on unmount
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, []);
@@ -40,8 +38,8 @@ const ClickableNavDropdown = ({ id, title, items }) => {
             className="ms-3 no-arrow-dropdown"
             drop="down"
             show={show}
-            onClick={handleDropdownToggle} // Toggle on click
-            ref={dropdownRef} // Reference for click outside detection
+            onClick={handleDropdownToggle}
+            ref={dropdownRef} 
         >
             {items.map(({ to, text, disabled }, index) => (
                 <NavDropdown.Item
@@ -96,20 +94,29 @@ const Base = (props) => {
                                 <>
                                     <ClickableNavDropdown
                                         id="nav-dropdown-tasks"
-                                        title="Tasks"
+                                        title={
+                                            <>
+                                                <FontAwesomeIcon icon={faCodeBranch} className="me-1"/>
+                                                Tasks
+                                            </>
+                                        }
                                         items={[
                                             { to: "/dashboard", text: "Dashboard" },
-                                            { to: "/runtask", text: "Run a Task" },
+                                            { to: "/runtask", text: "Run a single task" },
+                                            { to: "/runworkflowtask", text: "Run a workflow task" },
                                         ]}
                                     />
                                     <ClickableNavDropdown
                                         id="nav-dropdown-experiments"
-                                        title="Experiments"
+                                        title={
+                                            <>
+                                                <FontAwesomeIcon icon={faFlask} className="me-1"/>
+                                                Experiments
+                                            </>
+                                        }
                                         items={[
                                             { to: "/preview", text: "Dashboard" },
                                             { to: "/view", text: "Create" },
-                                            { to: "/", text: "Export RO-crates", disabled: true },
-                                            { to: "/", text: "Publish RO-hub", disabled: true },
                                             { to: "/experiment", text: "About" },
                                         ]}
                                     />

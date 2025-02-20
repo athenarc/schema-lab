@@ -7,42 +7,42 @@ const TaskStatus = (props) => {
     switch (props.status) {
         case "SUBMITTED":
             icon = faFileArrowUp;
-            color = "info";
+            color = "text-success";
             break;
         case "APPROVED":
             icon = faFileCircleCheck;
-            color = "info";
+            color = "text-success";
             break;
         case "REJECTED":
-            color = "danger";
+            color = "text-danger";
             icon = faFileCircleXmark;
             break;
         case "SCHEDULED":
             icon = faStopwatch;
-            color = "info";
+            color = "text-success";
             break;
         case "INITIALIZING":
         case "RUNNING":
             icon = faGears;
-            color = "info";
+            color = "text-success";
             break;
         case "COMPLETED":
-            color = "success";
+            color = "text-success";
             icon = faCheck;
             break;
         case "ERROR":
         case "CANCELED":
-            color = "danger";
+            color = "text-danger";
             icon = faXmark;
             break;
         case "ALL":
-            color = "dark"
+            color = "text-dark"
             icon = faList;
             break;
         case "UNKNOWN":
         default:
             text = "UNKNOWN";
-            color = "muted";
+            color = "text-muted";
             icon = faQuestion;
             break;
     }
@@ -54,7 +54,7 @@ const TaskStatus = (props) => {
     }, [color, props]);
 
     return (
-        <span className={`text-${color}`}>
+        <span style={{ color: color }} className={`${color}`}>
             <FontAwesomeIcon icon={icon} /> {text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()}
         </span>
     );

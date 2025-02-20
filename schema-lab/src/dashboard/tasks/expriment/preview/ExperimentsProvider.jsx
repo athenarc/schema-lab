@@ -26,7 +26,7 @@ const ExperimentsProvider = ({ children }) => {
     });
 
     const { userDetails } = useContext(UserDetailsContext);
-    const refreshInterval = 4000;
+    const refreshInterval = 3000;
 
     const fetchExperimentData = () => {
         const filters = {
@@ -41,8 +41,15 @@ const ExperimentsProvider = ({ children }) => {
         })
             .then((data) => {
                 if (data && data.results) {
-                    const sortedResults = [...data.results].sort((a, b) => {
-                        const dateA = new Date(a.created_at); // Convert created_at string to Date
+                    console.log("-->",data.results.length)
+                    const filteredResults = data.results.filter((experiment) => {
+                        return experiment.name
+                            .toLowerCase()
+                            .includes(ExperimentFilters.token.toLowerCase());
+                    });
+                    // Apply sorting
+                    const sortedResults = [...filteredResults].sort((a, b) => {
+                        const dateA = new Date(a.created_at);
                         const dateB = new Date(b.created_at);
 
                         if (ExperimentFilters.order === "-created_at") {
@@ -57,6 +64,7 @@ const ExperimentsProvider = ({ children }) => {
                         ExperimentFilters.page * pageSize,
                         (ExperimentFilters.page + 1) * pageSize
                     );
+                    console.log("length:",sortedResults.length)
 
                     setExperimentData({
                         count: sortedResults.length,

@@ -7,7 +7,7 @@ const Footer = () => {
     return (
         <footer className="bg-light text-center">
             <p>
-                {footer.footerMainText} <a href={footer.footerLink} className='text-dark'>{footer.footerLinkText}</a>, 
+                {footer.footerMainText} <a href={footer.footerLink} className='primary'>{footer.footerLinkText}</a>, 
                 <br /> {footer.footerExtraText}
             </p>
         </footer>

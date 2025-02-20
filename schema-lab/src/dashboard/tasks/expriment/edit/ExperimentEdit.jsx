@@ -1,9 +1,8 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { Form, Button, Row, Col, Card, Container, Modal } from "react-bootstrap";
+import { Form, Button, Row, Col, Card, Container, Modal, Alert } from "react-bootstrap";
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { editExperiment, getExperimentDetails } from "../../../../api/v1/actions";
 import { UserDetailsContext } from "../../../../utils/components/auth/AuthProvider";
-
 
 const PatchExperiment = () => {
     const navigate = useNavigate();
@@ -23,18 +22,13 @@ const PatchExperiment = () => {
     useEffect(() => {
         const fetchExperimentData = async () => {
             try {
-                
-                console.log("name:",name," creator:",creator)
                 const response = await getExperimentDetails({ 
                     creator, 
                     name, 
-                    auth: apiKey });
-                
-                // Check if the response is OK
+                    auth: apiKey 
+                });
                 if (response.ok) {
                     const experimentDetails = await response.json();
-                    
-                    // Set the state with the fetched data
                     setExperimentName(experimentDetails.name);
                     setDescription(experimentDetails.description);
                     setSelectedTasks(experimentDetails.tasks || []);
@@ -43,7 +37,6 @@ const PatchExperiment = () => {
                 }
             } catch (error) {
                 setErrorMessage('Failed to fetch experiment details.');
-                console.error(error);
             } finally {
                 setLoading(false);  
             }
@@ -69,6 +62,7 @@ const PatchExperiment = () => {
         });
 
         if (isValid) {
+            setErrorMessage(null); // Clear any existing error
             setShowConfirmModal(true);
         }
     };
@@ -79,22 +73,28 @@ const PatchExperiment = () => {
             description: description
         };
     
-        console.log("experimentdata:", experimentData);
-        console.log("name:", name, " creator:", creator);
-    
         try {
             const editResponse = await editExperiment(
-                creator,     // Creator
-                name,        // Experiment name
-                apiKey,      // API key
-                experimentData // Experiment data
+                creator,
+                name,
+                apiKey,
+                experimentData
             );
-            console.log("editRes:", editResponse);
+            if (!editResponse.ok) {
+                const errorData = await editResponse.json();
+                throw new Error(errorData.message || 'Failed to update the experiment');
+            }
+
             setShowConfirmModal(false);
             setShowModal(true);
         } catch (error) {
             setShowConfirmModal(false);
-            console.error(error);
+            setErrorMessage(error.message); 
+
+            // Automatically clear the error message after 3 seconds
+            setTimeout(() => {
+                setErrorMessage(null);
+            }, 3000);
         }
     };
 
@@ -108,7 +108,6 @@ const PatchExperiment = () => {
         setSelectedTasks([]);
     };
 
-    // Loading spinner while fetching data
     if (loading) {
         return (
             <Container className="py-5">
@@ -122,13 +121,14 @@ const PatchExperiment = () => {
     }
 
     return (
-        <Container className='py-5'>
+        <Container className="py-5">
             {/* Error Message */}
             {errorMessage && (
-                <div className="alert alert-danger mt-4 text-center">
-                    {errorMessage}
-                </div>
+                <Alert variant="danger" className='text-center' onClose={() => setErrorMessage(null)} dismissible>
+                    {errorMessage}: <strong>Name</strong> used from other experiment.
+                </Alert>
             )}
+
             <Card className="border-0 shadow-sm rounded-3 mb-4">
                 <Card.Body>
                     <p className="text-muted mb-4" style={{ fontSize: '0.875rem' }}>
@@ -136,7 +136,7 @@ const PatchExperiment = () => {
                     </p>
                     <Form onSubmit={handleSubmit}>
                         <Card className="border-0 shadow-sm rounded-3 mb-4">
-                            <Card.Header className={`bg-primary text-white`}>
+                            <Card.Header className="bg-primary text-white">
                                 Basic Information
                             </Card.Header>
                             <Card.Body>

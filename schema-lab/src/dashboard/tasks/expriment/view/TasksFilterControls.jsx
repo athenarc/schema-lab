@@ -5,6 +5,8 @@ import Button from "react-bootstrap/Button";
 import { useNavigate } from "react-router-dom";
 import { useTaskFilters } from "../../TasksListProvider";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import Tooltip from "react-bootstrap/Tooltip";
 import { faArrowAltCircleRight } from "@fortawesome/free-regular-svg-icons";
 
 const TasksFilterControls = () => {
@@ -25,15 +27,22 @@ const TasksFilterControls = () => {
                             <FontAwesomeIcon icon={faArrowAltCircleRight} className="ms-2" /> 
                             &nbsp;Select Tasks and click <b>Create</b> to submit Experiment:
                         </h6>
-                        <Button
-                            ref={elementRef}
-                            onClick={handleCreateExperiment}
-                            variant="outline-primary"
-                            disabled={selectedTasks.length === 0}
-                            className="ms-auto"
+                        <OverlayTrigger
+                            placement="top"
+                            overlay={<Tooltip id="button-tooltip">Select at least one task to create an experiment</Tooltip>}
                         >
-                            Create
-                        </Button>
+                        <div>
+                            <Button
+                                ref={elementRef}
+                                onClick={handleCreateExperiment}
+                                variant="outline-primary"
+                                disabled={selectedTasks.length === 0}
+                                className="ms-auto"
+                            >
+                                Create
+                            </Button>
+                        </div>
+                        </OverlayTrigger>
                     </div>
                 </div>
             </Col>

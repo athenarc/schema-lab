@@ -51,19 +51,24 @@ const TaskListDetails = () => {
         }
     }, [uuid, userDetails]);
 
+    // Get state with defaults
+    const { from: parent = 'defaultparent', creator = 'defaultcreator', name = 'defaultname' } = location.state || {};
+    // Common state object
+    const commonState = { from: parent, parent, creator, name };
+
     const renderNavLinks = () => {
         const navLinks = [
             { to: 'executors', text: 'Executors' },
             { to: 'inputs', text: 'Inputs' },
             { to: 'outputs', text: 'Outputs' }
         ];
-
+    
         return navLinks.map((link, index) => (
             <Nav.Link
                 as={Link}
                 to={link.to}
                 key={index}
-                state={{ taskDetails }}
+                state={commonState} // Spread the common state
                 className={currentPath.endsWith(link.to) ? 'active' : ''}
             >
                 {link.text}
@@ -91,6 +96,18 @@ const TaskListDetails = () => {
         ? <span><TaskStatus status={taskDetails.status} onColorChange={handleColorChange} /></span>
         : ' - ';
 
+
+    // Redirect BACK button depending on the parent
+    const handleBack = () => {
+        if (parent === 'tasks')  {
+            navigate('/dashboard');
+        } else if (parent === 'experiments') {
+            navigate(`/experiment-details/${creator}/${name}/description`);
+        } else {
+            navigate('/defaultParent'); // Fallback
+        }
+    };
+    
     return (
         <TaskDetailsContext.Provider value={taskDetails}>
             <div>
@@ -108,7 +125,7 @@ const TaskListDetails = () => {
                 <Outlet />
             </div>
             <div className="mt-3">
-                <Button variant="primary" onClick={() => navigate(-1)}>Back</Button>
+                <Button variant="primary" onClick={handleBack}>Back</Button>
             </div>
         </TaskDetailsContext.Provider>
     );

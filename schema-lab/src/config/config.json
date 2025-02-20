@@ -1,20 +1,20 @@
 {
     "title": "SCHEMA lab",
-    "favicon_logo": "media/schema-favicon.ico",    
+    "favicon_logo": "media/schema/favicon.ico",    
     "landing_page": {
         "title": "Welcome to SCHEMA lab",
         "subtitle": "Your platform for managing computational tasks",
-        "logo":"media/schema-logo.png",
-        "logo_alt":"SCHEMA Logo",
-        "image": "media/schema-lab-welcome.png",
-        "image_alt":"SCHEMA Image"
+        "logo":"media/schema/logo.png",
+        "logo_alt":"Schema Logo",
+        "image": "media/schema/welcome.png",
+        "image_alt":"Schema Image"
     },
 
     "footer": {
         "footerMainText":"Powered by",
         "footerLink": "https://github.com/athenarc/schema-lab",
         "footerLinkText": "SCHEMA lab",
-        "footerExtraText": "Copyright © 2024, ATHENA RC."
+        "footerExtraText": "Copyright © 2024, SCHEMA lab, ATHENA RC."
     },
     
     "pagination": {

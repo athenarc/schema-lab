@@ -33,7 +33,7 @@ const LoginPrompt = props => {
                 <Row>
                     <Col>
                         <p className="display-6 text-center">Login</p>
-                        <p>Use your credentials to log in and gain access to the SCHEMA Lab features</p>
+                        <p>Use your API key to log in and gain access to the SCHEMA Lab features</p>
                     </Col>
                 </Row>
                 <Row>        

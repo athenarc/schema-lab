@@ -9,7 +9,7 @@ const Home = () => {
     const { image, image_alt } = config.landing_page;
     
     const favicon = document.querySelector('link[rel="icon"]') || document.createElement('link');
-    favicon.href = "media/schema-favicon.ico";
+    favicon.href = "media/hypatia/favicon.ico";
     document.head.appendChild(favicon); 
     document.title = config.title
 

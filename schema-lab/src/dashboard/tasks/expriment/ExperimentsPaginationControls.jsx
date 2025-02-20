@@ -13,14 +13,6 @@ const ExperimentsPaginationControls = () => {
     const { pageSize } = clientPreferences;
     const { count = 0, results = [] } = ExperimentData || {};  
 
-    if (!ExperimentData) {
-        return <div>Loading...</div>;
-    }
-
-    if (count === 0) {
-        return <div>No experiments found.</div>;
-    }
-
     const currentPageIndex = ExperimentFilters.page;
     const maxPageIndex = Math.ceil(count / pageSize) - 1;
 
