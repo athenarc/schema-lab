@@ -1,18 +1,18 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import { Link, useNavigate } from "react-router-dom";
-import { Tooltip, OverlayTrigger, Dropdown, DropdownButton, Button, Alert, Modal } from 'react-bootstrap';
+import { Tooltip, OverlayTrigger, Dropdown, DropdownButton, Button, Alert, Modal, Form, Tabs, Tab } from 'react-bootstrap';
 import { faArrowDownAZ, faArrowDownZA, faXmark, faArrowRotateRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Table from "react-bootstrap/Table";
 import { useTaskData, useTaskFilters } from "./TasksListProvider";
 import { cloneDeep } from "lodash";
 import TaskStatus from "./TaskStatus";
-import { cancelTaskPost, retrieveTaskDetails } from "../../api/v1/actions";
+import { cancelTaskPost, cancelWorkflowTaskPost, retrieveTaskDetails, retrieveWorkflowTaskDetails } from "../../api/v1/actions";
 import { UserDetailsContext } from "../../utils/components/auth/AuthProvider";
 
-const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggleSelection }) => {
+const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggleSelection, showWorkflowTasks }) => {
     const { userDetails } = useContext(UserDetailsContext);
     const [alertMessage, setAlertMessage] = useState(null);
     const [isAlertActive, setIsAlertActive] = useState(false);
@@ -27,12 +27,14 @@ const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggl
 
     const confirmCancelTask = () => {
         // Execute the cancel task only when confirmed
-        handleCancelTask(uuid, userDetails.apiKey);
+        handleCancelTask(uuid, userDetails.apiKey, showWorkflowTasks);
         setShowCancelConfirmation(false); // Close the modal after confirmation
     };
 
-    const handleCancelTask = (taskUUID, auth) => {
-        cancelTaskPost({ taskUUID, auth })
+
+    const handleCancelTask = (taskUUID, auth, showWorkflowTasks) => {
+        const cancelTask = showWorkflowTasks ? cancelWorkflowTaskPost : cancelTaskPost;
+        cancelTask({ taskUUID, auth })
             .then(response => {
                 if (!response.ok) {
                     setAlertMessage(<span>Canceling <strong>{taskUUID}</strong> task failed! Please try again.</span>);
@@ -42,21 +44,40 @@ const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggl
                         setIsAlertActive(false);
                     }, 3000);
                 }
+            })
+            .catch((error) => {
+                setAlertMessage(<span>Canceling <strong>{taskUUID}</strong> task failed! Please try again.</span>);
+                setIsAlertActive(true);
+                setTimeout(() => {
+                    setAlertMessage(null);
+                    setIsAlertActive(false);
+                }, 3000);
             });
     };
 
     const handleRerunButtonClick = async () => {
         try {
-            const response = await retrieveTaskDetails({
-                taskUUID: uuid,
-                auth: userDetails.apiKey
-            });
+            // Use different API call based on showWorkflowTasks state
+            const response = showWorkflowTasks 
+                ? await retrieveWorkflowTaskDetails({
+                    taskUUID: uuid,
+                    auth: userDetails.apiKey
+                  })
+                : await retrieveTaskDetails({
+                    taskUUID: uuid,
+                    auth: userDetails.apiKey
+                  });
+                
             if (!response.ok) {
                 throw new Error(`Error network response.. Status: ${response.status}, Status Text: ${response.statusText}`);
             }
+            
             const data = await response.json();
-            // Navigating to /runtask with the retrieved data
-            navigate('/runtask', { state: { taskData: data } });
+            
+            // Navigate to different path based on showWorkflowTasks state
+            showWorkflowTasks
+                ? navigate('/runworkflowtask', { state: { taskworkflowdata: data } })
+                : navigate('/runtask', { state: { taskData: data } });
         } catch (error) {
             setError(error.toString());
         }
@@ -107,7 +128,7 @@ const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggl
                             placement="bottom"
                             overlay={
                                 <Tooltip id="retry-tooltip">
-                                    {canRerun ? "Rerun" : "Rerun only tasks in COMPLETED, ERROR, CANCELED and REJECTED status."}
+                                    {canRerun ? "Rerun" : "Rerun not available for this status"}
                                 </Tooltip>
                             }
                         >
@@ -163,9 +184,9 @@ const ColumnOrderToggle = ({ columnName, currentOrder, setOrder }) => {
     const handleSwitchOrder = () => {
         if (active && asc) {
             setOrder(`-${columnName}`);
-            return;
+        } else {
+            setOrder(columnName);
         }
-        setOrder(columnName);
     };
 
     return (
@@ -180,13 +201,13 @@ const ColumnOrderToggle = ({ columnName, currentOrder, setOrder }) => {
 };
 
 const TaskList = () => {
-    const { taskData } = useTaskData();
-    const { taskFilters, setTaskFilters, selectedTasks, setSelectedTasks } = useTaskFilters();
+    const [showWorkflowTasks, setShowWorkflowTasks] = useState(false);
+    const { taskData } = useTaskData(showWorkflowTasks);
+    const { taskFilters, setTaskFilters } = useTaskFilters();
     const [token, setToken] = useState(taskFilters.token);
     const [statuses, setStatuses] = useState({ ...(taskFilters.statuses) });
     const [typedChar, setTypedChar] = useState();
     const [showValidationMessage, setShowValidationMessage] = useState(false);
-    const [selectedRows, setSelectedRows] = useState([]);
 
     const minCharThreshold = 2;
 
@@ -241,24 +262,29 @@ const TaskList = () => {
     };
 
     const findFilteredTokens = () => {
-        if (taskData) {
-            const { count } = taskData;
-            if (count === 0) {
-                return (
-                    <div className="alert alert-warning text-center" role="alert">
-                        Your search <b>{token}</b> did not match any task!
-                    </div>
-                );
-            }
-        } else {
-            return null;
+        if (taskData && taskData.count === 0) {
+            return (
+                <div className="alert alert-warning text-center" role="alert">
+                    Your search <b>{token}</b> did not match any task!
+                </div>
+            );
         }
+        return null;
     };
-
 
     return (
         <Row className="p-3 mb-5">
             <Col className="align-items-center">
+                <Tabs
+                    id="task-tabs"
+                    activeKey={showWorkflowTasks ? 'workflow' : 'tasks'}
+                    onSelect={(key) => setShowWorkflowTasks(key === 'workflow')}
+                    className="mb-3 fw-bold"
+                >
+                    <Tab eventKey="tasks" title="Single Tasks" />
+                    <Tab eventKey="workflow" title="Workflow Tasks" />
+                </Tabs>
+
                 {taskData && taskData.results && (
                     <Table borderless responsive hover>
                         <thead>
@@ -296,16 +322,12 @@ const TaskList = () => {
                                     <DropdownButton
                                         id="dropdown-basic-button"
                                         variant='light'
-                                        title={
-                                            <>
-                                                <span className="fw-bold">Status</span>
-                                            </>
-                                        }
+                                        title={<span className="fw-bold">Status</span>}
                                         onSelect={handleStatusChange}
                                         drop="auto"
                                         renderMenuOnMount
                                         container="body" 
-                                    >   
+                                    >
                                         <Dropdown.Item eventKey='all'><TaskStatus status='ALL' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='submitted'><TaskStatus status='SUBMITTED' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='approved'><TaskStatus status='APPROVED' /></Dropdown.Item>
@@ -325,15 +347,14 @@ const TaskList = () => {
                             </tr>
                         </thead>
                         <tbody>
-                        {taskData.results.map((task) => (
+                            {taskData.results.map((task) => (
                                 <TaskListing
                                     key={task.uuid}
                                     uuid={task.uuid}
                                     status={task.state.status}
                                     submitted_at={task.submitted_at}
                                     updated_at={task.state.updated_at}
-                                    // isSelected={selectedTasks.some(t => t.uuid === task.uuid)}
-                                    // toggleSelection={() => toggleRowSelection(task)}
+                                    showWorkflowTasks={showWorkflowTasks}
                                 />
                             ))}
                         </tbody>
@@ -346,3 +367,4 @@ const TaskList = () => {
 };
 
 export default TaskList;
+

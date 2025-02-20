@@ -41,7 +41,6 @@ const ExperimentsProvider = ({ children }) => {
         })
             .then((data) => {
                 if (data && data.results) {
-                    console.log("-->",data.results.length)
                     const filteredResults = data.results.filter((experiment) => {
                         return experiment.name
                             .toLowerCase()
@@ -64,7 +63,6 @@ const ExperimentsProvider = ({ children }) => {
                         ExperimentFilters.page * pageSize,
                         (ExperimentFilters.page + 1) * pageSize
                     );
-                    console.log("length:",sortedResults.length)
 
                     setExperimentData({
                         count: sortedResults.length,

@@ -3,39 +3,42 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Form, Button, Row, Col, Card, Container, Accordion, OverlayTrigger, Tooltip, Modal, Alert } from "react-bootstrap";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark, faPlus } from '@fortawesome/free-solid-svg-icons';
-import { runTaskPost } from "../api/v1/actions";
+import { runWorkflowTaskPost } from "../api/v1/actions";
 import { UserDetailsContext } from "../utils/components/auth/AuthProvider";
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { FaAngleRight, FaAngleDown } from 'react-icons/fa';
 
-const TaskForm = () => {
+const WorkflowTaskForm = () => {
     const navigate = useNavigate();
     // Get data from re-run action
     const { state } = useLocation();
-    const taskData = state?.taskData || null;
+    const taskworkflowdata = state?.taskworkflowdata || null;
     const [activeKey, setActiveKey] = useState(null);
     const [showModal, setShowModal] = useState(false);
-    const [basicData, setBasicData] = useState({name: "", description: "", tags: [] });
-    const [executors, setExecutors] = useState([{image: "", command: [], workdir: "", stdout: "", stderr: "", env: ""}]);
-    const [inputs, setInputs] = useState([{ name: "", description: "", url: "", path: "", content: "", type: ""}]);
-    const [outputs, setOutputs] = useState([{ name: "", description: "", url: "", path: "", type: ""}]);
+    const [basicData, setBasicData] = useState({name: "", description: "", tags: [], execution_order: [] });
+    const [executors, setExecutors] = useState([{priority:0, yields: [], image: "", command: [], workdir: "", stdout: "", stderr: "", env: ""}]);
+    const [inputs, setInputs] = useState([{ name: "", description: "", url: "", content: "", type: ""}]);
+    const [outputs, setOutputs] = useState([{ name: "", description: "", url: "", type: ""}]);
     const [resources, setResources] = useState({ cpu_cores: 1, zones: "", preemptible: false, disk_gb: 5.0, ram_gb: 1.0 });
-    // const [volumes, setVolumes] = useState([]);
     const [showJson, setShowJson] = useState(false);
     const { userDetails } = useContext(UserDetailsContext);
 
     // Fill input boxes with data if UUID already exists
     useEffect(() => {
-        if (taskData) {
+        if (taskworkflowdata) {
             setBasicData({
-                name: taskData.name || "",
-                description: taskData.description || "",
-                tags: taskData.tags || []
+                name: taskworkflowdata.name || "",
+                description: taskworkflowdata.description || "",
+                tags: taskworkflowdata.tags || [],
+                execution_order: taskworkflowdata.execution_order || []
             });
 
+
             setExecutors(
-                Array.isArray(taskData.executors) && taskData.executors.length > 0
-                    ? taskData.executors.map((executor) => ({
+                Array.isArray(taskworkflowdata.executors) && taskworkflowdata.executors.length > 0
+                    ? taskworkflowdata.executors.map((executor) => ({
+                          priority: Number.isInteger(executor?.priority) ? executor.priority : 0,  
+                          yields: executor?.yields || [],
                           image: executor?.image || "",
                           command: executor?.command || [],
                           workdir: executor?.workdir || "",
@@ -43,45 +46,42 @@ const TaskForm = () => {
                           stderr: executor?.stderr || "",
                           env: executor?.env || {}
                       }))
-                    : [{ image: "", command: [], workdir: "", stdout: "", stderr: "", env: {} }]
+                    : [{ priority: 0, yields: [], image: "", command: [], workdir: "", stdout: "", stderr: "", env: {} }]
             );
 
             setInputs(
-                Array.isArray(taskData.inputs)
-                    ? taskData.inputs.map((input) => ({
+                Array.isArray(taskworkflowdata.inputs)
+                    ? taskworkflowdata.inputs.map((input) => ({
                           name: input?.name || "",
                           description: input?.description || "",
                           url: input?.url || "",
-                          path: input?.path || "",
                           content: input?.content || "",
                           type: input?.type || ""
                       }))
-                    : [{ name: "", description: "", url: "", path: "", content: "", type: "" }]
+                    : [{ name: "", description: "", url: "", content: "", type: "" }]
             );
 
             setOutputs(
-                Array.isArray(taskData.outputs)
-                    ? taskData.outputs.map((output) => ({
+                Array.isArray(taskworkflowdata.outputs)
+                    ? taskworkflowdata.outputs.map((output) => ({
                           name: output?.name || "",
                           description: output?.description || "",
                           url: output?.url || "",
-                          path: output?.path || "",
+                        //   path: output?.path || "",
                           type: output?.type || ""
                       }))
-                    : [{ name: "", description: "", url: "", path: "", type: "" }]
+                    : [{ name: "", description: "", url: "", type: "" }]
             );
 
-            // setVolumes(taskData?.volumes || []);
-
             setResources({
-                cpu_cores: taskData?.resources?.cpu_cores || 1,
-                zones: taskData?.resources?.zones || "",
-                preemptible: taskData?.resources?.preemptible || false,
-                disk_gb: taskData?.resources?.disk_gb || 5.0,
-                ram_gb: taskData?.resources?.ram_gb || 1.0,
+                cpu_cores: taskworkflowdata?.resources?.cpu_cores || 1,
+                zones: taskworkflowdata?.resources?.zones || "",
+                preemptible: taskworkflowdata?.resources?.preemptible || false,
+                disk_gb: taskworkflowdata?.resources?.disk_gb || 5.0,
+                ram_gb: taskworkflowdata?.resources?.ram_gb || 1.0,
             });
         }
-    }, [taskData]);
+    }, [taskworkflowdata]);
 
 
     const handleToggle = (eventKey) => {
@@ -118,7 +118,7 @@ const TaskForm = () => {
         } else if (typeof value === 'object' && value !== null) {
             return Object.keys(value).length === 0 || Object.values(value).every(isEmpty);
         } else if (typeof value === 'number') {
-            return isNaN(value) || value === 0;
+            return isNaN(value); // || value === 0;
         }
         return value === null || value === undefined;
     };
@@ -136,19 +136,20 @@ const TaskForm = () => {
         return data;
     };
     
+    
+
     const prepareRequestData = () => {
-        const { name, description, tags } = basicData;
+        const { name, description, tags, execution_order } = basicData;
         const data = {
             name,
             description,
             tags,
+            execution_order,
             executors,
             inputs,
             outputs,
             resources
-            // volumes
-        };
-    
+        };    
         return cleanEmptyValues(data);
     };
 
@@ -158,12 +159,12 @@ const TaskForm = () => {
 
     const handleConfirmSubmit = () => {
         const requestData = prepareRequestData();
-        
-        runTaskPost(userDetails.apiKey, requestData)
+
+        runWorkflowTaskPost(userDetails.apiKey, requestData)
             .then(response => {
                 if (response.ok) {
                     setAlertVariant('success');
-                    setAlertMessage('The task has been submitted successfully!');
+                    setAlertMessage('The workflow task has been submitted successfully!');
                     setShowAlert(true);
                     setTimeout(() => {
                         navigate('/Dashboard'); // Navigate to /Dashboard after a delay
@@ -172,21 +173,22 @@ const TaskForm = () => {
                     setAlertMessage('Failed to submit task!');
                     setAlertVariant('danger');
                     setShowAlert(true);
+                    setTimeout(() => {
+                        navigate('/Dashboard');
+                    }, 2000);
                 }
             })
             .catch(error => {
                 setAlertMessage('Failed to submit task!');
                 setAlertVariant('danger');
                 setShowAlert(true);
-                setTimeout(() => {
-                    navigate('/Dashboard'); // Navigate to /Dashboard after a delay
-                }, 2000);
             })
             .finally(() => {
                 setShowModal(false);
                 handleClear();
             });
     };
+
 
     const handleModalClose = () => setShowModal(false);
 
@@ -197,11 +199,57 @@ const TaskForm = () => {
             if (name === 'tags') {
                 const tagsArray = value.split(',');
                 return { ...prevData, tags: tagsArray };
+            } else if (name === 'execution_order') {
+                const executionOrderArray = value.split(',');
+                return { ...prevData, execution_order: executionOrderArray };
             } else {
                 return { ...prevData, [name]: value };
             }
         });
     };
+
+    const removeYield = (executorIndex, yieldIndex) => {
+        setExecutors(prevExecutors => {
+            const updatedExecutors = [...prevExecutors];
+            const updatedYields = [...updatedExecutors[executorIndex].yields];
+            updatedYields.splice(yieldIndex, 1);
+            updatedExecutors[executorIndex] = {
+                ...updatedExecutors[executorIndex],
+                yields: updatedYields
+            };
+            return updatedExecutors;
+        });
+    };
+
+    // Add new yield to an executor
+    const addYield = (executorIndex) => {
+        setExecutors(prevExecutors => {
+            const updatedExecutors = [...prevExecutors];
+            updatedExecutors[executorIndex] = {
+                ...updatedExecutors[executorIndex],
+                yields: [...updatedExecutors[executorIndex].yields, { name: "", path: "" }]
+            };
+            return updatedExecutors;
+        });
+    };
+
+    // Update yield values
+    const handleYieldChange = (executorIndex, yieldIndex, field, value) => {
+        setExecutors(prevExecutors => {
+            const updatedExecutors = [...prevExecutors];
+            const updatedYields = [...updatedExecutors[executorIndex].yields];
+            updatedYields[yieldIndex] = {
+                ...updatedYields[yieldIndex],
+                [field]: value
+            };
+            updatedExecutors[executorIndex] = {
+                ...updatedExecutors[executorIndex],
+                yields: updatedYields
+            };
+            return updatedExecutors;
+        });
+    };
+    
 
     const handleExecutorChange = (index, e) => {
         const { name, value } = e.target;
@@ -219,6 +267,8 @@ const TaskForm = () => {
                     return acc;
                 }, {});
                 updatedExecutor.env = envObject;
+            } else if (name === "priority") {
+                updatedExecutor.priority = parseInt(value, 10) || 0;
             } else {
                 updatedExecutor[name] = value;
             }
@@ -228,14 +278,15 @@ const TaskForm = () => {
         });
     };
     
+    
+    
     // Clear input boxes
     const handleClear = () => {
-        setBasicData({name: "", description: "", tags: []});
-        setExecutors([{image: "", command: [], workdir: "", stdout: "", stderr: "", env: ""}]);
-        setInputs([{ name: "", description: "", url: "", path: "", content: "", type: ""}]);
-        setOutputs([{ name: "", description: "", url: "", path: "", type: ""}]);
+        setBasicData({name: "", description: "", tags: [], execution_order: []});
+        setExecutors([{priority:0, yields:[], image: "", command: [], workdir: "", stdout: "", stderr: "", env: ""}]);
+        setInputs([{ name: "", description: "", url: "", content: "", type: ""}]);
+        setOutputs([{ name: "", description: "", url: "", type: ""}]);
         setResources({ cpu_cores: 1, zones: "", preemptible: false, disk_gb: 5.0, ram_gb: 1.0 });
-        // setVolumes([]);
     };
 
     const handleInputChange = (index, e) => {
@@ -263,7 +314,7 @@ const TaskForm = () => {
     };
     
     const addInputField = () => {
-        const newInput = { name: "", description: "", url: "", path: "", content: "", type: ""};
+        const newInput = { name: "", description: "", url: "", content: "", type: ""};
         setInputs(prevInputs => [...prevInputs, newInput]);
     };
 
@@ -272,18 +323,36 @@ const TaskForm = () => {
     };
 
     const addOutputField = () => {
-        const newInput = { name: "", description: "", url: "", path: "", type: "" };
+        const newInput = { name: "", description: "", url: "", type: "" };
         setOutputs(prevOutputs => [...prevOutputs, newInput]);
     };
 
     const removeOutputField = () => {
         setOutputs(prevOutputs => prevOutputs.slice(0, -1));
     };
+
+    const addExecutor = () => {
+        setExecutors(prevExecutors => [
+            ...prevExecutors,
+            {
+                priority: 0,
+                yields: [''],
+                image: '',
+                command: [''],
+                workdir: '',
+                stdout: '',
+                stderr: '',
+                env: {}
+            }
+        ]);
+    };
     
-    // const handleVolumeInputChange = (e) => {
-    //     const { value } = e.target;
-    //         setVolumes(value.split(' '));
-    // };
+    // Remove Executor
+    const removeExecutor = (index) => {
+        setExecutors(prevExecutors => 
+            prevExecutors.length > 1 ? prevExecutors.filter((_, i) => i !== index) : prevExecutors
+        );
+    };
 
     return (
         <Container className="py-5">
@@ -334,6 +403,27 @@ const TaskForm = () => {
                                     </Col>
                                 </Form.Group>
 
+                                <Form.Group as={Row} className="mb-3">
+                                    <Form.Label column sm="3" className="fw-bold">
+                                        Execution Order <span className="text-danger">*</span>
+                                    </Form.Label>
+                                    <Col sm="9">
+                                        <OverlayTrigger
+                                            placement="top"
+                                            overlay={<Tooltip id={`tooltip-tags`}>Please split execution order with comma</Tooltip>}
+                                        >
+                                            <Form.Control
+                                                type="text"
+                                                name="execution_order"
+                                                value={basicData.execution_order.join(',')}
+                                                onChange={handleBasicChange}
+                                                placeholder="Type the order of executors, separated by commas..."
+                                                required
+                                            />
+                                        </OverlayTrigger>
+                                    </Col>
+                                </Form.Group>
+
 
                                 <Form.Group as={Row} className="mb-3">
                                     <Form.Label column sm="3" className="fw-bold">
@@ -374,6 +464,73 @@ const TaskForm = () => {
                                     </a>
                                 </Card.Header>
                                 <Card.Body>
+                                    <Form.Group as={Row} className="mb-3">
+                                        <Form.Label column sm="3" className="fw-bold">
+                                            Priority
+                                        </Form.Label>
+                                        <Col sm="9">
+                                            <Form.Control
+                                                type="number"
+                                                name="priority"
+                                                step="1"
+                                                min="0"
+                                                max="100"
+                                                value={executor.priority}
+                                                onChange={(e) => handleExecutorChange(index, e)}
+                                                placeholder="Set priority..."
+                                            />
+                                        </Col>
+                                    </Form.Group>
+
+                                    {/* Yields Dynamic Fields */}
+                                    <Form.Group as={Row} className="mb-3">
+                                        <Form.Label column sm="3" className="fw-bold">
+                                            Yields
+                                        </Form.Label>
+                                        <Col sm="9">
+                                            {executor.yields.map((yieldItem, yieldIndex) => (
+                                                <div key={yieldIndex} className="d-flex align-items-center mb-2">
+                                                    <Form.Control
+                                                        type="text"
+                                                        value={yieldItem.name || ""}
+                                                        placeholder="Type name..."
+                                                        onChange={(e) => handleYieldChange(index, yieldIndex, "name", e.target.value)}
+                                                        className="me-2 w-50"
+                                                        required={executors[index].yields[yieldIndex].path ? true : false}
+                                                    />
+                                                    <Form.Control
+                                                        type="text"
+                                                        value={yieldItem.path || ""}
+                                                        placeholder="Type path..."
+                                                        onChange={(e) => handleYieldChange(index, yieldIndex, "path", e.target.value)}
+                                                        className="me-2 w-50"
+                                                        required={executors[index].yields[yieldIndex].name ? true : false}
+                                                    />
+                                                    {/* Remove button */}
+                                                    <Button
+                                                        variant="danger"
+                                                        size="sm"
+                                                        className="ms-2 d-flex align-items-center"
+                                                        onClick={() => removeYield(index, yieldIndex)}
+                                                    >
+                                                        <FontAwesomeIcon icon={faXmark} className="me-2" />
+                                                        Remove
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                            {/* Add button */}
+                                            <Button
+                                                variant="primary"
+                                                size="sm"
+                                                onClick={() => addYield(index)}
+                                                className="d-flex align-items-center mt-2"
+                                            >
+                                                <FontAwesomeIcon icon={faPlus} className="me-2" />
+                                                Add
+                                            </Button>
+                                        </Col>
+                                    </Form.Group>
+
                                     <Form.Group as={Row} className="mb-3">
                                         <Form.Label column sm="3" className="fw-bold">
                                             Image <span className="text-danger">*</span>
@@ -469,9 +626,24 @@ const TaskForm = () => {
                                             </OverlayTrigger>
                                         </Col>
                                     </Form.Group>
+                                    <Button variant="primary" onClick={addExecutor} className="me-2">
+                                        <FontAwesomeIcon icon={faPlus} className="me-2" />
+                                        Add
+                                    </Button>
+                                    <Button
+                                        variant="danger"
+                                        onClick={() => removeExecutor(index)}
+                                        disabled={executors.length === 1}
+                                    >
+                                        <FontAwesomeIcon icon={faXmark} className="me-2" />
+                                        Remove
+                                    </Button>
+
                                 </Card.Body>
+                                
                             </Card>
                         ))}
+                        
 
                         <Accordion activeKey={activeKey} onSelect={handleToggle} className="mb-4">
                             {/* Inputs */}
@@ -483,7 +655,7 @@ const TaskForm = () => {
                                         className="ms-2" 
                                         data-bs-toggle="tooltip" 
                                         data-bs-placement="top" 
-                                        title="Input information is optional, but if provided, both URL and Path are required." 
+                                        title="Input information is optional, but if provided, Name and URL are required." 
                                     />
                                 </Accordion.Header>
                                 <Accordion.Body>
@@ -491,7 +663,7 @@ const TaskForm = () => {
                                         <div key={index} className="mb-4">
                                             <Form.Group as={Row} className="mb-3">
                                                 <Form.Label column sm="3" className="fw-bold">
-                                                    Name
+                                                    Name <span className="text-danger">*</span>
                                                 </Form.Label>
                                                 <Col sm="8">
                                                     <Form.Control
@@ -535,29 +707,8 @@ const TaskForm = () => {
                                                             value={input.url}
                                                             onChange={(e) => handleInputChange(index, e)}
                                                             placeholder="Type URL..."
-                                                            required={!!(input.name || input.description || input.type || input.path)} 
+                                                            required={!!(input.name || input.description || input.type)} 
                                                         />
-                                                    </OverlayTrigger>
-                                                </Col>
-                                            </Form.Group>
-
-                                            <Form.Group as={Row} className="mb-3">
-                                                <Form.Label column sm="3" className="fw-bold">
-                                                    Path <span className="text-danger">*</span>
-                                                </Form.Label>
-                                                <Col sm="8">
-                                                    <OverlayTrigger
-                                                        placement="top"
-                                                        overlay={<Tooltip id={`tooltip-env`}>Location where the file or directory will be stored inside the task's container after the task completes.</Tooltip>}
-                                                    >
-                                                    <Form.Control
-                                                        type="text"
-                                                        name="path"
-                                                        value={input.path}
-                                                        onChange={(e) => handleInputChange(index, e)}
-                                                        placeholder="Type path..."
-                                                        required={!!(input.name || input.description || input.type || input.url)} 
-                                                    />
                                                     </OverlayTrigger>
                                                 </Col>
                                             </Form.Group>
@@ -606,7 +757,7 @@ const TaskForm = () => {
                                         className="ms-2" 
                                         data-bs-toggle="tooltip" 
                                         data-bs-placement="top" 
-                                        title="Output information is optional, but if provided, both URL and Path are required." 
+                                        title="Output information is optional, but if provided, both Name and URL are required." 
                                     />
                                 </Accordion.Header>
                                 <Accordion.Body>
@@ -614,7 +765,7 @@ const TaskForm = () => {
                                         <div key={index} className="mb-4">
                                             <Form.Group as={Row} className="mb-3">
                                                 <Form.Label column sm="3" className="fw-bold">
-                                                    Name
+                                                    Name <span className="text-danger">*</span>
                                                 </Form.Label>
                                                 <Col sm="8">
                                                     <Form.Control
@@ -658,13 +809,13 @@ const TaskForm = () => {
                                                         value={output.url}
                                                         onChange={(e) => handleOutputChange(index, e)}
                                                         placeholder="Type URL..."
-                                                        required={!!(output.name || output.description || output.type || output.path)}
+                                                        required={!!(output.name || output.description || output.type)}
                                                     />
                                                     </OverlayTrigger>
                                                 </Col>
                                             </Form.Group>
 
-                                            <Form.Group as={Row} className="mb-3">
+                                            {/* <Form.Group as={Row} className="mb-3">
                                                 <Form.Label column sm="3" className="fw-bold">
                                                     Path <span className="text-danger">*</span>
                                                 </Form.Label>
@@ -683,7 +834,7 @@ const TaskForm = () => {
                                                     />
                                                     </OverlayTrigger>
                                                 </Col>
-                                            </Form.Group>
+                                            </Form.Group> */}
 
                                             <Form.Group as={Row} className="mb-3">
                                                 <Form.Label column sm="3" className="fw-bold">
@@ -720,36 +871,6 @@ const TaskForm = () => {
                                 </Accordion.Body>
                             </Accordion.Item>
 
-                            {/* Volumes */}
-                            {/* <Accordion.Item eventKey="2">
-                                <Accordion.Header>
-                                    Volumes Information (Optional)&nbsp; 
-                                    <a 
-                                        href="https://schema.athenarc.gr/docs/schema-api/arch/tasks/" 
-                                        target="_blank" 
-                                        rel="noopener noreferrer" 
-                                        className="text-dark"
-                                        style={{ textDecoration: 'none' }}
-                                    >
-                                    <FontAwesomeIcon icon={faInfoCircle} />
-                                    </a>
-                                </Accordion.Header>
-                                <Accordion.Body>
-                                    <Form.Group as={Row} className="mb-3">
-                                        <Form.Label column sm="3" className="fw-bold">
-                                            Paths
-                                        </Form.Label>
-                                        <Col sm="9">
-                                        <Form.Control
-                                            type="text"
-                                            value={volumes.join(' ')}
-                                            onChange={handleVolumeInputChange}
-                                            placeholder="Type volumes, separated by comma..."
-                                        />
-                                        </Col>
-                                    </Form.Group>
-                                </Accordion.Body>
-                            </Accordion.Item> */}
 
                             {/* Resources */}
                             <Accordion.Item eventKey="3">
@@ -847,10 +968,10 @@ const TaskForm = () => {
                                     name: basicData.name,
                                     description: basicData.description,
                                     tags: basicData.tags,
+                                    execution_order: basicData.execution_order,
                                     executors,
                                     inputs,
                                     outputs,
-                                    // volumes,
                                     resources
                                 }, null, 2)}</pre>
                             )}
@@ -863,4 +984,4 @@ const TaskForm = () => {
     );
 };
 
-export default TaskForm;
+export default WorkflowTaskForm;

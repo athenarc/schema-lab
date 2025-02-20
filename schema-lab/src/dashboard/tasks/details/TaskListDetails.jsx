@@ -2,7 +2,7 @@ import { Outlet, useNavigate, useParams } from 'react-router-dom';
 import { Navbar, Container, Nav, Button } from 'react-bootstrap';
 import React, { useEffect, useState, useContext, createContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { retrieveTaskDetails } from "../../../api/v1/actions";
+import { retrieveTaskDetails, retrieveWorkflowTaskDetails } from "../../../api/v1/actions";
 import { UserDetailsContext } from "../../../utils/components/auth/AuthProvider";
 import TaskStatus  from "../TaskStatus"
 
@@ -27,29 +27,43 @@ const TaskListDetails = () => {
     useEffect(() => {
         const fetchTaskDetails = async () => {
             try {
-                const response = await retrieveTaskDetails({
+                let response = await retrieveTaskDetails({
                     taskUUID: uuid,
                     auth: userDetails.apiKey
                 });
+    
+                if (response.status === 404) {
+                    response = await retrieveWorkflowTaskDetails({
+                        taskUUID: uuid,
+                        auth: userDetails.apiKey
+                    });
+                }
+    
                 if (!response.ok) {
                     throw new Error(`Error network response.. Status: ${response.status}, Status Text: ${response.statusText}`);
                 }
+    
                 const data = await response.json();
-                setTaskDetails({
+    
+                setTaskDetails(prev => ({
+                    ...prev,
                     name: data.name,
-                    status: data.status_history[data.status_history.length - 1].status,
+                    execution_order: data.execution_order,
+                    status: data.state?.[data.state.length - 1]?.status || "Unknown",
                     executors: data.executors,
                     inputs: data.inputs,
                     outputs: data.outputs,
-                });
+                }));
             } catch (error) {
                 setError(error.toString());
             }
         };
-        if (uuid && userDetails && userDetails.apiKey) {
+    
+        if (uuid && userDetails?.apiKey) {
             fetchTaskDetails();
         }
     }, [uuid, userDetails]);
+    
 
     // Get state with defaults
     const { from: parent = 'defaultparent', creator = 'defaultcreator', name = 'defaultname' } = location.state || {};
@@ -96,6 +110,15 @@ const TaskListDetails = () => {
         ? <span><TaskStatus status={taskDetails.status} onColorChange={handleColorChange} /></span>
         : ' - ';
 
+    const execution_order = (
+        <span>
+            Execution order: <span>
+                {Array.isArray(taskDetails.execution_order) 
+                    ? [...taskDetails.execution_order].reverse().join(', ') 
+                    : taskDetails.execution_order || ' Not available '}
+            </span>
+        </span>
+    );
 
     // Redirect BACK button depending on the parent
     const handleBack = () => {
@@ -114,6 +137,7 @@ const TaskListDetails = () => {
                 <div>
                     <div className="lead">{title}</div>
                     <div className="lead">{subtitle}</div>
+                    <div className="text-muted">{execution_order}</div>
                     <Navbar bg="light" data-bs-theme="info">
                         <Container>
                             <Nav variant="underline">

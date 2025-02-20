@@ -102,7 +102,8 @@ const Base = (props) => {
                                         }
                                         items={[
                                             { to: "/dashboard", text: "Dashboard" },
-                                            { to: "/runtask", text: "Run a Task" },
+                                            { to: "/runtask", text: "Run a single task" },
+                                            { to: "/runworkflowtask", text: "Run a workflow task" },
                                         ]}
                                     />
                                     <ClickableNavDropdown
