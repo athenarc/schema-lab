@@ -283,3 +283,28 @@ export const editExperiment = async (creator, name, apiKey, experimentdata) => {
         throw error;
     }
 };
+
+
+// POST a workflow task
+export const runWorkflowTaskPost = async (apiKey, requestData) => {
+    try {
+        const response = await fetch(`${config.api.url}/api/workflows`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify(requestData)
+        });
+        
+        if (!response.ok) {
+            // Handle errors based on response status
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        return response;
+    } catch (error) {
+        console.error('Error during fetch:', error);
+        throw error;
+    }
+};
