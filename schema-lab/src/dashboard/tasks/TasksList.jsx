@@ -107,7 +107,7 @@ const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggl
                             placement="bottom"
                             overlay={
                                 <Tooltip id="retry-tooltip">
-                                    {canRerun ? "Rerun" : "Rerun only tasks in COMPLETED, ERROR, CANCELED and REJECTED status."}
+                                    {canRerun ? "Rerun" : "Rerun not available for this status"}
                                 </Tooltip>
                             }
                         >

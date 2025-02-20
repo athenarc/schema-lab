@@ -12,6 +12,7 @@ import Executors from "./dashboard/tasks/details/Executors";
 import Outputs from "./dashboard/tasks/details/Outputs"
 import Inputs from "./dashboard/tasks/details/Inputs"
 import RunTask from "./runtask";
+import RunWorkflowTask from "./runworkflowtask";
 import AboutusTemplate from './layouts/Aboutus_template';
 // import Aboutus from "./layouts/Aboutus";
 import LearnMore from "./layouts/LearnMore";
@@ -22,8 +23,6 @@ import ViewExperiments from "./dashboard/tasks/expriment/preview/index"
 import ExperimentListDetails from "./dashboard/tasks/expriment/details";
 import ExperimentDetails from "./dashboard/tasks/expriment/details/ExperimentDetails";
 import EditExperiment from "./dashboard/tasks/expriment/edit";
-import Workflow from "./dashboard/tasks/workflow/view";
-import ViewWorkflows from "./dashboard/tasks/workflow/preview";
 
 const ProtectedRoutes = () => {
     const { userDetails } = useContext(UserDetailsContext);
@@ -47,6 +46,7 @@ const router = createBrowserRouter(
                 <Route path="/logout" element={<Logout />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/runtask" element={<RunTask />} />
+                <Route path="/runworkflowtask" element={<RunWorkflowTask />} />
                 <Route path="/preferences" element={<UserPreferencesView />} />
                 <Route path="/experiment" element={<Experiments/>} />
                     <Route path="/view" element={<Experiment/>} />
@@ -57,8 +57,6 @@ const router = createBrowserRouter(
                     <Route index element={<Navigate to="description" />} />
                     <Route path="description" element={<ExperimentDetails />} />
                 </Route>
-                <Route path="/workflow" element={<Workflow/>} />
-                    <Route path="/workflow-preview" element={<ViewWorkflows/>} />
                 <Route path="/task-details/:uuid" element={<Details />}>
                     <Route index element={<Navigate to="executors" />} />
                     <Route path="executors" element={<Executors />} />

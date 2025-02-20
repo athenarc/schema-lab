@@ -102,7 +102,8 @@ const Base = (props) => {
                                         }
                                         items={[
                                             { to: "/dashboard", text: "Dashboard" },
-                                            { to: "/runtask", text: "Run a Task" },
+                                            { to: "/runtask", text: "Run a single task" },
+                                            { to: "/runworkflowtask", text: "Run a workflow task" },
                                         ]}
                                     />
                                     <ClickableNavDropdown
@@ -117,19 +118,6 @@ const Base = (props) => {
                                             { to: "/preview", text: "Dashboard" },
                                             { to: "/view", text: "Create" },
                                             { to: "/experiment", text: "About" },
-                                        ]}
-                                    />
-                                    <ClickableNavDropdown
-                                        id="nav-dropdown-tasks"
-                                        title={
-                                            <>
-                                                <FontAwesomeIcon icon={faDiagramProject} className="me-1" />
-                                                Workflows
-                                            </>
-                                        }
-                                        items={[
-                                            { to: "/workflow-preview", text: "Dashboard" },
-                                            { to: "/workflow-view", text: "Create" },
                                         ]}
                                     />
                                     <Button
