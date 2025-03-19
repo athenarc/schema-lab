@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import { Link, useNavigate } from "react-router-dom";
-import { Tooltip, OverlayTrigger, Dropdown, DropdownButton, Button, Alert, Modal } from 'react-bootstrap';
+import { Tooltip, OverlayTrigger, Dropdown, DropdownButton, Button, Alert, Modal, Form } from 'react-bootstrap';
 import { faArrowDownAZ, faArrowDownZA, faXmark, faArrowRotateRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Table from "react-bootstrap/Table";
@@ -180,7 +180,8 @@ const ColumnOrderToggle = ({ columnName, currentOrder, setOrder }) => {
 };
 
 const TaskList = () => {
-    const { taskData } = useTaskData();
+    const [showWorkflowTasks, setShowWorkflowTasks] = useState(false);
+    const { taskData } = useTaskData(showWorkflowTasks);
     const { taskFilters, setTaskFilters, selectedTasks, setSelectedTasks } = useTaskFilters();
     const [token, setToken] = useState(taskFilters.token);
     const [statuses, setStatuses] = useState({ ...(taskFilters.statuses) });
@@ -241,8 +242,9 @@ const TaskList = () => {
     };
 
     const findFilteredTokens = () => {
-        if (taskData) {
-            const { count } = taskData;
+        const data = showWorkflowTasks ? taskData : taskData;
+        if (data) {
+            const { count } = data;
             if (count === 0) {
                 return (
                     <div className="alert alert-warning text-center" role="alert">
@@ -255,11 +257,22 @@ const TaskList = () => {
         }
     };
 
+    const displayedData = showWorkflowTasks ? taskData : taskData;
 
     return (
         <Row className="p-3 mb-5">
             <Col className="align-items-center">
-                {taskData && taskData.results && (
+                <div className="d-flex align-items-center">
+                    <Form.Switch
+                        id="workflow-switch"
+                        label={<span className="fw-bold">
+                            {showWorkflowTasks ? "Workflow Tasks" : "Single Tasks"}
+                        </span>}
+                        checked={showWorkflowTasks}
+                        onChange={() => setShowWorkflowTasks(!showWorkflowTasks)}
+                    />
+                </div>
+                {displayedData && displayedData.results && (
                     <Table borderless responsive hover>
                         <thead>
                             <tr>
@@ -296,16 +309,12 @@ const TaskList = () => {
                                     <DropdownButton
                                         id="dropdown-basic-button"
                                         variant='light'
-                                        title={
-                                            <>
-                                                <span className="fw-bold">Status</span>
-                                            </>
-                                        }
+                                        title={<span className="fw-bold">Status</span>}
                                         onSelect={handleStatusChange}
                                         drop="auto"
                                         renderMenuOnMount
                                         container="body" 
-                                    >   
+                                    >
                                         <Dropdown.Item eventKey='all'><TaskStatus status='ALL' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='submitted'><TaskStatus status='SUBMITTED' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='approved'><TaskStatus status='APPROVED' /></Dropdown.Item>
@@ -325,15 +334,13 @@ const TaskList = () => {
                             </tr>
                         </thead>
                         <tbody>
-                        {taskData.results.map((task) => (
+                            {displayedData.results.map((task) => (
                                 <TaskListing
                                     key={task.uuid}
                                     uuid={task.uuid}
                                     status={task.state.status}
                                     submitted_at={task.submitted_at}
                                     updated_at={task.state.updated_at}
-                                    // isSelected={selectedTasks.some(t => t.uuid === task.uuid)}
-                                    // toggleSelection={() => toggleRowSelection(task)}
                                 />
                             ))}
                         </tbody>
@@ -346,3 +353,4 @@ const TaskList = () => {
 };
 
 export default TaskList;
+

@@ -158,6 +158,7 @@ const TaskForm = () => {
 
     const handleConfirmSubmit = () => {
         const requestData = prepareRequestData();
+        
         runTaskPost(userDetails.apiKey, requestData)
             .then(response => {
                 if (response.ok) {
@@ -168,17 +169,18 @@ const TaskForm = () => {
                         navigate('/Dashboard'); // Navigate to /Dashboard after a delay
                     }, 2000);
                 } else {
-                    console.error('Failed to submit task');
                     setAlertMessage('Failed to submit task!');
                     setAlertVariant('danger');
                     setShowAlert(true);
                 }
             })
             .catch(error => {
-                console.error('Error submitting task:', error);
                 setAlertMessage('Failed to submit task!');
                 setAlertVariant('danger');
                 setShowAlert(true);
+                setTimeout(() => {
+                    navigate('/Dashboard'); // Navigate to /Dashboard after a delay
+                }, 2000);
             })
             .finally(() => {
                 setShowModal(false);
@@ -708,7 +710,7 @@ const TaskForm = () => {
                                         </Button>
                                         <Button 
                                             variant="danger" 
-                                            onClick={() => removeOutputField(inputs[outputs.length - 1]?.id)}
+                                            onClick={() => removeOutputField(outputs[outputs.length - 1]?.id)}
                                             disabled={outputs.length === 1}
                                         >
                                             <FontAwesomeIcon icon={faXmark} className="me-2" />
