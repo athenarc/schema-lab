@@ -12,33 +12,33 @@ const WorkflowTaskForm = () => {
     const navigate = useNavigate();
     // Get data from re-run action
     const { state } = useLocation();
-    const taskData = state?.taskData || null;
+    const taskworkflowdata = state?.taskworkflowdata || null;
     const [activeKey, setActiveKey] = useState(null);
     const [showModal, setShowModal] = useState(false);
-    const [basicData, setBasicData] = useState({name: "", description: "", tags: [] });
-    const [executors, setExecutors] = useState([{priority:0, yields: {}, image: "", command: [], workdir: "", stdout: "", stderr: "", env: ""}]);
+    const [basicData, setBasicData] = useState({name: "", description: "", tags: [], execution_order: [] });
+    const [executors, setExecutors] = useState([{priority:0, yields: [], image: "", command: [], workdir: "", stdout: "", stderr: "", env: ""}]);
     const [inputs, setInputs] = useState([{ name: "", description: "", url: "", content: "", type: ""}]);
-    const [outputs, setOutputs] = useState([{ name: "", description: "", url: "", path: "", type: ""}]);
+    const [outputs, setOutputs] = useState([{ name: "", description: "", url: "", type: ""}]);
     const [resources, setResources] = useState({ cpu_cores: 1, zones: "", preemptible: false, disk_gb: 5.0, ram_gb: 1.0 });
     const [showJson, setShowJson] = useState(false);
     const { userDetails } = useContext(UserDetailsContext);
 
     // Fill input boxes with data if UUID already exists
     useEffect(() => {
-        if (taskData) {
+        if (taskworkflowdata) {
             setBasicData({
-                name: taskData.name || "",
-                description: taskData.description || "",
-                tags: taskData.tags || []
+                name: taskworkflowdata.name || "",
+                description: taskworkflowdata.description || "",
+                tags: taskworkflowdata.tags || [],
+                execution_order: taskworkflowdata.execution_order || []
             });
 
+
             setExecutors(
-                Array.isArray(taskData.executors) && taskData.executors.length > 0
-                    ? taskData.executors.map((executor) => ({
+                Array.isArray(taskworkflowdata.executors) && taskworkflowdata.executors.length > 0
+                    ? taskworkflowdata.executors.map((executor) => ({
                           priority: Number.isInteger(executor?.priority) ? executor.priority : 0,  
-                          yields: typeof executor?.yields === "object" && executor.yields !== null
-                          ? executor.yields
-                          : {},
+                          yields: executor?.yields || [],
                           image: executor?.image || "",
                           command: executor?.command || [],
                           workdir: executor?.workdir || "",
@@ -46,12 +46,12 @@ const WorkflowTaskForm = () => {
                           stderr: executor?.stderr || "",
                           env: executor?.env || {}
                       }))
-                    : [{ priority: 0, yields: {}, image: "", command: [], workdir: "", stdout: "", stderr: "", env: {} }]
+                    : [{ priority: 0, yields: [], image: "", command: [], workdir: "", stdout: "", stderr: "", env: {} }]
             );
 
             setInputs(
-                Array.isArray(taskData.inputs)
-                    ? taskData.inputs.map((input) => ({
+                Array.isArray(taskworkflowdata.inputs)
+                    ? taskworkflowdata.inputs.map((input) => ({
                           name: input?.name || "",
                           description: input?.description || "",
                           url: input?.url || "",
@@ -62,26 +62,26 @@ const WorkflowTaskForm = () => {
             );
 
             setOutputs(
-                Array.isArray(taskData.outputs)
-                    ? taskData.outputs.map((output) => ({
+                Array.isArray(taskworkflowdata.outputs)
+                    ? taskworkflowdata.outputs.map((output) => ({
                           name: output?.name || "",
                           description: output?.description || "",
                           url: output?.url || "",
-                          path: output?.path || "",
+                        //   path: output?.path || "",
                           type: output?.type || ""
                       }))
-                    : [{ name: "", description: "", url: "", path: "", type: "" }]
+                    : [{ name: "", description: "", url: "", type: "" }]
             );
 
             setResources({
-                cpu_cores: taskData?.resources?.cpu_cores || 1,
-                zones: taskData?.resources?.zones || "",
-                preemptible: taskData?.resources?.preemptible || false,
-                disk_gb: taskData?.resources?.disk_gb || 5.0,
-                ram_gb: taskData?.resources?.ram_gb || 1.0,
+                cpu_cores: taskworkflowdata?.resources?.cpu_cores || 1,
+                zones: taskworkflowdata?.resources?.zones || "",
+                preemptible: taskworkflowdata?.resources?.preemptible || false,
+                disk_gb: taskworkflowdata?.resources?.disk_gb || 5.0,
+                ram_gb: taskworkflowdata?.resources?.ram_gb || 1.0,
             });
         }
-    }, [taskData]);
+    }, [taskworkflowdata]);
 
 
     const handleToggle = (eventKey) => {
@@ -118,7 +118,7 @@ const WorkflowTaskForm = () => {
         } else if (typeof value === 'object' && value !== null) {
             return Object.keys(value).length === 0 || Object.values(value).every(isEmpty);
         } else if (typeof value === 'number') {
-            return isNaN(value) || value === 0;
+            return isNaN(value); // || value === 0;
         }
         return value === null || value === undefined;
     };
@@ -136,18 +136,20 @@ const WorkflowTaskForm = () => {
         return data;
     };
     
+    
+
     const prepareRequestData = () => {
-        const { name, description, tags } = basicData;
+        const { name, description, tags, execution_order } = basicData;
         const data = {
             name,
             description,
             tags,
+            execution_order,
             executors,
             inputs,
             outputs,
             resources
-        };
-    
+        };    
         return cleanEmptyValues(data);
     };
 
@@ -157,24 +159,26 @@ const WorkflowTaskForm = () => {
 
     const handleConfirmSubmit = () => {
         const requestData = prepareRequestData();
+
         runWorkflowTaskPost(userDetails.apiKey, requestData)
             .then(response => {
                 if (response.ok) {
                     setAlertVariant('success');
-                    setAlertMessage('The task has been submitted successfully!');
+                    setAlertMessage('The workflow task has been submitted successfully!');
                     setShowAlert(true);
                     setTimeout(() => {
                         navigate('/Dashboard'); // Navigate to /Dashboard after a delay
                     }, 2000);
                 } else {
-                    console.error('Failed to submit task');
                     setAlertMessage('Failed to submit task!');
                     setAlertVariant('danger');
                     setShowAlert(true);
+                    setTimeout(() => {
+                        navigate('/Dashboard');
+                    }, 2000);
                 }
             })
             .catch(error => {
-                console.error('Error submitting task:', error);
                 setAlertMessage('Failed to submit task!');
                 setAlertVariant('danger');
                 setShowAlert(true);
@@ -185,6 +189,7 @@ const WorkflowTaskForm = () => {
             });
     };
 
+
     const handleModalClose = () => setShowModal(false);
 
     const handleBasicChange = (e) => {
@@ -194,22 +199,53 @@ const WorkflowTaskForm = () => {
             if (name === 'tags') {
                 const tagsArray = value.split(',');
                 return { ...prevData, tags: tagsArray };
+            } else if (name === 'execution_order') {
+                const executionOrderArray = value.split(',');
+                return { ...prevData, execution_order: executionOrderArray };
             } else {
                 return { ...prevData, [name]: value };
             }
         });
     };
 
-    const removeYield = (index, yieldKey) => {
+    const removeYield = (executorIndex, yieldIndex) => {
         setExecutors(prevExecutors => {
             const updatedExecutors = [...prevExecutors];
-            const updatedExecutor = { ...updatedExecutors[index] };
-    
-            if (updatedExecutor.yields) {
-                delete updatedExecutor.yields[yieldKey];
-            }
-    
-            updatedExecutors[index] = updatedExecutor;
+            const updatedYields = [...updatedExecutors[executorIndex].yields];
+            updatedYields.splice(yieldIndex, 1);
+            updatedExecutors[executorIndex] = {
+                ...updatedExecutors[executorIndex],
+                yields: updatedYields
+            };
+            return updatedExecutors;
+        });
+    };
+
+    // Add new yield to an executor
+    const addYield = (executorIndex) => {
+        setExecutors(prevExecutors => {
+            const updatedExecutors = [...prevExecutors];
+            updatedExecutors[executorIndex] = {
+                ...updatedExecutors[executorIndex],
+                yields: [...updatedExecutors[executorIndex].yields, { name: "", path: "" }]
+            };
+            return updatedExecutors;
+        });
+    };
+
+    // Update yield values
+    const handleYieldChange = (executorIndex, yieldIndex, field, value) => {
+        setExecutors(prevExecutors => {
+            const updatedExecutors = [...prevExecutors];
+            const updatedYields = [...updatedExecutors[executorIndex].yields];
+            updatedYields[yieldIndex] = {
+                ...updatedYields[yieldIndex],
+                [field]: value
+            };
+            updatedExecutors[executorIndex] = {
+                ...updatedExecutors[executorIndex],
+                yields: updatedYields
+            };
             return updatedExecutors;
         });
     };
@@ -233,24 +269,6 @@ const WorkflowTaskForm = () => {
                 updatedExecutor.env = envObject;
             } else if (name === "priority") {
                 updatedExecutor.priority = parseInt(value, 10) || 0;
-            } else if (name.startsWith("yields.")) {
-                const [_, yieldKey, field] = name.split(".");
-    
-                if (!updatedExecutor.yields) {
-                    updatedExecutor.yields = {};
-                }
-    
-                if (field === "name") {
-                    updatedExecutor.yields[yieldKey] = {
-                        ...updatedExecutor.yields[yieldKey],
-                        name: value
-                    };
-                } else if (field === "path") {
-                    updatedExecutor.yields[yieldKey] = {
-                        ...updatedExecutor.yields[yieldKey],
-                        path: value
-                    };
-                }
             } else {
                 updatedExecutor[name] = value;
             }
@@ -264,10 +282,10 @@ const WorkflowTaskForm = () => {
     
     // Clear input boxes
     const handleClear = () => {
-        setBasicData({name: "", description: "", tags: []});
-        setExecutors([{priority:0, yields:{}, image: "", command: [], workdir: "", stdout: "", stderr: "", env: ""}]);
+        setBasicData({name: "", description: "", tags: [], execution_order: []});
+        setExecutors([{priority:0, yields:[], image: "", command: [], workdir: "", stdout: "", stderr: "", env: ""}]);
         setInputs([{ name: "", description: "", url: "", content: "", type: ""}]);
-        setOutputs([{ name: "", description: "", url: "", path: "", type: ""}]);
+        setOutputs([{ name: "", description: "", url: "", type: ""}]);
         setResources({ cpu_cores: 1, zones: "", preemptible: false, disk_gb: 5.0, ram_gb: 1.0 });
     };
 
@@ -305,7 +323,7 @@ const WorkflowTaskForm = () => {
     };
 
     const addOutputField = () => {
-        const newInput = { name: "", description: "", url: "", path: "", type: "" };
+        const newInput = { name: "", description: "", url: "", type: "" };
         setOutputs(prevOutputs => [...prevOutputs, newInput]);
     };
 
@@ -317,8 +335,8 @@ const WorkflowTaskForm = () => {
         setExecutors(prevExecutors => [
             ...prevExecutors,
             {
-                priority: 1,
-                yields: {},
+                priority: 0,
+                yields: [''],
                 image: '',
                 command: [''],
                 workdir: '',
@@ -382,6 +400,27 @@ const WorkflowTaskForm = () => {
                                             onChange={handleBasicChange}
                                             placeholder="Enter a detailed description..."
                                         />
+                                    </Col>
+                                </Form.Group>
+
+                                <Form.Group as={Row} className="mb-3">
+                                    <Form.Label column sm="3" className="fw-bold">
+                                        Execution Order <span className="text-danger">*</span>
+                                    </Form.Label>
+                                    <Col sm="9">
+                                        <OverlayTrigger
+                                            placement="top"
+                                            overlay={<Tooltip id={`tooltip-tags`}>Please split execution order with comma</Tooltip>}
+                                        >
+                                            <Form.Control
+                                                type="text"
+                                                name="execution_order"
+                                                value={basicData.execution_order.join(',')}
+                                                onChange={handleBasicChange}
+                                                placeholder="Type the order of executors, separated by commas..."
+                                                required
+                                            />
+                                        </OverlayTrigger>
                                     </Col>
                                 </Form.Group>
 
@@ -449,32 +488,30 @@ const WorkflowTaskForm = () => {
                                             Yields
                                         </Form.Label>
                                         <Col sm="9">
-                                            {Object.entries(executor.yields || {}).map(([key, obj]) => (
-                                                <div key={key} className="d-flex align-items-center mb-2">
+                                            {executor.yields.map((yieldItem, yieldIndex) => (
+                                                <div key={yieldIndex} className="d-flex align-items-center mb-2">
                                                     <Form.Control
                                                         type="text"
-                                                        name={`yields.${key}.name`}
-                                                        value={obj.name || ""}
+                                                        value={yieldItem.name || ""}
                                                         placeholder="Type name..."
-                                                        onChange={(e) => handleExecutorChange(index, e)}
+                                                        onChange={(e) => handleYieldChange(index, yieldIndex, "name", e.target.value)}
                                                         className="me-2 w-50"
-                                                        required
+                                                        required={executors[index].yields[yieldIndex].path ? true : false}
                                                     />
                                                     <Form.Control
                                                         type="text"
-                                                        name={`yields.${key}.path`}
-                                                        value={obj.path || ""}
+                                                        value={yieldItem.path || ""}
                                                         placeholder="Type path..."
-                                                        onChange={(e) => handleExecutorChange(index, e)}
+                                                        onChange={(e) => handleYieldChange(index, yieldIndex, "path", e.target.value)}
                                                         className="me-2 w-50"
-                                                        required
+                                                        required={executors[index].yields[yieldIndex].name ? true : false}
                                                     />
                                                     {/* Remove button */}
                                                     <Button
                                                         variant="danger"
                                                         size="sm"
                                                         className="ms-2 d-flex align-items-center"
-                                                        onClick={() => removeYield(index, key)}
+                                                        onClick={() => removeYield(index, yieldIndex)}
                                                     >
                                                         <FontAwesomeIcon icon={faXmark} className="me-2" />
                                                         Remove
@@ -485,11 +522,7 @@ const WorkflowTaskForm = () => {
                                             <Button
                                                 variant="primary"
                                                 size="sm"
-                                                onClick={() => {
-                                                    const newKey = `yield_${Date.now()}`;
-                                                    handleExecutorChange(index, { target: { name: `yields.${newKey}.name`, value: "" } });
-                                                    handleExecutorChange(index, { target: { name: `yields.${newKey}.path`, value: "" } });
-                                                }}
+                                                onClick={() => addYield(index)}
                                                 className="d-flex align-items-center mt-2"
                                             >
                                                 <FontAwesomeIcon icon={faPlus} className="me-2" />
@@ -622,7 +655,7 @@ const WorkflowTaskForm = () => {
                                         className="ms-2" 
                                         data-bs-toggle="tooltip" 
                                         data-bs-placement="top" 
-                                        title="Input information is optional, but if provided, URL is required." 
+                                        title="Input information is optional, but if provided, Name and URL are required." 
                                     />
                                 </Accordion.Header>
                                 <Accordion.Body>
@@ -630,7 +663,7 @@ const WorkflowTaskForm = () => {
                                         <div key={index} className="mb-4">
                                             <Form.Group as={Row} className="mb-3">
                                                 <Form.Label column sm="3" className="fw-bold">
-                                                    Name
+                                                    Name <span className="text-danger">*</span>
                                                 </Form.Label>
                                                 <Col sm="8">
                                                     <Form.Control
@@ -674,7 +707,7 @@ const WorkflowTaskForm = () => {
                                                             value={input.url}
                                                             onChange={(e) => handleInputChange(index, e)}
                                                             placeholder="Type URL..."
-                                                            required={!!(input.name || input.description || input.type || input.path)} 
+                                                            required={!!(input.name || input.description || input.type)} 
                                                         />
                                                     </OverlayTrigger>
                                                 </Col>
@@ -724,7 +757,7 @@ const WorkflowTaskForm = () => {
                                         className="ms-2" 
                                         data-bs-toggle="tooltip" 
                                         data-bs-placement="top" 
-                                        title="Output information is optional, but if provided, both URL and Path are required." 
+                                        title="Output information is optional, but if provided, both Name and URL are required." 
                                     />
                                 </Accordion.Header>
                                 <Accordion.Body>
@@ -732,7 +765,7 @@ const WorkflowTaskForm = () => {
                                         <div key={index} className="mb-4">
                                             <Form.Group as={Row} className="mb-3">
                                                 <Form.Label column sm="3" className="fw-bold">
-                                                    Name
+                                                    Name <span className="text-danger">*</span>
                                                 </Form.Label>
                                                 <Col sm="8">
                                                     <Form.Control
@@ -776,13 +809,13 @@ const WorkflowTaskForm = () => {
                                                         value={output.url}
                                                         onChange={(e) => handleOutputChange(index, e)}
                                                         placeholder="Type URL..."
-                                                        required={!!(output.name || output.description || output.type || output.path)}
+                                                        required={!!(output.name || output.description || output.type)}
                                                     />
                                                     </OverlayTrigger>
                                                 </Col>
                                             </Form.Group>
 
-                                            <Form.Group as={Row} className="mb-3">
+                                            {/* <Form.Group as={Row} className="mb-3">
                                                 <Form.Label column sm="3" className="fw-bold">
                                                     Path <span className="text-danger">*</span>
                                                 </Form.Label>
@@ -801,7 +834,7 @@ const WorkflowTaskForm = () => {
                                                     />
                                                     </OverlayTrigger>
                                                 </Col>
-                                            </Form.Group>
+                                            </Form.Group> */}
 
                                             <Form.Group as={Row} className="mb-3">
                                                 <Form.Label column sm="3" className="fw-bold">
@@ -828,7 +861,7 @@ const WorkflowTaskForm = () => {
                                         </Button>
                                         <Button 
                                             variant="danger" 
-                                            onClick={() => removeOutputField(inputs[outputs.length - 1]?.id)}
+                                            onClick={() => removeOutputField(outputs[outputs.length - 1]?.id)}
                                             disabled={outputs.length === 1}
                                         >
                                             <FontAwesomeIcon icon={faXmark} className="me-2" />
@@ -935,6 +968,7 @@ const WorkflowTaskForm = () => {
                                     name: basicData.name,
                                     description: basicData.description,
                                     tags: basicData.tags,
+                                    execution_order: basicData.execution_order,
                                     executors,
                                     inputs,
                                     outputs,

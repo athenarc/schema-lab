@@ -29,7 +29,8 @@ const TasksPaginationControls = () => {
             <Col className="d-flex justify-content-start align-items-start">
                 {count > pageSize
                     ? <small>Displaying tasks {(currentPageIndex * pageSize) + 1}-{Math.min((currentPageIndex + 1) * pageSize, count)}, out of {count} total</small>
-                    : <small>Search results: {count} total tasks</small>
+                    //: <small>Search results: {count} total tasks</small>
+                    : <small>Displaying tasks {(currentPageIndex * pageSize) + 1}-{Math.min((currentPageIndex + 1) * pageSize, count)}, out of {count} total</small>
                 }
             </Col>
             <Col className="d-flex justify-content-end align-items-start">
