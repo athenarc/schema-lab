@@ -6,11 +6,11 @@ import { useClientPreferences } from "../../client/ClientPreferencesProvider";
 export const TasksContext = createContext();
 
 export const useTaskData = (showWorkflowTasks) => {
-    const { taskData, setTaskData, fetchTaskData } = useContext(TasksContext);
+    const { taskData, setTaskData, fetchTaskData, taskFilters } = useContext(TasksContext);
     
     useEffect(() => {
         fetchTaskData(showWorkflowTasks);
-    }, [showWorkflowTasks]);
+    }, [showWorkflowTasks, taskFilters]);
 
     return { taskData, setTaskData };
 };
@@ -35,8 +35,6 @@ const TasksListProvider = ({ children }) => {
     const [selectedTasks, setSelectedTasks] = useState([]);
     const { userDetails } = useContext(UserDetailsContext);
 
-    const refreshInterval = 5000; 
-
     const fetchTaskData = (isWorkflowTasks) => {
         const filters = {
             ...taskFilters,
@@ -48,12 +46,34 @@ const TasksListProvider = ({ children }) => {
 
         const fetchFunction = isWorkflowTasks ? listWorkflowTasks : listTasks;
 
-        fetchFunction({ filters, auth: userDetails.apiKey }).then((response) => response.ok && response.json()).then((data) => {
-            setTaskData({ count: data.count, results: data.results });
-        });
+        fetchFunction({ filters, auth: userDetails.apiKey })
+            .then((response) => response.ok && response.json())
+            .then((data) => {
+                setTaskData({ count: data.count, results: data.results });
+            })
+            .catch(error => {
+                console.error("Error fetching task data:", error);
+            });
     };
 
-    return <TasksContext.Provider value={{ taskData, setTaskData, taskFilters, setTaskFilters, selectedTasks, setSelectedTasks, fetchTaskData }}>{children}</TasksContext.Provider>;
+    useEffect(() => {
+    }, [taskFilters]);
+
+    return (
+        <TasksContext.Provider 
+            value={{ 
+                taskData, 
+                setTaskData, 
+                taskFilters, 
+                setTaskFilters, 
+                selectedTasks, 
+                setSelectedTasks, 
+                fetchTaskData 
+            }}
+        >
+            {children}
+        </TasksContext.Provider>
+    );
 };
 
 export default TasksListProvider;

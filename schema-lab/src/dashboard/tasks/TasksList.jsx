@@ -9,10 +9,10 @@ import Table from "react-bootstrap/Table";
 import { useTaskData, useTaskFilters } from "./TasksListProvider";
 import { cloneDeep } from "lodash";
 import TaskStatus from "./TaskStatus";
-import { cancelTaskPost, retrieveTaskDetails } from "../../api/v1/actions";
+import { cancelTaskPost, retrieveTaskDetails, retrieveWorkflowTaskDetails } from "../../api/v1/actions";
 import { UserDetailsContext } from "../../utils/components/auth/AuthProvider";
 
-const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggleSelection }) => {
+const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggleSelection, showWorkflowTasks }) => {
     const { userDetails } = useContext(UserDetailsContext);
     const [alertMessage, setAlertMessage] = useState(null);
     const [isAlertActive, setIsAlertActive] = useState(false);
@@ -47,16 +47,27 @@ const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggl
 
     const handleRerunButtonClick = async () => {
         try {
-            const response = await retrieveTaskDetails({
-                taskUUID: uuid,
-                auth: userDetails.apiKey
-            });
+            // Use different API call based on showWorkflowTasks state
+            const response = showWorkflowTasks 
+                ? await retrieveWorkflowTaskDetails({
+                    taskUUID: uuid,
+                    auth: userDetails.apiKey
+                  })
+                : await retrieveTaskDetails({
+                    taskUUID: uuid,
+                    auth: userDetails.apiKey
+                  });
+                
             if (!response.ok) {
                 throw new Error(`Error network response.. Status: ${response.status}, Status Text: ${response.statusText}`);
             }
+            
             const data = await response.json();
-            // Navigating to /runtask with the retrieved data
-            navigate('/runtask', { state: { taskData: data } });
+            
+            // Navigate to different path based on showWorkflowTasks state
+            showWorkflowTasks
+                ? navigate('/runworkflowtask', { state: { taskData: data } })
+                : navigate('/runtask', { state: { taskData: data } });
         } catch (error) {
             setError(error.toString());
         }
@@ -341,6 +352,7 @@ const TaskList = () => {
                                     status={task.state.status}
                                     submitted_at={task.submitted_at}
                                     updated_at={task.state.updated_at}
+                                    showWorkflowTasks={showWorkflowTasks}
                                 />
                             ))}
                         </tbody>
