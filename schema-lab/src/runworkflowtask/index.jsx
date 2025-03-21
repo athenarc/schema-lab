@@ -30,20 +30,27 @@ const RunWorkflowTask = () => {
 
     return (
         <div className="d-flex flex-column min-vh-100">
-        <Container className="flex-grow-1">
-            <Row>
-                <Col>
-                    <h1 className="display-6 mb-4">Setup a Workflow Task</h1>
-                    <p className="display-7">
-                        Submit workflow task for project: <strong>{projectName}</strong>.
-                    </p>
-                    <Container>
-                        <WorkflowTaskForm />
-                    </Container>
-                </Col>
-            </Row>
-        </Container>
-    </div>
+            <Container className="flex-grow-1">
+                <Row>
+                    <Col>
+                        <h1 className="display-6 mb-4">Setup a Workflow Task</h1>
+                        <p className="display-7">
+                            Submit workflow task for project: <strong>{projectName}</strong>.
+                        </p>
+                        <p className="small text-muted mb-2">
+                            Use this form to set up and run a workflow task:
+                        </p>
+                        <ul className="small text-muted list-unstyled">
+                            <li>* Add multiple executors and define their order or dependencies.</li>
+                            <li>* Configure inputs, outputs, and resources for each step.</li>
+                        </ul>
+                        <Container>
+                            <WorkflowTaskForm />
+                        </Container>
+                    </Col>
+                </Row>
+            </Container>
+        </div>
     );
 };
 
