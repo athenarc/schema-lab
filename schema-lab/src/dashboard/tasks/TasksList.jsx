@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import { Link, useNavigate } from "react-router-dom";
@@ -9,7 +9,7 @@ import Table from "react-bootstrap/Table";
 import { useTaskData, useTaskFilters } from "./TasksListProvider";
 import { cloneDeep } from "lodash";
 import TaskStatus from "./TaskStatus";
-import { cancelTaskPost, retrieveTaskDetails, retrieveWorkflowTaskDetails } from "../../api/v1/actions";
+import { cancelTaskPost, cancelWorkflowTaskPost, retrieveTaskDetails, retrieveWorkflowTaskDetails } from "../../api/v1/actions";
 import { UserDetailsContext } from "../../utils/components/auth/AuthProvider";
 
 const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggleSelection, showWorkflowTasks }) => {
@@ -27,12 +27,14 @@ const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggl
 
     const confirmCancelTask = () => {
         // Execute the cancel task only when confirmed
-        handleCancelTask(uuid, userDetails.apiKey);
+        handleCancelTask(uuid, userDetails.apiKey, showWorkflowTasks);
         setShowCancelConfirmation(false); // Close the modal after confirmation
     };
 
-    const handleCancelTask = (taskUUID, auth) => {
-        cancelTaskPost({ taskUUID, auth })
+
+    const handleCancelTask = (taskUUID, auth, showWorkflowTasks) => {
+        const cancelTask = showWorkflowTasks ? cancelWorkflowTaskPost : cancelTaskPost;
+        cancelTask({ taskUUID, auth })
             .then(response => {
                 if (!response.ok) {
                     setAlertMessage(<span>Canceling <strong>{taskUUID}</strong> task failed! Please try again.</span>);
@@ -42,6 +44,14 @@ const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggl
                         setIsAlertActive(false);
                     }, 3000);
                 }
+            })
+            .catch((error) => {
+                setAlertMessage(<span>Canceling <strong>{taskUUID}</strong> task failed! Please try again.</span>);
+                setIsAlertActive(true);
+                setTimeout(() => {
+                    setAlertMessage(null);
+                    setIsAlertActive(false);
+                }, 3000);
             });
     };
 
@@ -66,7 +76,7 @@ const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggl
             
             // Navigate to different path based on showWorkflowTasks state
             showWorkflowTasks
-                ? navigate('/runworkflowtask', { state: { taskData: data } })
+                ? navigate('/runworkflowtask', { state: { taskworkflowdata: data } })
                 : navigate('/runtask', { state: { taskData: data } });
         } catch (error) {
             setError(error.toString());

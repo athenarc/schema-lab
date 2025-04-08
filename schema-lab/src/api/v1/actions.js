@@ -74,7 +74,6 @@ export const runTaskPost = async (apiKey, requestData) => {
             },
             body: JSON.stringify(requestData)
         });
-        console.log("Respone Single ok:",response)
         if (!response.ok) {
             // Handle errors based on response status
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -358,3 +357,19 @@ export const retrieveWorkflowTaskDetails = ({taskUUID, auth}) => {
     });
 }
 
+// Cancel a workflow running task
+export const cancelWorkflowTaskPost = ({taskUUID, auth}) => {
+    const qualifiedUrl=`${config.api.url}/api/workflows/${taskUUID}/cancel`
+    return fetch(
+        qualifiedUrl,
+        {
+            method: "POST",
+            headers: {
+                'Authorization': `Bearer ${auth}`
+            }
+        }
+    ).then(response => {
+        console.log('Cancel request response status:', response.status);
+        return response;
+    });
+}
