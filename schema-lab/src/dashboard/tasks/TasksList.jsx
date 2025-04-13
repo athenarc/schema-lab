@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import { Link, useNavigate } from "react-router-dom";
-import { Tooltip, OverlayTrigger, Dropdown, DropdownButton, Button, Alert, Modal, Form } from 'react-bootstrap';
+import { Tooltip, OverlayTrigger, Dropdown, DropdownButton, Button, Alert, Modal, Form, Tabs, Tab } from 'react-bootstrap';
 import { faArrowDownAZ, faArrowDownZA, faXmark, faArrowRotateRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Table from "react-bootstrap/Table";
@@ -184,9 +184,9 @@ const ColumnOrderToggle = ({ columnName, currentOrder, setOrder }) => {
     const handleSwitchOrder = () => {
         if (active && asc) {
             setOrder(`-${columnName}`);
-            return;
+        } else {
+            setOrder(columnName);
         }
-        setOrder(columnName);
     };
 
     return (
@@ -203,12 +203,11 @@ const ColumnOrderToggle = ({ columnName, currentOrder, setOrder }) => {
 const TaskList = () => {
     const [showWorkflowTasks, setShowWorkflowTasks] = useState(false);
     const { taskData } = useTaskData(showWorkflowTasks);
-    const { taskFilters, setTaskFilters, selectedTasks, setSelectedTasks } = useTaskFilters();
+    const { taskFilters, setTaskFilters } = useTaskFilters();
     const [token, setToken] = useState(taskFilters.token);
     const [statuses, setStatuses] = useState({ ...(taskFilters.statuses) });
     const [typedChar, setTypedChar] = useState();
     const [showValidationMessage, setShowValidationMessage] = useState(false);
-    const [selectedRows, setSelectedRows] = useState([]);
 
     const minCharThreshold = 2;
 
@@ -263,37 +262,30 @@ const TaskList = () => {
     };
 
     const findFilteredTokens = () => {
-        const data = showWorkflowTasks ? taskData : taskData;
-        if (data) {
-            const { count } = data;
-            if (count === 0) {
-                return (
-                    <div className="alert alert-warning text-center" role="alert">
-                        Your search <b>{token}</b> did not match any task!
-                    </div>
-                );
-            }
-        } else {
-            return null;
+        if (taskData && taskData.count === 0) {
+            return (
+                <div className="alert alert-warning text-center" role="alert">
+                    Your search <b>{token}</b> did not match any task!
+                </div>
+            );
         }
+        return null;
     };
-
-    const displayedData = showWorkflowTasks ? taskData : taskData;
 
     return (
         <Row className="p-3 mb-5">
             <Col className="align-items-center">
-                <div className="d-flex align-items-center">
-                    <Form.Switch
-                        id="workflow-switch"
-                        label={<span className="fw-bold">
-                            {showWorkflowTasks ? "Workflow Tasks" : "Single Tasks"}
-                        </span>}
-                        checked={showWorkflowTasks}
-                        onChange={() => setShowWorkflowTasks(!showWorkflowTasks)}
-                    />
-                </div>
-                {displayedData && displayedData.results && (
+                <Tabs
+                    id="task-tabs"
+                    activeKey={showWorkflowTasks ? 'workflow' : 'tasks'}
+                    onSelect={(key) => setShowWorkflowTasks(key === 'workflow')}
+                    className="mb-3 fw-bold"
+                >
+                    <Tab eventKey="tasks" title="Single Tasks" />
+                    <Tab eventKey="workflow" title="Workflow Tasks" />
+                </Tabs>
+
+                {taskData && taskData.results && (
                     <Table borderless responsive hover>
                         <thead>
                             <tr>
@@ -355,7 +347,7 @@ const TaskList = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {displayedData.results.map((task) => (
+                            {taskData.results.map((task) => (
                                 <TaskListing
                                     key={task.uuid}
                                     uuid={task.uuid}
