@@ -4,7 +4,7 @@ import { Link, Outlet } from "react-router-dom";
 import { UserDetailsContext } from "../utils/components/auth/AuthProvider";
 import Footer from './Footer';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChevronDown, faRightToBracket, faFlask, faCodeBranch, faDiagramProject } from "@fortawesome/free-solid-svg-icons";
+import { faChevronDown, faRightToBracket, faFlask, faCodeBranch, faDiagramProject, faFolder } from "@fortawesome/free-solid-svg-icons";
 import { getProjectName } from "../api/v1/actions";
 import config from "../config/config.json";
 
@@ -120,6 +120,14 @@ const Base = (props) => {
                                             { to: "/experiment", text: "About" },
                                         ]}
                                     />
+                                    <Button
+                                        variant="text-primary"
+                                        as={Link}
+                                        to="/files"
+                                        className=" text-primary"
+                                    >
+                                        <FontAwesomeIcon icon={faFolder} className="me-1"/> Files
+                                    </Button>
                                     <Button
                                         variant="text-primary"
                                         as={Link}
