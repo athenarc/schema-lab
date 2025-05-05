@@ -4,6 +4,7 @@ import Home from "./Home";
 import Auth from "./auth";
 import Logout from "./auth/Logout";
 import Dashboard from "./dashboard";
+import Files from "./files";
 import Base from "./layouts/Base";
 import { UserDetailsContext } from "./utils/components/auth/AuthProvider";
 import UserPreferencesView from "./client/ClientPreferencesView";
@@ -57,6 +58,7 @@ const router = createBrowserRouter(
                     <Route index element={<Navigate to="description" />} />
                     <Route path="description" element={<ExperimentDetails />} />
                 </Route>
+                <Route path="/files" element={<Files/>} />
                 <Route path="/task-details/:uuid" element={<Details />}>
                     <Route index element={<Navigate to="executors" />} />
                     <Route path="executors" element={<Executors />} />
