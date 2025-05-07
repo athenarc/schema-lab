@@ -27,11 +27,15 @@ const FilesList = ({ files }) => {
         <Col md={3}>Modified</Col>
         <Col md={2}>Actions</Col>
       </Row>
-
+      {files.length === 0 && (
+        <Row>
+          <Col className="text-center">No files uploaded yet!</Col>
+        </Row>
+      )}
       {files.map((file, index) => (
         <Row
           key={index}
-          className="border rounded p-2 mb-3 flex-column flex-md-row gx-3"
+          className="border rounded p-2 mb-3 mt-3 flex-column flex-md-row gx-3"
         >
           <Col xs={12} md={6} className="text-truncate">
             <div className="fw-bold d-md-none">File Name</div>
