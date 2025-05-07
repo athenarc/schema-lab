@@ -19,7 +19,7 @@ const Files = () => {
   const { userDetails } = useContext(UserDetailsContext); // Ensure this context provides `userDetails`
   const [projectName, setProjectName] = useState(null);
   const [files, setFiles] = useState([]);
-  const [showModal, setShowModal] = useState(false);
+ 
 
   const fetchFiles = useCallback(() => {
     getFiles({ auth: userDetails.apiKey, recursive: "yes" })
@@ -71,21 +71,10 @@ const Files = () => {
         </Col>
       </Row>
       <Row>
-        <FilesList files={files} />
+        <FilesList files={files} userDetails={userDetails} onUploadSuccess={handleUploadSuccess}/>
       </Row>
       <Row>
-        <Col className="col-md-12 text-end">
-          <Button variant="primary" onClick={() => setShowModal(true)}>
-            Upload File
-          </Button>
-        </Col>
-
-        <FileUploadModal
-          show={showModal}
-          onClose={() => setShowModal(false)}
-          userDetails={userDetails?.apiKey}
-          onUploadSuccess={handleUploadSuccess}
-        />
+        <Col className="col-md-12 text-end"></Col>
       </Row>
     </Container>
   );
