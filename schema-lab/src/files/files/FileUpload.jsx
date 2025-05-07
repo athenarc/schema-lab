@@ -25,6 +25,7 @@ const FileUploadModal = ({ show, onClose, userDetails, onUploadSuccess }) => {
 
     try {
       await uploadFile({
+        path: "uploads",
         file,
         auth: userDetails,
         onProgress: (p) => setProgress(p),
@@ -52,7 +53,7 @@ const FileUploadModal = ({ show, onClose, userDetails, onUploadSuccess }) => {
   return (
     <Modal show={show} onHide={handleClose} centered>
       <Modal.Header className="bg-primary text-white" closeButton>
-        <Modal.Title >Upload a File</Modal.Title>
+        <Modal.Title>Upload a File</Modal.Title>
       </Modal.Header>
       <Modal.Body className="m-auto p-4">
         <Form.Group controlId="fileInput">
@@ -61,17 +62,27 @@ const FileUploadModal = ({ show, onClose, userDetails, onUploadSuccess }) => {
         </Form.Group>
 
         {uploading && (
-          <ProgressBar now={progress} label={`${Math.round(progress)}%`} className="my-3" />
+          <ProgressBar
+            now={progress}
+            label={`${Math.round(progress)}%`}
+            className="my-3"
+          />
         )}
 
-        {uploadSuccess && <div className="text-success mt-2">File uploaded successfully!</div>}
+        {uploadSuccess && (
+          <div className="text-success mt-2">File uploaded successfully!</div>
+        )}
         {error && <div className="text-danger mt-2">{error}</div>}
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={handleClose} disabled={uploading}>
           Close
         </Button>
-        <Button variant="primary" onClick={handleUpload} disabled={!file || uploading}>
+        <Button
+          variant="primary"
+          onClick={handleUpload}
+          disabled={!file || uploading}
+        >
           {uploading ? "Uploading..." : "Upload"}
         </Button>
       </Modal.Footer>
