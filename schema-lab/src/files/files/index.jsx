@@ -70,8 +70,23 @@ const Files = () => {
           </h1>
         </Col>
       </Row>
-      
-      
+      <Row>
+        <FilesList files={files} />
+      </Row>
+      <Row>
+        <Col className="col-md-12 text-end">
+          <Button variant="primary" onClick={() => setShowModal(true)}>
+            Upload File
+          </Button>
+        </Col>
+
+        <FileUploadModal
+          show={showModal}
+          onClose={() => setShowModal(false)}
+          userDetails={userDetails?.apiKey}
+          onUploadSuccess={handleUploadSuccess}
+        />
+      </Row>
     </Container>
   );
 };
