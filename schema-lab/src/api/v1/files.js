@@ -12,10 +12,10 @@ export const getFiles = ({ auth, recursive = "yes" }) => {
 };
 
 // Upload a file
-export const uploadFile = ({ file, auth, onProgress }) => {
+export const uploadFile = ({ path, file, auth, onProgress }) => {
   if (!file) throw new Error("No file provided");
 
-  const filePath = `uploads/${file.name}`;
+  const filePath = `${path}/${file.name}`;
   const payload = {
     path: filePath,
     size: file.size,
