@@ -6,23 +6,7 @@ import {
   faArrowDownZA,
 } from "@fortawesome/free-solid-svg-icons";
 import FileUploadModal from "./FileUpload";
-
-const timestampToDateOptions = {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit",
-};
-
-const formatBytes = (bytes) => {
-  if (bytes === 0 || !bytes) return "0 B";
-  const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB", "TB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-};
+import { formatBytes, timestampToDateOptions } from "../utils/utils";
 
 const ColumnSortIcon = ({ columnKey, sortKey, sortOrder }) => {
   const isActive = sortKey === columnKey;
@@ -127,7 +111,15 @@ const FilesList = ({ files, userDetails, onUploadSuccess }) => {
         <Col md={2}>Actions</Col>
       </Row>
 
-      <div className="px-2" style={{ width: "100%", height: "530px", overflowY: "auto", overflowX: "hidden" }}>
+      <div
+        className="px-2"
+        style={{
+          width: "100%",
+          height: "530px",
+          overflowY: "auto",
+          overflowX: "hidden",
+        }}
+      >
         {sortedFiles.length === 0 && (
           <Row>
             <Col className="text-center">No files uploaded yet!</Col>
