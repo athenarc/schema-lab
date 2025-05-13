@@ -141,7 +141,7 @@ const FilesList = ({ files, userDetails, onUploadSuccess }) => {
             <Col xs={12} md={3}>
               <div className="fw-bold d-md-none">Created At</div>
               {new Date(file?.metadata?.ts_modified).toLocaleDateString(
-                undefined,
+                "en",
                 timestampToDateOptions
               )}
             </Col>
