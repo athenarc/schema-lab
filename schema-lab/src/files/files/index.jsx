@@ -1,31 +1,43 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import Row from "react-bootstrap/Row";
 import { UserDetailsContext } from "../../utils/components/auth/AuthProvider";
 import { getFiles } from "../../api/v1/files";
 import FilesList from "./FilesList";
-import FileUploadModal from "./FileUpload";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  Button,
-  Col,
-  Container,
-  OverlayTrigger,
-  Tooltip,
-} from "react-bootstrap";
+import { Col, Container, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { getProjectName } from "../../api/v1/actions";
 import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 
 const Files = () => {
-  const { userDetails } = useContext(UserDetailsContext); // Ensure this context provides `userDetails`
+  const { userDetails } = useContext(UserDetailsContext);
   const [projectName, setProjectName] = useState(null);
   const [files, setFiles] = useState([]);
- 
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const fetchFiles = useCallback(() => {
+    setLoading(true);
     getFiles({ auth: userDetails.apiKey, recursive: "yes" })
-      .then((res) => res.json())
-      .then((data) => setFiles(data))
-      .catch((err) => console.error("Failed to fetch files:", err));
+      .then((res) => {
+        if (!res.ok) {
+          if (res.status === 500) {
+            throw new Error("Internal Server Error (500)");
+          }
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setFiles(data);
+        setError(null);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch files:", err.message);
+        setError(err.message);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [userDetails.apiKey]);
 
   useEffect(() => {
@@ -71,7 +83,13 @@ const Files = () => {
         </Col>
       </Row>
       <Row>
-        <FilesList files={files} userDetails={userDetails} onUploadSuccess={handleUploadSuccess}/>
+        <FilesList
+          files={files}
+          userDetails={userDetails}
+          onUploadSuccess={handleUploadSuccess}
+          error={error}
+          loading={loading}
+        />
       </Row>
       <Row>
         <Col className="col-md-12 text-end"></Col>
