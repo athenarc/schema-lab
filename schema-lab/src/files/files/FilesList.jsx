@@ -7,6 +7,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import FileUploadModal from "./FileUpload";
 import { formatBytes, timestampToDateOptions } from "../utils/utils";
+import { Spinner } from "react-bootstrap";
 
 const ColumnSortIcon = ({ columnKey, sortKey, sortOrder }) => {
   const isActive = sortKey === columnKey;
@@ -20,7 +21,7 @@ const ColumnSortIcon = ({ columnKey, sortKey, sortOrder }) => {
   );
 };
 
-const FilesList = ({ files, userDetails, onUploadSuccess }) => {
+const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
   const [sortKey, setSortKey] = useState("path");
   const [sortOrder, setSortOrder] = useState("asc");
   const [filterName, setFilterName] = useState("");
@@ -120,9 +121,25 @@ const FilesList = ({ files, userDetails, onUploadSuccess }) => {
           overflowX: "hidden",
         }}
       >
-        {sortedFiles.length === 0 && (
+        {loading && (
           <Row>
-            <Col className="text-center">No files uploaded yet!</Col>
+            <Col className="text-center py-4">
+              <Spinner animation="border" role="status" variant="primary" />
+              <div className="mt-2">Loading files...</div>
+            </Col>
+          </Row>
+        )}
+        {sortedFiles.length === 0 && !loading && (
+          <Row>
+            {error ? (
+              <Col className="text-center">
+                <div className="alert alert-danger" role="alert">
+                  {error}
+                </div>
+              </Col>
+            ) : (
+              <Col className="text-center">No files uploaded yet!"</Col>
+            )}
           </Row>
         )}
         {sortedFiles.map((file, index) => (
@@ -152,19 +169,21 @@ const FilesList = ({ files, userDetails, onUploadSuccess }) => {
         ))}
       </div>
 
-      <Row className="mt-3">
-        <Col className="col-md-3 offset-md-9 text-end">
-          <Button variant="primary" onClick={() => setShowModal(true)}>
-            Upload File
-          </Button>
-          <FileUploadModal
-            show={showModal}
-            onClose={() => setShowModal(false)}
-            userDetails={userDetails?.apiKey}
-            onUploadSuccess={onUploadSuccess}
-          />
-        </Col>
-      </Row>
+      {!error && !loading &&(
+        <Row className="mt-3">
+          <Col className="col-md-3 offset-md-9 text-end">
+            <Button variant="primary" onClick={() => setShowModal(true)}>
+              Upload File
+            </Button>
+            <FileUploadModal
+              show={showModal}
+              onClose={() => setShowModal(false)}
+              userDetails={userDetails?.apiKey}
+              onUploadSuccess={onUploadSuccess}
+            />
+          </Col>
+        </Row>
+      )}
     </Container>
   );
 };
