@@ -8,6 +8,9 @@ import {
 import FileUploadModal from "./FileUpload";
 import { formatBytes, timestampToDateOptions } from "../utils/utils";
 import { Spinner } from "react-bootstrap";
+import { faTrash, faPen } from "@fortawesome/free-solid-svg-icons";
+import DeleteConfirmationModal from "./modals/DeleteConfirmationModal";
+import { deleteFile } from "../../api/v1/files";
 
 const ColumnSortIcon = ({ columnKey, sortKey, sortOrder }) => {
   const isActive = sortKey === columnKey;
@@ -22,10 +25,13 @@ const ColumnSortIcon = ({ columnKey, sortKey, sortOrder }) => {
 };
 
 const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState(null);
   const [sortKey, setSortKey] = useState("path");
   const [sortOrder, setSortOrder] = useState("asc");
   const [filterName, setFilterName] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const handleSort = (key) => {
     if (sortKey === key) {
@@ -59,8 +65,40 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
     return 0;
   });
 
+  const handleDelete = async (file) => {
+    setDeleteLoading(true); // Show loading spinner while deleting
+
+    try {
+      await deleteFile({
+        auth: userDetails.apiKey, // Assume userDetails contains the apiKey for auth
+        path: file.path,
+      });
+
+      // On success, filter out the deleted file from the list
+      const updatedFiles = files.filter((f) => f.path !== file.path);
+      onUploadSuccess(updatedFiles); // Update the parent component with the new file list
+      setDeleteLoading(false);
+      setShowDeleteModal(false); // Close the modal
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      setDeleteLoading(false);
+      setShowDeleteModal(false); // Close the modal on error as well
+    }
+  };
+
+  const handleConfirmDelete = (file) => {
+    setFileToDelete(file);
+    setShowDeleteModal(true);
+  };
+
   return (
     <Container fluid className="w-800">
+      <DeleteConfirmationModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onDelete={handleDelete}
+        file={fileToDelete}
+      />
       <Row className="mb-3">
         <Col md={6}>
           <Form.Control
@@ -142,31 +180,42 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
             )}
           </Row>
         )}
-        {sortedFiles.map((file, index) => (
-          <Row
-            key={index}
-            className="border rounded p-2 mb-3 mt-3 flex-column flex-md-row gx-3"
-          >
-            <Col xs={12} md={6} className="text-truncate">
-              <div className="fw-bold d-md-none">File Name</div>
-              {file?.path}
-            </Col>
-            <Col xs={12} md={1}>
-              <div className="fw-bold d-md-none">Size</div>
-              {formatBytes(file?.metadata?.size)}
-            </Col>
-            <Col xs={12} md={3}>
-              <div className="fw-bold d-md-none">Created At</div>
-              {new Date(file?.metadata?.ts_modified).toLocaleDateString(
-                "en",
-                timestampToDateOptions
-              )}
-            </Col>
-            <Col xs={12} md={2}>
-              <div className="fw-bold d-md-none">Actions</div>
-            </Col>
-          </Row>
-        ))}
+        {!loading &&
+          sortedFiles.map((file, index) => (
+            <Row
+              key={index}
+              className="border rounded p-2 mb-3 mt-3 flex-column flex-md-row gx-3 "
+            >
+              <Col xs={12} md={6} className="text-truncate">
+                <div className="fw-bold d-md-none">File Name</div>
+                {file?.path}
+              </Col>
+              <Col xs={12} md={1}>
+                <div className="fw-bold d-md-none">Size</div>
+                {formatBytes(file?.metadata?.size)}
+              </Col>
+              <Col xs={12} md={3}>
+                <div className="fw-bold d-md-none">Created At</div>
+                {new Date(file?.metadata?.ts_modified).toLocaleDateString(
+                  "en",
+                  timestampToDateOptions
+                )}
+              </Col>
+              <Col xs="auto">
+                <div className="fw-bold d-md-none">Actions</div>
+                <div className="d-flex gap-2 mt-2 mt-md-0">
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() => handleConfirmDelete(file)}
+                    disabled={deleteLoading} // Disable the button while deletion is in progress
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </Button>
+                </div>
+              </Col>
+            </Row>
+          ))}
       </div>
 
       {!error && !loading && (
