@@ -169,7 +169,7 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
         ))}
       </div>
 
-      {!error && !loading &&(
+      {!error && !loading && (
         <Row className="mt-3">
           <Col className="col-md-3 offset-md-9 text-end">
             <Button variant="primary" onClick={() => setShowModal(true)}>
