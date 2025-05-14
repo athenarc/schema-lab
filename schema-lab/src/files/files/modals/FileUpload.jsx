@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Modal, Button, ProgressBar, Form } from "react-bootstrap";
-import { uploadFile } from "../../api/v1/files";
+import { uploadFile } from "../../../api/v1/files";
 
 const FileUploadModal = ({ show, onClose, userDetails, onUploadSuccess }) => {
   const [file, setFile] = useState(null);
