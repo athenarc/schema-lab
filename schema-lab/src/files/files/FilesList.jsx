@@ -5,7 +5,7 @@ import {
   faArrowDownAZ,
   faArrowDownZA,
 } from "@fortawesome/free-solid-svg-icons";
-import FileUploadModal from "./FileUpload";
+import FileUploadModal from "./modals/FileUpload";
 import { formatBytes, timestampToDateOptions } from "../utils/utils";
 import { Spinner } from "react-bootstrap";
 import { faTrash, faPen } from "@fortawesome/free-solid-svg-icons";
@@ -64,6 +64,11 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
     if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
     return 0;
   });
+
+  const handleEdit = (file) => {
+    console.log("Edit clicked:", file);
+    // TODO: Open a modal or inline form to edit file metadata
+  };
 
   const handleDelete = async (file) => {
     setDeleteLoading(true); // Show loading spinner while deleting
@@ -204,6 +209,13 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
               <Col xs="auto">
                 <div className="fw-bold d-md-none">Actions</div>
                 <div className="d-flex gap-2 mt-2 mt-md-0">
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => handleEdit(file)}
+                  >
+                    <FontAwesomeIcon icon={faPen} />
+                  </Button>
                   <Button
                     variant="outline-danger"
                     size="sm"
