@@ -11,6 +11,7 @@ import { Spinner } from "react-bootstrap";
 import { faTrash, faPen } from "@fortawesome/free-solid-svg-icons";
 import DeleteConfirmationModal from "./modals/DeleteConfirmationModal";
 import { deleteFile } from "../../api/v1/files";
+import FileEditModal from "./modals/FileEdit";
 
 const ColumnSortIcon = ({ columnKey, sortKey, sortOrder }) => {
   const isActive = sortKey === columnKey;
@@ -30,7 +31,9 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
   const [sortKey, setSortKey] = useState("path");
   const [sortOrder, setSortOrder] = useState("asc");
   const [filterName, setFilterName] = useState("");
-  const [showModal, setShowModal] = useState(false);
+  const [showFileUploadModal, setShowFileUploadModal] = useState(false);
+  const [showFileEditModal, setShowFileEditModal] = useState(false);
+  const [fileToEdit, setFileToEdit] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const handleSort = (key) => {
@@ -65,29 +68,40 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
     return 0;
   });
 
-  const handleEdit = (file) => {
-    console.log("Edit clicked:", file);
-    // TODO: Open a modal or inline form to edit file metadata
+  const handleFileEdit = (file) => {
+    setShowFileEditModal(true);
+    setFileToEdit(file);
   };
 
   const handleDelete = async (file) => {
-    setDeleteLoading(true); // Show loading spinner while deleting
+    setDeleteLoading(true);
 
     try {
       await deleteFile({
-        auth: userDetails.apiKey, // Assume userDetails contains the apiKey for auth
+        auth: userDetails.apiKey,
         path: file.path,
       });
 
-      // On success, filter out the deleted file from the list
       const updatedFiles = files.filter((f) => f.path !== file.path);
-      onUploadSuccess(updatedFiles); // Update the parent component with the new file list
+      onUploadSuccess(updatedFiles);
       setDeleteLoading(false);
-      setShowDeleteModal(false); // Close the modal
+      setShowDeleteModal(false);
     } catch (error) {
       console.error("Error deleting file:", error);
       setDeleteLoading(false);
-      setShowDeleteModal(false); // Close the modal on error as well
+      setShowDeleteModal(false);
+    }
+  };
+
+  const handleUploadSuccess = (updatedFiles) => {
+    setShowFileEditModal(false);
+    setFileToEdit(null);
+    setShowFileUploadModal(false);
+
+    if (updatedFiles) {
+      onUploadSuccess(updatedFiles);
+    } else {
+      onUploadSuccess();
     }
   };
 
@@ -212,7 +226,7 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
                   <Button
                     variant="outline-primary"
                     size="sm"
-                    onClick={() => handleEdit(file)}
+                    onClick={() => handleFileEdit(file)}
                   >
                     <FontAwesomeIcon icon={faPen} />
                   </Button>
@@ -220,7 +234,7 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
                     variant="outline-danger"
                     size="sm"
                     onClick={() => handleConfirmDelete(file)}
-                    disabled={deleteLoading} // Disable the button while deletion is in progress
+                    disabled={deleteLoading}
                   >
                     <FontAwesomeIcon icon={faTrash} />
                   </Button>
@@ -233,14 +247,30 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
       {!error && !loading && (
         <Row className="mt-3">
           <Col className="col-md-3 offset-md-9 text-end">
-            <Button variant="primary" onClick={() => setShowModal(true)}>
+            <Button
+              variant="primary"
+              onClick={() => setShowFileUploadModal(true)}
+            >
               Upload File
             </Button>
             <FileUploadModal
-              show={showModal}
-              onClose={() => setShowModal(false)}
+              show={showFileUploadModal}
+              onClose={() => {
+                setShowFileUploadModal(false);
+              }}
               userDetails={userDetails?.apiKey}
-              onUploadSuccess={onUploadSuccess}
+              onUploadSuccess={handleUploadSuccess}
+            />
+
+            <FileEditModal
+              show={showFileEditModal}
+              onClose={() => {
+                setShowFileEditModal(false);
+                setFileToEdit(null);
+              }}
+              userDetails={userDetails?.apiKey}
+              onUploadSuccess={handleUploadSuccess}
+              file={fileToEdit}
             />
           </Col>
         </Row>

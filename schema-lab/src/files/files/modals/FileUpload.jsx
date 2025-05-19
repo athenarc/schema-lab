@@ -31,7 +31,7 @@ const FileUploadModal = ({ show, onClose, userDetails, onUploadSuccess }) => {
         onProgress: (p) => setProgress(p),
       });
       setUploadSuccess(true);
-      onUploadSuccess?.(); // Trigger refetch of files
+      onUploadSuccess?.();
       setFile(null);
     } catch (err) {
       setError(err.message);
