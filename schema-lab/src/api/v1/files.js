@@ -150,3 +150,42 @@ export const deleteFile = ({ auth, path }) => {
     },
   }).then((response) => response);
 };
+
+export const renameOrMoveFile = ({
+  auth,
+  oldPath,
+  newPath,
+  queryParams = {},
+}) => {
+  const url = new URL(`${config.api.url}/storage/files/${oldPath}`);
+
+  Object.entries(queryParams).forEach(([key, value]) =>
+    url.searchParams.append(key, value)
+  );
+
+  return fetch(url.toString(), {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${auth}`,
+    },
+    body: JSON.stringify({ path: newPath }),
+  }).then(async (response) => {
+    if (!response.ok) {
+      const err = await response.json();
+
+      if (err.detail) {
+        throw new Error(err.detail);
+      }
+
+      if (typeof err === "object") {
+        const messages = Object.values(err).flat().join(" | ");
+        throw new Error(messages);
+      }
+
+      throw new Error("Failed to rename file");
+    }
+
+    return response.json();
+  });
+};
