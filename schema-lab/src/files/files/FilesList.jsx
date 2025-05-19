@@ -8,7 +8,11 @@ import {
 import FileUploadModal from "./modals/FileUpload";
 import { formatBytes, timestampToDateOptions } from "../utils/utils";
 import { Spinner } from "react-bootstrap";
-import { faTrash, faPen } from "@fortawesome/free-solid-svg-icons";
+import {
+  faTrash,
+  faPen,
+  faFileDownload,
+} from "@fortawesome/free-solid-svg-icons";
 import DeleteConfirmationModal from "./modals/DeleteConfirmationModal";
 import { deleteFile, downloadFile } from "../../api/v1/files";
 import FileEditModal from "./modals/FileEdit";
@@ -203,7 +207,7 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
           sortedFiles.map((file, index) => (
             <Row
               key={index}
-              className="border rounded p-2 mb-3 mt-3 flex-column flex-md-row gx-3 "
+              className="border rounded p-2 mb-3 mt-3 flex-column flex-md-row gx-3 align-items-center"
             >
               <Col xs={12} md={6} className="text-truncate">
                 <div className="fw-bold d-md-none">File Name</div>
@@ -247,7 +251,7 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
                       })
                     }
                   >
-                    Download
+                    <FontAwesomeIcon icon={faFileDownload} />
                   </Button>
                 </div>
               </Col>
