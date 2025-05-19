@@ -10,7 +10,7 @@ import { formatBytes, timestampToDateOptions } from "../utils/utils";
 import { Spinner } from "react-bootstrap";
 import { faTrash, faPen } from "@fortawesome/free-solid-svg-icons";
 import DeleteConfirmationModal from "./modals/DeleteConfirmationModal";
-import { deleteFile } from "../../api/v1/files";
+import { deleteFile, downloadFile } from "../../api/v1/files";
 import FileEditModal from "./modals/FileEdit";
 
 const ColumnSortIcon = ({ columnKey, sortKey, sortOrder }) => {
@@ -237,6 +237,17 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
                     disabled={deleteLoading}
                   >
                     <FontAwesomeIcon icon={faTrash} />
+                  </Button>
+                  <Button
+                    variant="outline-primary"
+                    onClick={() =>
+                      downloadFile({
+                        auth: userDetails?.apiKey,
+                        path: file.path,
+                      })
+                    }
+                  >
+                    Download
                   </Button>
                 </div>
               </Col>

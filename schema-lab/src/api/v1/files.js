@@ -189,3 +189,40 @@ export const renameOrMoveFile = ({
     return response.json();
   });
 };
+
+export const getFileDownloadUrl = async ({ auth, path }) => {
+  const encodedPath = encodeURIComponent(path);
+  const url = `${config.api.url}/storage/files/${encodedPath}?action=download`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${auth}`,
+    },
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.detail || "Failed to get download URL");
+  }
+
+  return response.json();
+};
+
+export const downloadFile = async ({ auth, path }) => {
+  try {
+    const { url, path: filePath } = await getFileDownloadUrl({ auth, path });
+
+    const filename = filePath.split("/").pop();
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (err) {
+    console.error("Download failed", err);
+    alert(err.message || "Failed to download file");
+  }
+};
