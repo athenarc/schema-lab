@@ -120,6 +120,7 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
 
   const handleFilePreview = (file) => {
     setShowFilePreviewModal(true);
+    setFileToEdit(file);
   };
   return (
     <Container fluid className="w-800">

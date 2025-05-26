@@ -226,3 +226,34 @@ export const downloadFile = async ({ auth, path }) => {
     alert(err.message || "Failed to download file");
   }
 };
+
+export const getFilePreview = async ({ auth, path }) => {
+  const encodedPath = encodeURIComponent(path);
+  const url = `${config.api.url}/storage/files/preview?path=${encodedPath}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${auth}`,
+    },
+  });
+
+  const contentType = response.headers.get("Content-Type") || "";
+  const isJson = contentType.includes("application/json");
+
+  if (!response.ok) {
+    if (isJson) {
+      const err = await response.json();
+      throw new Error(err.detail || "Failed to get preview");
+    } else {
+      const errText = await response.text();
+      throw new Error(errText || "Non-JSON error");
+    }
+  }
+
+  if (!isJson) {
+    throw new Error("Expected JSON response but received something else");
+  }
+
+  return response.json(); // { type: 'image', url } or { type: 'csv', preview }
+};
