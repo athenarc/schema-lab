@@ -5,6 +5,7 @@ import {
   faArrowDownAZ,
   faArrowDownZA,
 } from "@fortawesome/free-solid-svg-icons";
+
 import FileUploadModal from "./modals/FileUpload";
 import { formatBytes, timestampToDateOptions } from "../utils/utils";
 import { Spinner } from "react-bootstrap";
@@ -12,10 +13,12 @@ import {
   faTrash,
   faPen,
   faFileDownload,
+  faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
 import DeleteConfirmationModal from "./modals/DeleteConfirmationModal";
 import { deleteFile, downloadFile } from "../../api/v1/files";
 import FileEditModal from "./modals/FileEdit";
+import FilePreviewModal from "./modals/FilePreview";
 
 const ColumnSortIcon = ({ columnKey, sortKey, sortOrder }) => {
   const isActive = sortKey === columnKey;
@@ -37,6 +40,7 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
   const [filterName, setFilterName] = useState("");
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [showFileEditModal, setShowFileEditModal] = useState(false);
+  const [showFilePreviewModal, setShowFilePreviewModal] = useState(false);
   const [fileToEdit, setFileToEdit] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
@@ -114,6 +118,9 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
     setShowDeleteModal(true);
   };
 
+  const handleFilePreview = (file) => {
+    setShowFilePreviewModal(true);
+  };
   return (
     <Container fluid className="w-800">
       <DeleteConfirmationModal
@@ -253,6 +260,13 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
                   >
                     <FontAwesomeIcon icon={faFileDownload} />
                   </Button>
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => handleFilePreview(file)}
+                  >
+                    <FontAwesomeIcon icon={faMagnifyingGlass} />
+                  </Button>
                 </div>
               </Col>
             </Row>
@@ -285,6 +299,14 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
               }}
               userDetails={userDetails?.apiKey}
               onUploadSuccess={handleUploadSuccess}
+              file={fileToEdit}
+            />
+            <FilePreviewModal
+              show={showFilePreviewModal}
+              onClose={() => {
+                setShowFilePreviewModal(false);
+              }}
+              userDetails={userDetails?.apiKey}
               file={fileToEdit}
             />
           </Col>
