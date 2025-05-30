@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Container, Row, Col, Button, Form } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Button,
+  Form,
+  Tooltip,
+  OverlayTrigger,
+} from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowDownAZ,
@@ -19,6 +27,12 @@ import DeleteConfirmationModal from "./modals/DeleteConfirmationModal";
 import { deleteFile, downloadFile } from "../../api/v1/files";
 import FileEditModal from "./modals/FileEdit";
 import FilePreviewModal from "./modals/FilePreview";
+
+const isPreviewable = (path) => {
+  if (!path) return false;
+  const ext = path.split(".").pop().toLowerCase();
+  return ["jpg", "jpeg", "png", "gif", "bmp", "webp", "csv"].includes(ext);
+};
 
 const ColumnSortIcon = ({ columnKey, sortKey, sortOrder }) => {
   const isActive = sortKey === columnKey;
@@ -212,66 +226,85 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
           </Row>
         )}
         {!loading &&
-          sortedFiles.map((file, index) => (
-            <Row
-              key={index}
-              className="border rounded p-2 mb-3 mt-3 flex-column flex-md-row gx-3 align-items-center"
-            >
-              <Col xs={12} md={6} className="text-truncate">
-                <div className="fw-bold d-md-none">File Name</div>
-                {file?.path}
-              </Col>
-              <Col xs={12} md={1}>
-                <div className="fw-bold d-md-none">Size</div>
-                {formatBytes(file?.metadata?.size)}
-              </Col>
-              <Col xs={12} md={3}>
-                <div className="fw-bold d-md-none">Created At</div>
-                {new Date(file?.metadata?.ts_modified).toLocaleDateString(
-                  "en",
-                  timestampToDateOptions
-                )}
-              </Col>
-              <Col xs="auto">
-                <div className="fw-bold d-md-none">Actions</div>
-                <div className="d-flex gap-2 mt-2 mt-md-0">
-                  <Button
-                    variant="outline-primary"
-                    size="sm"
-                    onClick={() => handleFileEdit(file)}
-                  >
-                    <FontAwesomeIcon icon={faPen} />
-                  </Button>
-                  <Button
-                    variant="outline-danger"
-                    size="sm"
-                    onClick={() => handleConfirmDelete(file)}
-                    disabled={deleteLoading}
-                  >
-                    <FontAwesomeIcon icon={faTrash} />
-                  </Button>
-                  <Button
-                    variant="outline-primary"
-                    onClick={() =>
-                      downloadFile({
-                        auth: userDetails?.apiKey,
-                        path: file.path,
-                      })
-                    }
-                  >
-                    <FontAwesomeIcon icon={faFileDownload} />
-                  </Button>
-                  <Button
-                    variant="outline-primary"
-                    size="sm"
-                    onClick={() => handleFilePreview(file)}
-                  >
-                    <FontAwesomeIcon icon={faMagnifyingGlass} />
-                  </Button>
-                </div>
-              </Col>
-            </Row>
-          ))}
+          sortedFiles.map((file, index) => {
+            const previewable = isPreviewable(file?.path);
+            return (
+              <Row
+                key={index}
+                className="border rounded p-2 mb-3 mt-3 flex-column flex-md-row gx-3 align-items-center"
+              >
+                <Col xs={12} md={6} className="text-truncate">
+                  <div className="fw-bold d-md-none">File Name</div>
+                  {file?.path}
+                </Col>
+                <Col xs={12} md={1}>
+                  <div className="fw-bold d-md-none">Size</div>
+                  {formatBytes(file?.metadata?.size)}
+                </Col>
+                <Col xs={12} md={3}>
+                  <div className="fw-bold d-md-none">Created At</div>
+                  {new Date(file?.metadata?.ts_modified).toLocaleDateString(
+                    "en",
+                    timestampToDateOptions
+                  )}
+                </Col>
+                <Col xs="auto">
+                  <div className="fw-bold d-md-none">Actions</div>
+                  <div className="d-flex gap-2 mt-2 mt-md-0">
+                    <Button
+                      variant="outline-primary"
+                      size="sm"
+                      onClick={() => handleFileEdit(file)}
+                    >
+                      <FontAwesomeIcon icon={faPen} />
+                    </Button>
+                    <Button
+                      variant="outline-danger"
+                      size="sm"
+                      onClick={() => handleConfirmDelete(file)}
+                      disabled={deleteLoading}
+                    >
+                      <FontAwesomeIcon icon={faTrash} />
+                    </Button>
+                    <Button
+                      variant="outline-primary"
+                      size="sm" // added here (was missing)
+                      onClick={() =>
+                        downloadFile({
+                          auth: userDetails?.apiKey,
+                          path: file.path,
+                        })
+                      }
+                    >
+                      <FontAwesomeIcon icon={faFileDownload} />
+                    </Button>
+                    <OverlayTrigger
+                      placement="bottom"
+                      overlay={
+                        !previewable ? (
+                          <Tooltip id={`tooltip-disabled-${index}`}>
+                            Preview available only for images or CSV files.
+                          </Tooltip>
+                        ) : (
+                          <></>
+                        )
+                      }
+                    >
+                      <Button
+                        variant="outline-primary"
+                        size="sm" // added
+                        onClick={() => handleFilePreview(file)}
+                        disabled={!previewable}
+                        style={!previewable ? { pointerEvents: "none" } : {}}
+                      >
+                        <FontAwesomeIcon icon={faMagnifyingGlass} />
+                      </Button>
+                    </OverlayTrigger>
+                  </div>
+                </Col>
+              </Row>
+            );
+          })}
       </div>
 
       {!error && !loading && (
