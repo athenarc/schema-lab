@@ -46,6 +46,12 @@ const ColumnSortIcon = ({ columnKey, sortKey, sortOrder }) => {
   );
 };
 
+const getFilenameFromPath = (path) => {
+  if (!path) return "";
+  const parts = path.split(/[/\\]/);
+  return parts[parts.length - 1];
+};
+
 const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [fileToDelete, setFileToDelete] = useState(null);
@@ -235,7 +241,7 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
               >
                 <Col xs={12} md={6} className="text-truncate">
                   <div className="fw-bold d-md-none">File Name</div>
-                  {file?.path}
+                  {getFilenameFromPath(file?.path)}
                 </Col>
                 <Col xs={12} md={1}>
                   <div className="fw-bold d-md-none">Size</div>
