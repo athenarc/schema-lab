@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import {
   Container,
   Row,
@@ -130,7 +130,7 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
       await uploadFile({
         path: "uploads",
         file,
-        auth: userDetails.apiKey,
+        auth: userDetails?.apiKey,
         onProgress: (p) => setUploadProgress(p),
         signal: controller.signal,
       });
@@ -438,14 +438,14 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
         onClose={() => setShowFileEditModal(false)}
         file={fileToEdit}
         onUpdateSuccess={onUploadSuccess}
-        userDetails={userDetails}
+        userDetails={userDetails?.apiKey}
       />
 
       <FilePreviewModal
         show={showFilePreviewModal}
         onClose={() => setShowFilePreviewModal(false)}
         file={fileToEdit}
-        userDetails={userDetails}
+        userDetails={userDetails?.apiKey}
       />
     </Container>
   );
