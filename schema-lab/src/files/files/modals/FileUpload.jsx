@@ -1,63 +1,27 @@
 import { useState } from "react";
-import { Modal, Button, ProgressBar, Form, Alert } from "react-bootstrap";
-import { uploadFile } from "../../../api/v1/files";
+import { Modal, Button, Form } from "react-bootstrap";
 import { fileOverwrite } from "../../utils/utils";
 
-const FileUploadModal = ({
-  show,
-  onClose,
-  userDetails,
-  onUploadSuccess,
-  files = [],
-}) => {
+const FileUploadModal = ({ show, onClose, files = [], onFileSelected }) => {
   const [file, setFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [error, setError] = useState("");
-  const [progress, setProgress] = useState(0);
   const [isOverwrite, setIsOverwrite] = useState(false);
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     setFile(selectedFile);
-    setUploadSuccess(false);
-    setError("");
-    setProgress(0);
     setIsOverwrite(fileOverwrite({ fileToUpload: selectedFile, files }));
   };
 
-  const handleUpload = async () => {
-    if (!file) return;
-
-    setUploading(true);
-    setError("");
-    setUploadSuccess(false);
-
-    try {
-      await uploadFile({
-        path: "uploads",
-        file,
-        auth: userDetails,
-        onProgress: (p) => setProgress(p),
-      });
-      setUploadSuccess(true);
-      onUploadSuccess?.();
+  const handleUploadClick = () => {
+    if (file) {
+      onFileSelected(file);
       setFile(null);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setUploading(false);
     }
   };
 
   const handleClose = () => {
-    if (!uploading) {
-      setFile(null);
-      setError("");
-      setProgress(0);
-      setUploadSuccess(false);
-      onClose();
-    }
+    if (!file) setIsOverwrite(false);
+    onClose();
   };
 
   return (
@@ -89,30 +53,13 @@ const FileUploadModal = ({
             </div>
           </div>
         )}
-
-        {uploading && (
-          <ProgressBar
-            now={progress}
-            label={`${Math.round(progress)}%`}
-            className="my-3"
-          />
-        )}
-
-        {uploadSuccess && (
-          <div className="text-success mt-2">File uploaded successfully!</div>
-        )}
-        {error && <div className="text-danger mt-2">{error}</div>}
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose} disabled={uploading}>
+        <Button variant="secondary" onClick={handleClose}>
           Close
         </Button>
-        <Button
-          variant="primary"
-          onClick={handleUpload}
-          disabled={!file || uploading}
-        >
-          {uploading ? "Uploading..." : "Upload"}
+        <Button variant="primary" onClick={handleUploadClick} disabled={!file}>
+          Upload
         </Button>
       </Modal.Footer>
     </Modal>
