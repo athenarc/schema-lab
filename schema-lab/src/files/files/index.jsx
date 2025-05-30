@@ -63,7 +63,7 @@ const Files = () => {
       <Row>
         <Col>
           <h1 className="display-6">
-            Project Files{" "}
+            Files{" "}
             <OverlayTrigger
               placement="right"
               overlay={
