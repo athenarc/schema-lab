@@ -9,13 +9,14 @@ import {
   OverlayTrigger,
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faArrowDownAZ,
-  faArrowDownZA,
-} from "@fortawesome/free-solid-svg-icons";
-
 import FileUploadModal from "./modals/FileUpload";
-import { formatBytes, timestampToDateOptions } from "../utils/utils";
+import {
+  ColumnSortIcon,
+  formatBytes,
+  getFilenameFromPath,
+  isPreviewable,
+  timestampToDateOptions,
+} from "../utils/utils";
 import { Spinner } from "react-bootstrap";
 import {
   faTrash,
@@ -27,30 +28,6 @@ import DeleteConfirmationModal from "./modals/DeleteConfirmationModal";
 import { deleteFile, downloadFile } from "../../api/v1/files";
 import FileEditModal from "./modals/FileEdit";
 import FilePreviewModal from "./modals/FilePreview";
-
-const isPreviewable = (path) => {
-  if (!path) return false;
-  const ext = path.split(".").pop().toLowerCase();
-  return ["jpg", "jpeg", "png", "gif", "bmp", "webp", "csv"].includes(ext);
-};
-
-const ColumnSortIcon = ({ columnKey, sortKey, sortOrder }) => {
-  const isActive = sortKey === columnKey;
-  const isAsc = sortOrder === "asc";
-  const icon = isActive && isAsc ? faArrowDownZA : faArrowDownAZ;
-  return (
-    <FontAwesomeIcon
-      icon={icon}
-      className={`ms-1 ${isActive ? "text-primary" : "text-muted"}`}
-    />
-  );
-};
-
-const getFilenameFromPath = (path) => {
-  if (!path) return "";
-  const parts = path.split(/[/\\]/);
-  return parts[parts.length - 1];
-};
 
 const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -329,6 +306,7 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
               }}
               userDetails={userDetails?.apiKey}
               onUploadSuccess={handleUploadSuccess}
+              files={sortedFiles}
             />
 
             <FileEditModal
