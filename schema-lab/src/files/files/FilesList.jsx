@@ -253,15 +253,47 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
       {uploadError && (
         <Row>
           <Col md={12}>
-            <div className="alert alert-danger">{uploadError}</div>
+            <div className="alert alert-danger d-flex justify-content-between align-items-center">
+              <div>{uploadError}</div>
+              <div>
+                <Button
+                  variant="outline-light"
+                  size="sm"
+                  className="me-2"
+                  onClick={() => startUpload(selectedFile)}
+                >
+                  Retry
+                </Button>
+                <Button
+                  variant="outline-light"
+                  size="sm"
+                  onClick={() => {
+                    setUploadError("");
+                    setSelectedFile(null);
+                  }}
+                >
+                  &times;
+                </Button>
+              </div>
+            </div>
           </Col>
         </Row>
       )}
       {uploadSuccess && (
         <Row>
           <Col md={12}>
-            <div className="alert alert-success">
-              File uploaded successfully!
+            <div className="alert alert-success d-flex justify-content-between align-items-center">
+              <div>File uploaded successfully!</div>
+              <Button
+                variant="outline-light"
+                size="sm"
+                onClick={() => {
+                  setUploadSuccess(false);
+                  setSelectedFile(null);
+                }}
+              >
+                &times;
+              </Button>
             </div>
           </Col>
         </Row>
