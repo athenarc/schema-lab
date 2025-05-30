@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { Modal, Button, Spinner, Alert, Table } from "react-bootstrap";
+import {
+  Modal,
+  Button,
+  Spinner,
+  Alert,
+  Table,
+  Row,
+  Col,
+  Card,
+} from "react-bootstrap";
 import { getFilePreview } from "../../../api/v1/files";
 
 const FilePreviewModal = ({ show, onClose, userDetails, file }) => {
@@ -36,11 +45,31 @@ const FilePreviewModal = ({ show, onClose, userDetails, file }) => {
     fetchPreview();
   }, [show, file?.path, userDetails]);
 
+  const renderMetadata = (metadata) => {
+    if (!metadata || Object.keys(metadata).length === 0) return null;
+
+    return (
+      <Card className="mb-3">
+        <Card.Header className="bg-light fw-bold">File Metadata</Card.Header>
+        <Card.Body>
+          <Row>
+            {Object.entries(metadata).map(([key, value]) => (
+              <Col sm={6} md={4} lg={3} key={key} className="mb-2">
+                <strong>{key}:</strong> <span>{value}</span>
+              </Col>
+            ))}
+          </Row>
+        </Card.Body>
+      </Card>
+    );
+  };
+
   const renderCsvTable = (rows) => {
     const hasHeader = rows.length > 1;
+
     return (
       <div style={{ maxHeight: "400px", overflowY: "auto" }}>
-        <Table striped bordered hover size="sm" responsive>
+        <Table responsive className="csv-preview-table">
           <thead>
             {hasHeader && (
               <tr>
@@ -60,6 +89,44 @@ const FilePreviewModal = ({ show, onClose, userDetails, file }) => {
             ))}
           </tbody>
         </Table>
+
+        {/* Add custom styles */}
+        <style>{`
+        .csv-preview-table {
+          border-collapse: separate;
+          border-spacing: 0;
+          width: 100%;
+        }
+
+        .csv-preview-table thead tr {
+          background-color: #f8f9fa;
+          position: sticky;
+          top: 0;
+          z-index: 1;
+        }
+
+        .csv-preview-table th,
+        .csv-preview-table td {
+          padding: 0.75rem 1rem;
+          border-bottom: 1px solid #dee2e6;
+          white-space: nowrap;
+        }
+
+        .csv-preview-table tbody tr:hover {
+          background-color: #f1f3f5;
+        }
+
+        .csv-preview-table td {
+          color: #343a40;
+          font-size: 0.9rem;
+        }
+
+        .csv-preview-table th {
+          font-weight: 600;
+          color: #212529;
+          font-size: 0.95rem;
+        }
+      `}</style>
       </div>
     );
   };
@@ -67,21 +134,26 @@ const FilePreviewModal = ({ show, onClose, userDetails, file }) => {
   const renderPreviewContent = () => {
     if (!previewData) return null;
 
-    if (previewData.type === "image") {
-      return (
-        <img
-          src={previewData.url}
-          alt="File Preview"
-          style={{ maxWidth: "100%", maxHeight: "400px", borderRadius: "4px" }}
-        />
-      );
-    }
+    return (
+      <>
+        {renderMetadata(previewData.metadata)}
 
-    if (previewData.type === "csv") {
-      return renderCsvTable(previewData.preview);
-    }
-
-    return <Alert variant="warning">Unsupported file type.</Alert>;
+        {previewData.type === "image" ? (
+          <div className="text-center">
+            <img
+              src={previewData.url}
+              alt="File Preview"
+              className="img-fluid rounded shadow-sm"
+              style={{ maxHeight: "400px" }}
+            />
+          </div>
+        ) : previewData.type === "csv" ? (
+          renderCsvTable(previewData.preview)
+        ) : (
+          <Alert variant="warning">Unsupported file type.</Alert>
+        )}
+      </>
+    );
   };
 
   return (
@@ -95,14 +167,13 @@ const FilePreviewModal = ({ show, onClose, userDetails, file }) => {
         </Modal.Title>
       </Modal.Header>
 
-      <Modal.Body
-        className="d-flex justify-content-center align-items-center"
-        style={{ minHeight: "250px" }}
-      >
+      <Modal.Body style={{ minHeight: "250px" }}>
         {loading ? (
-          <Spinner animation="border" variant="primary" />
+          <div className="d-flex justify-content-center align-items-center py-4">
+            <Spinner animation="border" variant="primary" />
+          </div>
         ) : error ? (
-          <Alert variant="danger" className="w-100 text-center">
+          <Alert variant="danger" className="text-center">
             {error}
           </Alert>
         ) : (
