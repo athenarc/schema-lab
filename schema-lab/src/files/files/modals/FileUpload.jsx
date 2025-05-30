@@ -1,20 +1,7 @@
 import { useState } from "react";
 import { Modal, Button, ProgressBar, Form, Alert } from "react-bootstrap";
 import { uploadFile } from "../../../api/v1/files";
-import { getFilenameFromPath } from "../../utils/utils";
-
-const fileOverwrite = ({ fileToUpload, files }) => {
-  if (!fileToUpload) return false;
-
-  // Get base name of fileToUpload.name (should be just the filename)
-  const uploadFileName = getFilenameFromPath(fileToUpload.name);
-
-  return files.some((existing) => {
-    // Extract base filename from existing.name (strip path)
-    const existingFileName = getFilenameFromPath(existing?.path);
-    return existingFileName === uploadFileName;
-  });
-};
+import { fileOverwrite } from "../../utils/utils";
 
 const FileUploadModal = ({
   show,
