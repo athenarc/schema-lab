@@ -11,7 +11,7 @@ export const getFiles = ({ auth, recursive = "yes" }) => {
   }).then((response) => response);
 };
 
-export const uploadFile = ({ path, file, auth, onProgress }) => {
+export const uploadFile = ({ path, file, auth, onProgress, signal }) => {
   if (!file) throw new Error("No file provided");
 
   const filePath = `${path}/${file.name}`;
@@ -21,6 +21,17 @@ export const uploadFile = ({ path, file, auth, onProgress }) => {
   };
 
   return new Promise((resolve, reject) => {
+    // Listen for abort early (before starting upload)
+    if (signal?.aborted) {
+      reject(new Error("Upload aborted"));
+      return;
+    }
+
+    const onAbort = () => {
+      reject(new Error("Upload aborted"));
+    };
+    signal?.addEventListener("abort", onAbort);
+
     fetch(`${config.api.url}/storage/files`, {
       method: "POST",
       headers: {
@@ -32,11 +43,15 @@ export const uploadFile = ({ path, file, auth, onProgress }) => {
       .then((res) => res.json())
       .then(async (data) => {
         const { upload_info } = data;
+
         if (upload_info.type === "multipart") {
           const parts = upload_info.urls.parts;
           const uploadResults = [];
           const partProgress = new Array(parts.length).fill(0);
 
+          let aborted = false;
+
+          // Helper to wrap XMLHttpRequest with abort support
           const uploadPart = (partInfo, index) => {
             const start = index * partInfo.n_bytes;
             const end = Math.min(start + partInfo.n_bytes, file.size);
@@ -45,6 +60,14 @@ export const uploadFile = ({ path, file, auth, onProgress }) => {
             return new Promise((res, rej) => {
               const xhr = new XMLHttpRequest();
               xhr.open("PUT", partInfo.url, true);
+
+              // Abort xhr if signal aborts
+              const abortHandler = () => {
+                aborted = true;
+                xhr.abort();
+                rej(new Error("Upload aborted"));
+              };
+              signal?.addEventListener("abort", abortHandler);
 
               xhr.upload.addEventListener("progress", (e) => {
                 if (e.lengthComputable) {
@@ -56,6 +79,7 @@ export const uploadFile = ({ path, file, auth, onProgress }) => {
               });
 
               xhr.onload = () => {
+                signal?.removeEventListener("abort", abortHandler);
                 if (xhr.status === 200) {
                   const etag = xhr.getResponseHeader("ETag");
                   if (!etag) {
@@ -72,15 +96,26 @@ export const uploadFile = ({ path, file, auth, onProgress }) => {
                 }
               };
 
-              xhr.onerror = () =>
+              xhr.onerror = () => {
+                signal?.removeEventListener("abort", abortHandler);
                 rej(new Error(`Part ${partInfo.part} failed`));
+              };
+
+              xhr.onabort = () => {
+                signal?.removeEventListener("abort", abortHandler);
+                rej(new Error("Upload aborted"));
+              };
+
               xhr.send(blob);
             });
           };
 
           for (let i = 0; i < parts.length; i++) {
+            if (aborted) break;
             await uploadPart(parts[i], i);
           }
+
+          if (aborted) return;
 
           // Finalize multipart upload with XML body
           const xmlBody =
@@ -105,11 +140,19 @@ export const uploadFile = ({ path, file, auth, onProgress }) => {
             throw new Error("Failed to finalize multipart upload");
           }
 
+          signal?.removeEventListener("abort", onAbort);
           resolve({ success: true });
         } else {
           // Simple upload (non-multipart)
           const xhr = new XMLHttpRequest();
           xhr.open("PUT", upload_info.url, true);
+
+          // Abort handler for simple upload
+          const abortHandler = () => {
+            xhr.abort();
+            reject(new Error("Upload aborted"));
+          };
+          signal?.addEventListener("abort", abortHandler);
 
           xhr.upload.addEventListener("progress", (e) => {
             if (e.lengthComputable) {
@@ -119,14 +162,24 @@ export const uploadFile = ({ path, file, auth, onProgress }) => {
           });
 
           xhr.onload = () => {
+            signal?.removeEventListener("abort", abortHandler);
             if (xhr.status === 200) {
+              signal?.removeEventListener("abort", onAbort);
               resolve({ success: true });
             } else {
               reject(new Error(`Failed to upload file`));
             }
           };
 
-          xhr.onerror = () => reject(new Error(`Failed to upload file`));
+          xhr.onerror = () => {
+            signal?.removeEventListener("abort", abortHandler);
+            reject(new Error(`Failed to upload file`));
+          };
+
+          xhr.onabort = () => {
+            signal?.removeEventListener("abort", abortHandler);
+            reject(new Error("Upload aborted"));
+          };
 
           for (const [key, value] of Object.entries(
             upload_info.headers || {}
@@ -137,7 +190,10 @@ export const uploadFile = ({ path, file, auth, onProgress }) => {
           xhr.send(file);
         }
       })
-      .catch(reject);
+      .catch((err) => {
+        signal?.removeEventListener("abort", onAbort);
+        reject(err);
+      });
   });
 };
 
