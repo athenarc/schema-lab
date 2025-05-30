@@ -1,19 +1,42 @@
 import { useState } from "react";
-import { Modal, Button, ProgressBar, Form } from "react-bootstrap";
+import { Modal, Button, ProgressBar, Form, Alert } from "react-bootstrap";
 import { uploadFile } from "../../../api/v1/files";
+import { getFilenameFromPath } from "../../utils/utils";
 
-const FileUploadModal = ({ show, onClose, userDetails, onUploadSuccess }) => {
+const fileOverwrite = ({ fileToUpload, files }) => {
+  if (!fileToUpload) return false;
+
+  // Get base name of fileToUpload.name (should be just the filename)
+  const uploadFileName = getFilenameFromPath(fileToUpload.name);
+
+  return files.some((existing) => {
+    // Extract base filename from existing.name (strip path)
+    const existingFileName = getFilenameFromPath(existing?.path);
+    return existingFileName === uploadFileName;
+  });
+};
+
+const FileUploadModal = ({
+  show,
+  onClose,
+  userDetails,
+  onUploadSuccess,
+  files = [],
+}) => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
+  const [isOverwrite, setIsOverwrite] = useState(false);
 
   const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
+    const selectedFile = event.target.files[0];
+    setFile(selectedFile);
     setUploadSuccess(false);
     setError("");
     setProgress(0);
+    setIsOverwrite(fileOverwrite({ fileToUpload: selectedFile, files }));
   };
 
   const handleUpload = async () => {
@@ -60,6 +83,25 @@ const FileUploadModal = ({ show, onClose, userDetails, onUploadSuccess }) => {
           <Form.Label>Select a file to upload</Form.Label>
           <Form.Control type="file" onChange={handleFileChange} />
         </Form.Group>
+
+        {isOverwrite && file && (
+          <div
+            className="alert alert-warning d-flex flex-column p-3 rounded mt-4"
+            role="alert"
+            style={{ fontSize: "0.95rem", lineHeight: 1.4 }}
+          >
+            <div className="mb-1" style={{ fontWeight: "600" }}>
+              Warning: File Name Conflict
+            </div>
+            <div>
+              A file named{" "}
+              <span className="fw-bold text-decoration-underline">
+                {file.name}
+              </span>{" "}
+              already exists. Uploading will overwrite the existing file.
+            </div>
+          </div>
+        )}
 
         {uploading && (
           <ProgressBar

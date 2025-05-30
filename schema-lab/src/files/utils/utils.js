@@ -1,3 +1,9 @@
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faArrowDownAZ,
+  faArrowDownZA,
+} from "@fortawesome/free-solid-svg-icons";
+
 const timestampToDateOptions = {
   year: "2-digit",
   month: "2-digit",
@@ -15,4 +21,34 @@ const formatBytes = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
-export { timestampToDateOptions, formatBytes };
+const isPreviewable = (path) => {
+  if (!path) return false;
+  const ext = path.split(".").pop().toLowerCase();
+  return ["jpg", "jpeg", "png", "gif", "bmp", "webp", "csv"].includes(ext);
+};
+
+const ColumnSortIcon = ({ columnKey, sortKey, sortOrder }) => {
+  const isActive = sortKey === columnKey;
+  const isAsc = sortOrder === "asc";
+  const icon = isActive && isAsc ? faArrowDownZA : faArrowDownAZ;
+  return (
+    <FontAwesomeIcon
+      icon={icon}
+      className={`ms-1 ${isActive ? "text-primary" : "text-muted"}`}
+    />
+  );
+};
+
+const getFilenameFromPath = (path) => {
+  if (!path) return "";
+  const parts = path.split(/[/\\]/);
+  return parts[parts.length - 1];
+};
+
+export {
+  timestampToDateOptions,
+  formatBytes,
+  isPreviewable,
+  ColumnSortIcon,
+  getFilenameFromPath,
+};
