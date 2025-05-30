@@ -45,10 +45,24 @@ const getFilenameFromPath = (path) => {
   return parts[parts.length - 1];
 };
 
+const fileOverwrite = ({ fileToUpload, files }) => {
+  if (!fileToUpload) return false;
+
+  // Get base name of fileToUpload.name (should be just the filename)
+  const uploadFileName = getFilenameFromPath(fileToUpload.name);
+
+  return files.some((existing) => {
+    // Extract base filename from existing.name (strip path)
+    const existingFileName = getFilenameFromPath(existing?.path);
+    return existingFileName === uploadFileName;
+  });
+};
+
 export {
   timestampToDateOptions,
   formatBytes,
   isPreviewable,
   ColumnSortIcon,
   getFilenameFromPath,
+  fileOverwrite,
 };
