@@ -219,8 +219,7 @@ export const deleteFile = ({ auth, path }) => {
 
       throw new Error("Failed to delete file");
     }
-
-    return response.json();
+    return response;
   });
 };
 
@@ -258,8 +257,7 @@ export const renameOrMoveFile = ({
 
       throw new Error("Failed to rename file");
     }
-
-    return response.json();
+    return response;
   });
 };
 
