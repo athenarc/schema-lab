@@ -313,3 +313,24 @@ export const getFilePreview = async ({ auth, path }) => {
 
   return response.json(); // { type: 'image', url } or { type: 'csv', preview }
 };
+
+export async function unzipFile({ auth, zip_path, destination_path }) {
+  const qualifiedUrl = `${config.api.url}/storage/files/unzip/`;
+
+  const response = await fetch(qualifiedUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${auth}`,
+    },
+    body: JSON.stringify({ zip_path, destination_path }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+
+    throw new Error(errorData?.message || "Failed to unzip file");
+  }
+
+  return await response.json();
+}

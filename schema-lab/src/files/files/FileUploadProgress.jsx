@@ -12,6 +12,10 @@ export default function FileUploadProgress({
   isOverwrite,
   cancelUpload,
   startUpload,
+  unzipError,
+  setUnzipError,
+  unzipSuccess,
+  setUnzipSuccess,
 }) {
   return (
     <>
@@ -72,19 +76,42 @@ export default function FileUploadProgress({
           </Col>
         </Row>
       )}
+      {unzipError && (
+        <Row className="mt-3">
+          <Col>
+            <div className="alert alert-danger d-flex justify-content-between align-items-center mb-0 px-3 py-2">
+              <span style={{ fontSize: "0.9rem" }}>{unzipError}</span>
+              <div>
+                <Button
+                  variant="outline-light"
+                  size="sm"
+                  onClick={() => {
+                    setUnzipError("");
+                    setSelectedFile(null);
+                  }}
+                >
+                  ×
+                </Button>
+              </div>
+            </div>
+          </Col>
+        </Row>
+      )}
 
-      {uploadSuccess && (
+      {(uploadSuccess || unzipSuccess) && (
         <Row className="mt-3">
           <Col>
             <div className="alert alert-success d-flex justify-content-between align-items-center mb-0 px-3 py-2">
               <span style={{ fontSize: "0.9rem" }}>
-                File uploaded successfully!
+                {uploadSuccess && "File uploaded successfully!"}
+                {unzipSuccess && "File unzipped successfully!"}
               </span>
               <Button
                 variant="outline-light"
                 size="sm"
                 onClick={() => {
                   setUploadSuccess(false);
+                  setUnzipSuccess(false);
                   setSelectedFile(null);
                 }}
               >
