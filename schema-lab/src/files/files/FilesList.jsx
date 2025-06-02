@@ -32,21 +32,23 @@ import FilePreviewModal from "./modals/FilePreview";
 import FileUploadProgress from "./FileUploadProgress";
 import FileUnzipper from "./FileUnzipper";
 
-const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
+const FilesList = ({ files, userDetails, onFetchFiles, error, loading }) => {
+  // Delete states
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [fileToDelete, setFileToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteSuccess, setDeleteSuccess] = useState(false);
+  const [deleteError, setDeleteError] = useState(false);
 
+  // Filtering states
   const [sortKey, setSortKey] = useState("path");
   const [sortOrder, setSortOrder] = useState("asc");
-
   const [filterName, setFilterName] = useState("");
 
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [showFileEditModal, setShowFileEditModal] = useState(false);
   const [showFilePreviewModal, setShowFilePreviewModal] = useState(false);
   const [fileToEdit, setFileToEdit] = useState(null);
-
-  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Upload states
   const [uploading, setUploading] = useState(false);
@@ -56,6 +58,8 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isOverwrite, setIsOverwrite] = useState(false);
   const [uploadAbortController, setUploadAbortController] = useState(null);
+
+  // Unzip states
   const [unzipError, setUnzipError] = useState("");
   const [unzipSuccess, setUnzipSuccess] = useState(false);
 
@@ -110,21 +114,24 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
   const handleDelete = useCallback(
     async (file) => {
       setDeleteLoading(true);
+      setDeleteError("");
+      setDeleteSuccess(false);
       try {
         await deleteFile({
-          auth: userDetails.apiKey,
-          path: file.path,
+          auth: userDetails?.apiKey,
+          path: file?.path,
         });
-        const updatedFiles = files.filter((f) => f.path !== file.path);
-        onUploadSuccess(updatedFiles);
+
+        setDeleteSuccess(true);
       } catch (err) {
-        console.error("Error deleting file:", err);
+        setDeleteError(err?.message || "Delete failed");
       } finally {
+        onFetchFiles();
         setDeleteLoading(false);
         setShowDeleteModal(false);
       }
     },
-    [files, onUploadSuccess, userDetails.apiKey]
+    [onFetchFiles, userDetails?.apiKey]
   );
 
   const handleFilePreview = useCallback((file) => {
@@ -156,7 +163,6 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
         setUploadProgress(100);
         setUploadSuccess(true);
         setSelectedFile(null);
-        onUploadSuccess();
       } catch (err) {
         if (err.name === "AbortError") {
           setUploadError("Upload cancelled by user");
@@ -166,9 +172,10 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
       } finally {
         setUploading(false);
         setUploadAbortController(null);
+        onFetchFiles();
       }
     },
-    [onUploadSuccess, userDetails?.apiKey]
+    [onFetchFiles, userDetails?.apiKey]
   );
 
   const cancelUpload = useCallback(() => {
@@ -261,6 +268,10 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
         setUnzipError={setUnzipError}
         unzipSuccess={unzipSuccess}
         setUnzipSuccess={setUnzipSuccess}
+        deleteError={deleteError}
+        setDeleteError={setDeleteError}
+        deleteSuccess={deleteSuccess}
+        setDeleteSuccess={setDeleteSuccess}
       />
 
       <div
@@ -376,7 +387,7 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
                     <FileUnzipper
                       filePath={file.path}
                       apiKey={userDetails?.apiKey}
-                      onUnzipSuccess={onUploadSuccess}
+                      onUnzipSuccess={onFetchFiles}
                       setUnzipError={setUnzipError}
                       setUnzipSuccess={setUnzipSuccess}
                     />
@@ -413,7 +424,7 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
         show={showFileEditModal}
         onClose={() => setShowFileEditModal(false)}
         file={fileToEdit}
-        onUpdateSuccess={onUploadSuccess}
+        onUpdateSuccess={onFetchFiles}
         userDetails={userDetails?.apiKey}
       />
 
