@@ -202,7 +202,7 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
         </Col>
       </Row>
 
-      <Row className="fw-bold border-bottom pb-2 mb-2 d-none d-md-flex">
+      <Row className="fw-bold border-bottom pb-2 mb-1 d-none d-md-flex">
         <Col
           md={6}
           onClick={() => handleSort("path")}
