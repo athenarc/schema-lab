@@ -54,7 +54,7 @@ const Files = () => {
   useEffect(() => {
     fetchFiles();
   }, [fetchFiles]);
-  const handleUploadSuccess = () => {
+  const handleFetchFiles = () => {
     fetchFiles();
   };
 
@@ -86,7 +86,7 @@ const Files = () => {
         <FilesList
           files={files}
           userDetails={userDetails}
-          onUploadSuccess={handleUploadSuccess}
+          onFetchFiles={handleFetchFiles}
           error={error}
           loading={loading}
         />
