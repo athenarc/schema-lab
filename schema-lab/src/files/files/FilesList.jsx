@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   Container,
   Row,
@@ -7,7 +7,6 @@ import {
   Form,
   Tooltip,
   OverlayTrigger,
-  ProgressBar,
   Spinner,
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -18,6 +17,7 @@ import {
   getFilenameFromPath,
   isPreviewable,
   timestampToDateOptions,
+  fileOverwrite,
 } from "../utils/utils";
 import {
   faTrash,
@@ -29,20 +29,25 @@ import DeleteConfirmationModal from "./modals/DeleteConfirmationModal";
 import { deleteFile, downloadFile, uploadFile } from "../../api/v1/files";
 import FileEditModal from "./modals/FileEdit";
 import FilePreviewModal from "./modals/FilePreview";
-import { fileOverwrite } from "../utils/utils";
+import FileUploadProgress from "./FileUploadProgress";
 
 const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [fileToDelete, setFileToDelete] = useState(null);
+
   const [sortKey, setSortKey] = useState("path");
   const [sortOrder, setSortOrder] = useState("asc");
+
   const [filterName, setFilterName] = useState("");
+
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [showFileEditModal, setShowFileEditModal] = useState(false);
   const [showFilePreviewModal, setShowFilePreviewModal] = useState(false);
   const [fileToEdit, setFileToEdit] = useState(null);
+
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Upload states
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -51,118 +56,131 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
   const [isOverwrite, setIsOverwrite] = useState(false);
   const [uploadAbortController, setUploadAbortController] = useState(null);
 
-  const handleSort = (key) => {
-    if (sortKey === key) {
-      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-    } else {
-      setSortKey(key);
-      setSortOrder("asc");
-    }
-  };
+  // Memoized filtered and sorted files
+  const filteredFiles = useMemo(() => {
+    const lowerFilter = filterName.toLowerCase();
+    return files.filter((file) =>
+      file.path.toLowerCase().includes(lowerFilter)
+    );
+  }, [files, filterName]);
 
-  const filteredFiles = files.filter((file) =>
-    file.path.toLowerCase().includes(filterName.toLowerCase())
+  const sortedFiles = useMemo(() => {
+    return [...filteredFiles].sort((a, b) => {
+      const getVal = (file) =>
+        sortKey === "size"
+          ? file.metadata?.size
+          : sortKey === "ts_modified"
+          ? file.metadata?.ts_modified
+          : file[sortKey];
+
+      const aValue = getVal(a);
+      const bValue = getVal(b);
+
+      if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [filteredFiles, sortKey, sortOrder]);
+
+  const handleSort = useCallback(
+    (key) => {
+      if (sortKey === key) {
+        setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+      } else {
+        setSortKey(key);
+        setSortOrder("asc");
+      }
+    },
+    [sortKey]
   );
 
-  const sortedFiles = [...filteredFiles].sort((a, b) => {
-    const aValue =
-      sortKey === "size"
-        ? a.metadata?.size
-        : sortKey === "ts_modified"
-        ? a.metadata?.ts_modified
-        : a[sortKey];
-    const bValue =
-      sortKey === "size"
-        ? b.metadata?.size
-        : sortKey === "ts_modified"
-        ? b.metadata?.ts_modified
-        : b[sortKey];
-
-    if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
-    if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
-    return 0;
-  });
-
-  const handleFileEdit = (file) => {
-    setShowFileEditModal(true);
+  const handleFileEdit = useCallback((file) => {
     setFileToEdit(file);
-  };
+    setShowFileEditModal(true);
+  }, []);
 
-  const handleDelete = async (file) => {
-    setDeleteLoading(true);
-    try {
-      await deleteFile({
-        auth: userDetails.apiKey,
-        path: file.path,
-      });
-      const updatedFiles = files.filter((f) => f.path !== file.path);
-      onUploadSuccess(updatedFiles);
-    } catch (error) {
-      console.error("Error deleting file:", error);
-    } finally {
-      setDeleteLoading(false);
-      setShowDeleteModal(false);
-    }
-  };
-
-  const handleConfirmDelete = (file) => {
+  const handleConfirmDelete = useCallback((file) => {
     setFileToDelete(file);
     setShowDeleteModal(true);
-  };
+  }, []);
 
-  const handleFilePreview = (file) => {
-    setShowFilePreviewModal(true);
-    setFileToEdit(file);
-  };
-
-  const startUpload = async (file) => {
-    if (!file) return;
-
-    const controller = new AbortController();
-    setUploadAbortController(controller);
-
-    setUploading(true);
-    setUploadProgress(0);
-    setUploadError("");
-    setUploadSuccess(false);
-
-    try {
-      await uploadFile({
-        path: "uploads",
-        file,
-        auth: userDetails?.apiKey,
-        onProgress: (p) => setUploadProgress(p),
-        signal: controller.signal,
-      });
-
-      setUploadProgress(100);
-      setUploadSuccess(true);
-      setSelectedFile(null);
-      onUploadSuccess();
-    } catch (err) {
-      if (err.name === "AbortError") {
-        setUploadError("Upload cancelled by user");
-      } else {
-        setUploadError(err.message || "Upload failed");
+  const handleDelete = useCallback(
+    async (file) => {
+      setDeleteLoading(true);
+      try {
+        await deleteFile({
+          auth: userDetails.apiKey,
+          path: file.path,
+        });
+        const updatedFiles = files.filter((f) => f.path !== file.path);
+        onUploadSuccess(updatedFiles);
+      } catch (err) {
+        console.error("Error deleting file:", err);
+      } finally {
+        setDeleteLoading(false);
+        setShowDeleteModal(false);
       }
-    } finally {
-      setUploading(false);
-      setUploadAbortController(null);
-    }
-  };
+    },
+    [files, onUploadSuccess, userDetails.apiKey]
+  );
 
-  const cancelUpload = () => {
-    if (uploadAbortController) {
-      uploadAbortController.abort();
-    }
-  };
+  const handleFilePreview = useCallback((file) => {
+    setFileToEdit(file);
+    setShowFilePreviewModal(true);
+  }, []);
 
-  const handleFileSelected = (file) => {
-    setSelectedFile(file);
-    setIsOverwrite(fileOverwrite({ fileToUpload: file, files }));
-    setShowFileUploadModal(false);
-    startUpload(file);
-  };
+  const startUpload = useCallback(
+    async (file) => {
+      if (!file) return;
+
+      const controller = new AbortController();
+      setUploadAbortController(controller);
+
+      setUploading(true);
+      setUploadProgress(0);
+      setUploadError("");
+      setUploadSuccess(false);
+
+      try {
+        await uploadFile({
+          path: "uploads",
+          file,
+          auth: userDetails?.apiKey,
+          onProgress: (p) => setUploadProgress(p),
+          signal: controller.signal,
+        });
+
+        setUploadProgress(100);
+        setUploadSuccess(true);
+        setSelectedFile(null);
+        onUploadSuccess();
+      } catch (err) {
+        if (err.name === "AbortError") {
+          setUploadError("Upload cancelled by user");
+        } else {
+          setUploadError(err.message || "Upload failed");
+        }
+      } finally {
+        setUploading(false);
+        setUploadAbortController(null);
+      }
+    },
+    [onUploadSuccess, userDetails?.apiKey]
+  );
+
+  const cancelUpload = useCallback(() => {
+    uploadAbortController?.abort();
+  }, [uploadAbortController]);
+
+  const handleFileSelected = useCallback(
+    (file) => {
+      setSelectedFile(file);
+      setIsOverwrite(fileOverwrite({ fileToUpload: file, files }));
+      setShowFileUploadModal(false);
+      startUpload(file);
+    },
+    [files, startUpload]
+  );
 
   return (
     <Container fluid className="w-800">
@@ -224,80 +242,19 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
         <Col md={2}>Actions</Col>
       </Row>
 
-      {uploading && (
-        <Row className="mb-3 align-items-center">
-          <Col md={10}>
-            <ProgressBar
-              now={uploadProgress}
-              label={`${Math.round(uploadProgress)}%`}
-              animated
-              striped
-            />
-            {isOverwrite && selectedFile && (
-              <div
-                className="alert alert-warning mt-2"
-                style={{ fontSize: "0.9rem" }}
-              >
-                Warning: Uploading <strong>{selectedFile.name}</strong> will
-                overwrite an existing file with the same name.
-              </div>
-            )}
-          </Col>
-          <Col md={2} className="text-end">
-            <Button variant="outline-danger" size="sm" onClick={cancelUpload}>
-              Cancel
-            </Button>
-          </Col>
-        </Row>
-      )}
-      {uploadError && (
-        <Row>
-          <Col md={12}>
-            <div className="alert alert-danger d-flex justify-content-between align-items-center">
-              <div>{uploadError}</div>
-              <div>
-                <Button
-                  variant="outline-light"
-                  size="sm"
-                  className="me-2"
-                  onClick={() => startUpload(selectedFile)}
-                >
-                  Retry
-                </Button>
-                <Button
-                  variant="outline-light"
-                  size="sm"
-                  onClick={() => {
-                    setUploadError("");
-                    setSelectedFile(null);
-                  }}
-                >
-                  &times;
-                </Button>
-              </div>
-            </div>
-          </Col>
-        </Row>
-      )}
-      {uploadSuccess && (
-        <Row>
-          <Col md={12}>
-            <div className="alert alert-success d-flex justify-content-between align-items-center">
-              <div>File uploaded successfully!</div>
-              <Button
-                variant="outline-light"
-                size="sm"
-                onClick={() => {
-                  setUploadSuccess(false);
-                  setSelectedFile(null);
-                }}
-              >
-                &times;
-              </Button>
-            </div>
-          </Col>
-        </Row>
-      )}
+      <FileUploadProgress
+        uploading={uploading}
+        selectedFile={selectedFile}
+        uploadError={uploadError}
+        uploadSuccess={uploadSuccess}
+        setUploadError={setUploadError}
+        setSelectedFile={setSelectedFile}
+        setUploadSuccess={setUploadSuccess}
+        uploadProgress={uploadProgress}
+        isOverwrite={isOverwrite}
+        cancelUpload={cancelUpload}
+        startUpload={startUpload}
+      />
 
       <div
         className="px-2"
@@ -316,25 +273,25 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
             </Col>
           </Row>
         )}
-        {sortedFiles.length === 0 && !loading && (
+        {!loading && sortedFiles.length === 0 && (
           <Row>
-            {error ? (
-              <Col className="text-center">
+            <Col className="text-center">
+              {error ? (
                 <div className="alert alert-danger" role="alert">
                   {error}
                 </div>
-              </Col>
-            ) : (
-              <Col className="text-center">No files uploaded yet!</Col>
-            )}
+              ) : (
+                "No files uploaded yet!"
+              )}
+            </Col>
           </Row>
         )}
         {!loading &&
-          sortedFiles.map((file, index) => {
+          sortedFiles.map((file) => {
             const previewable = isPreviewable(file?.path);
             return (
               <Row
-                key={index}
+                key={file.path}
                 className="border rounded p-2 mb-3 mt-3 flex-column flex-md-row gx-3 align-items-center"
               >
                 <Col xs={12} md={6} className="text-truncate">
@@ -386,7 +343,7 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
                       placement="bottom"
                       overlay={
                         !previewable ? (
-                          <Tooltip id={`tooltip-disabled-${index}`}>
+                          <Tooltip id={`tooltip-disabled-${file.path}`}>
                             Preview available only for images or CSV files.
                           </Tooltip>
                         ) : (
