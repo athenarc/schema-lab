@@ -30,6 +30,7 @@ import { deleteFile, downloadFile, uploadFile } from "../../api/v1/files";
 import FileEditModal from "./modals/FileEdit";
 import FilePreviewModal from "./modals/FilePreview";
 import FileUploadProgress from "./FileUploadProgress";
+import FileUnzipper from "./FileUnzipper";
 
 const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -55,6 +56,8 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isOverwrite, setIsOverwrite] = useState(false);
   const [uploadAbortController, setUploadAbortController] = useState(null);
+  const [unzipError, setUnzipError] = useState("");
+  const [unzipSuccess, setUnzipSuccess] = useState(false);
 
   // Memoized filtered and sorted files
   const filteredFiles = useMemo(() => {
@@ -254,6 +257,10 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
         isOverwrite={isOverwrite}
         cancelUpload={cancelUpload}
         startUpload={startUpload}
+        unzipError={unzipError}
+        setUnzipError={setUnzipError}
+        unzipSuccess={unzipSuccess}
+        setUnzipSuccess={setUnzipSuccess}
       />
 
       <div
@@ -309,9 +316,13 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
                     timestampToDateOptions
                   )}
                 </Col>
-                <Col xs="auto">
+                <Col xs="auto" style={{ minWidth: "max-content" }}>
                   <div className="fw-bold d-md-none">Actions</div>
-                  <div className="d-flex gap-2 mt-2 mt-md-0">
+
+                  <div
+                    className="d-flex gap-2"
+                    style={{ flexWrap: "nowrap", marginTop: 0 }}
+                  >
                     <Button
                       variant="outline-primary"
                       size="sm"
@@ -361,6 +372,14 @@ const FilesList = ({ files, userDetails, onUploadSuccess, error, loading }) => {
                         <FontAwesomeIcon icon={faMagnifyingGlass} />
                       </Button>
                     </OverlayTrigger>
+
+                    <FileUnzipper
+                      filePath={file.path}
+                      apiKey={userDetails?.apiKey}
+                      onUnzipSuccess={onUploadSuccess}
+                      setUnzipError={setUnzipError}
+                      setUnzipSuccess={setUnzipSuccess}
+                    />
                   </div>
                 </Col>
               </Row>
