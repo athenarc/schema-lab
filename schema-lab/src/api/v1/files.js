@@ -204,7 +204,24 @@ export const deleteFile = ({ auth, path }) => {
     headers: {
       Authorization: `Bearer ${auth}`,
     },
-  }).then((response) => response);
+  }).then(async (response) => {
+    if (!response.ok) {
+      const err = await response.json();
+
+      if (err.detail) {
+        throw new Error(err.detail);
+      }
+
+      if (typeof err === "object") {
+        const messages = Object.values(err).flat().join(" | ");
+        throw new Error(messages);
+      }
+
+      throw new Error("Failed to delete file");
+    }
+
+    return response.json();
+  });
 };
 
 export const renameOrMoveFile = ({
