@@ -6,7 +6,7 @@ const FileUploadModal = ({
   show,
   onClose,
   userDetails,
-  onUploadSuccess,
+  onUpdateSuccess,
   file,
 }) => {
   const [renaming, setRenaming] = useState(false);
@@ -86,7 +86,7 @@ const FileUploadModal = ({
       });
 
       setRenameSuccess(true);
-      onUploadSuccess?.();
+      onUpdateSuccess?.();
     } catch (err) {
       setError(err.message || "Rename failed");
       console.error(err);
