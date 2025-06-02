@@ -17,7 +17,7 @@ const FileUnzipper = ({
   const canUnzip = filePath?.toLowerCase().endsWith(".zip");
 
   const handleUnzip = async () => {
-    setUnzipError(null);
+    setUnzipError(false);
     setUnzipSuccess(false);
     setUnzipping(true);
     try {
@@ -26,10 +26,12 @@ const FileUnzipper = ({
         zip_path: filePath,
         destination_path: "/",
       });
+      setUnzipError(false);
       setUnzipSuccess(true);
       onUnzipSuccess();
     } catch (err) {
       setUnzipError(err.message || "Failed to unzip file");
+      setUnzipSuccess(false);
     } finally {
       setUnzipping(false);
     }
