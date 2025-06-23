@@ -49,7 +49,7 @@ const TaskListDetails = () => {
                     ...prev,
                     name: data.name,
                     execution_order: data.execution_order,
-                    status: data.state?.[data.state.length - 1]?.status || "Unknown",
+                    status: data.status_history?.[data.status_history.length - 1]?.status || "Unknown",
                     executors: data.executors,
                     inputs: data.inputs,
                     outputs: data.outputs,
