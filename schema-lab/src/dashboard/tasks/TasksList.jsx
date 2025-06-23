@@ -332,6 +332,7 @@ const TaskList = () => {
                                         <Dropdown.Item eventKey='submitted'><TaskStatus status='SUBMITTED' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='approved'><TaskStatus status='APPROVED' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='scheduled'><TaskStatus status='SCHEDULED' /></Dropdown.Item>
+                                        <Dropdown.Item eventKey='queued'><TaskStatus status='QUEUED' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='running'><TaskStatus status='RUNNING' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='completed'><TaskStatus status='COMPLETED' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='error'><TaskStatus status='ERROR' /></Dropdown.Item>
