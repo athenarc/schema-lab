@@ -119,9 +119,9 @@ const ExperimentDetails = () => {
                                                             to={`/task-details/${task.uuid}/executors`} state={{ from: 'experiments', creator: `${experimentDetails.creator}`, name: `${experimentDetails.name}` }}>
                                                             {task.uuid}</Link>
                                                         </td>
-                                                        <td><TaskStatus status={task.state.status} /></td>
+                                                        <td><TaskStatus status={task.current_status.status} /></td>
                                                         {/* <td>{new Date(task.submitted_at).toLocaleString('en')}</td> */}
-                                                        <td>{new Date(task.state.updated_at).toLocaleString('en')}</td>
+                                                        <td>{new Date(task.current_status.updated_at).toLocaleString('en')}</td>
                                                     </tr>
                                                 ))
                                             )}
