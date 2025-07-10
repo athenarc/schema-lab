@@ -18,6 +18,7 @@ const TaskStatus = (props) => {
             icon = faFileCircleXmark;
             break;
         case "SCHEDULED":
+        case "QUEUED":
             icon = faStopwatch;
             color = "text-success";
             break;

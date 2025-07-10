@@ -259,9 +259,9 @@ const ExperimentTaskList = () => {
                                 <ExperimentTaskListing
                                     key={task.uuid}
                                     uuid={task.uuid}
-                                    status={task.state.status}
+                                    status={task.current_status.status}
                                     submitted_at={task.submitted_at}
-                                    updated_at={task.state.updated_at}
+                                    updated_at={task.current_status.updated_at}
                                     isSelected={selectedTasks.some(t => t.uuid === task.uuid)}
                                     toggleSelection={() => toggleRowSelection(task)}
                                 />

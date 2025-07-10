@@ -332,6 +332,7 @@ const TaskList = () => {
                                         <Dropdown.Item eventKey='submitted'><TaskStatus status='SUBMITTED' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='approved'><TaskStatus status='APPROVED' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='scheduled'><TaskStatus status='SCHEDULED' /></Dropdown.Item>
+                                        <Dropdown.Item eventKey='queued'><TaskStatus status='QUEUED' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='running'><TaskStatus status='RUNNING' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='completed'><TaskStatus status='COMPLETED' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='error'><TaskStatus status='ERROR' /></Dropdown.Item>
@@ -351,9 +352,9 @@ const TaskList = () => {
                                 <TaskListing
                                     key={task.uuid}
                                     uuid={task.uuid}
-                                    status={task.state.status}
+                                    status={task.current_status.status}
                                     submitted_at={task.submitted_at}
-                                    updated_at={task.state.updated_at}
+                                    updated_at={task.current_status.updated_at}
                                     showWorkflowTasks={showWorkflowTasks}
                                 />
                             ))}
