@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
+import Card from "react-bootstrap/Card";
 import { useNavigate } from "react-router-dom";
 import { useTaskFilters } from "../../TasksListProvider";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -19,34 +20,43 @@ const TasksFilterControls = () => {
     };
 
     return (
-        <Row className="mt-3 align-items-center">
-            <Col>
-                <div className="bg-light py-2 px-3 rounded">
-                    <div className="d-flex justify-content-between align-items-center">
-                        <h6 className="d-inline mb-0">
-                            <FontAwesomeIcon icon={faArrowAltCircleRight} className="ms-2" /> 
-                            &nbsp;Select Tasks and click <b>Create</b> to submit Experiment:
-                        </h6>
-                        <OverlayTrigger
-                            placement="top"
-                            overlay={<Tooltip id="button-tooltip">Select at least one task to create an experiment</Tooltip>}
-                        >
-                        <div>
-                            <Button
-                                ref={elementRef}
-                                onClick={handleCreateExperiment}
-                                variant="outline-primary"
-                                disabled={selectedTasks.length === 0}
-                                className="ms-auto"
-                            >
-                                Create
-                            </Button>
-                        </div>
-                        </OverlayTrigger>
-                    </div>
+        <Card className="shadow-sm mt-3">
+            <Card.Header as="h6" className="fw-semibold">
+                <FontAwesomeIcon
+                    icon={faArrowAltCircleRight}
+                    className="me-2 text-primary"
+                />
+                Create Experiment
+            </Card.Header>
+            <Card.Body className="d-flex justify-content-between align-items-center">
+                <div>
+                    <small className="text-muted">
+                        Select a <b>Completed</b> task or workflow. Then, click <b>Create</b> to submit your experiment.
+                    </small>
                 </div>
-            </Col>
-        </Row>
+
+                <OverlayTrigger
+                    placement="top"
+                    overlay={
+                        <Tooltip id="button-tooltip">
+                            Select at least one task to create an experiment
+                        </Tooltip>
+                    }
+                >
+                    <div>
+                        <Button
+                            ref={elementRef}
+                            onClick={handleCreateExperiment}
+                            variant="outline-primary"
+                            disabled={selectedTasks.length === 0}
+                            className="ms-auto"
+                        >
+                            Create
+                        </Button>
+                    </div>
+                </OverlayTrigger>
+            </Card.Body>
+        </Card>
     );
 };
 

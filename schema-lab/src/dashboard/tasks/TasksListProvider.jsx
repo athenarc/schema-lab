@@ -23,7 +23,7 @@ export const useTaskFilters = () => {
     return { taskFilters, setTaskFilters, selectedTasks, setSelectedTasks };
 };
 
-const TasksListProvider = ({ children }) => {
+const TasksListProvider = ({ children, initialFilters = {} }) => {
     const { clientPreferences } = useClientPreferences();
     const { pageSize } = clientPreferences;
 
@@ -33,6 +33,7 @@ const TasksListProvider = ({ children }) => {
         statuses: {},
         order: "-submitted_at",
         page: 0,
+        ...initialFilters,
     });
     const [isWorkflowView, setIsWorkflowView] = useState(false);
     const [selectedTasks, setSelectedTasks] = useState([]);
