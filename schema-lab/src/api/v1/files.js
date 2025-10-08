@@ -283,50 +283,25 @@ export const getFileDownloadUrl = async ({ auth, path }) => {
 export const downloadFile = async ({ auth, path }) => {
   try {
     const { url, path: filePath } = await getFileDownloadUrl({ auth, path });
+    const filename = filePath.split("\\").pop();
 
-    const filename = filePath.split("/").pop();
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Download failed");
+
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
 
     const link = document.createElement("a");
-    link.href = url;
+    link.href = blobUrl;
     link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(blobUrl);
   } catch (err) {
     console.error("Download failed", err);
     alert(err.message || "Failed to download file");
   }
-};
-
-export const getFilePreview = async ({ auth, path }) => {
-  const encodedPath = encodeURIComponent(path);
-  const url = `${config.api.url}/storage/files/preview?path=${encodedPath}`;
-
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${auth}`,
-    },
-  });
-
-  const contentType = response.headers.get("Content-Type") || "";
-  const isJson = contentType.includes("application/json");
-
-  if (!response.ok) {
-    if (isJson) {
-      const err = await response.json();
-      throw new Error(err.detail || "Failed to get preview");
-    } else {
-      const errText = await response.text();
-      throw new Error(errText || "Non-JSON error");
-    }
-  }
-
-  if (!isJson) {
-    throw new Error("Expected JSON response but received something else");
-  }
-
-  return response.json(); // { type: 'image', url } or { type: 'csv', preview }
 };
 
 export async function unzipFile({ auth, zip_path, destination_path }) {
@@ -348,4 +323,62 @@ export async function unzipFile({ auth, zip_path, destination_path }) {
   }
 
   return await response.json();
+}
+
+export async function getFileTypePreview({ auth, path }) {
+  const { url } = await getFileDownloadUrl({ auth, path });
+
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("Failed to fetch file");
+
+  const blob = await response.blob();
+
+  // Read first 8 bytes for magic number check
+  const arrayBuffer = await blob.slice(0, 8).arrayBuffer();
+  const bytes = new Uint8Array(arrayBuffer);
+
+  // Magic bytes check for png
+  const isPng =
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47 &&
+    bytes[4] === 0x0d &&
+    bytes[5] === 0x0a &&
+    bytes[6] === 0x1a &&
+    bytes[7] === 0x0a;
+
+  const isJpg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+
+  const isGif =
+    bytes[0] === 0x47 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x38;
+
+  if (isPng || isJpg || isGif) {
+    return {
+      type: "image",
+      previewUrl: URL.createObjectURL(blob),
+      mime: blob.type || "image/*",
+    };
+  }
+
+  // If not an image, try to read as text
+  const text = await blob.text();
+
+  const isCsv = text.includes(",") && text.includes("\n");
+
+  if (isCsv) {
+    const previewLines = text.split(/\r?\n/).slice(0, 10).join("\n");
+
+    return {
+      type: "csv",
+      previewText: previewLines,
+    };
+  }
+
+  return {
+    type: "unknown",
+  };
 }

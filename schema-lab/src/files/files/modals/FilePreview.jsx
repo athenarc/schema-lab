@@ -9,7 +9,7 @@ import {
   Col,
   Card,
 } from "react-bootstrap";
-import { getFilePreview } from "../../../api/v1/files";
+import { getFileTypePreview } from "../../../api/v1/files";
 
 const FilePreviewModal = ({ show, onClose, userDetails, file }) => {
   const [loading, setLoading] = useState(false);
@@ -30,7 +30,7 @@ const FilePreviewModal = ({ show, onClose, userDetails, file }) => {
       setError("");
       setPreviewData(null);
       try {
-        const result = await getFilePreview({
+        const result = await getFileTypePreview({
           auth: userDetails,
           path: file.path,
         });
@@ -64,7 +64,20 @@ const FilePreviewModal = ({ show, onClose, userDetails, file }) => {
     );
   };
 
-  const renderCsvTable = (rows) => {
+  const parseCsvPreview = (text) => {
+    if (!text) return [];
+    return text
+      .split(/\r?\n/)
+      .filter(Boolean)
+      .map((line) =>
+        line.split(",").map((cell) => cell.trim())
+      );
+  };
+
+  const renderCsvTable = (previewText) => {
+    const rows = parseCsvPreview(previewText);
+    if (rows.length === 0) return <div>No CSV data to preview.</div>;
+
     const hasHeader = rows.length > 1;
 
     return (
@@ -89,44 +102,37 @@ const FilePreviewModal = ({ show, onClose, userDetails, file }) => {
             ))}
           </tbody>
         </Table>
-
-        {/* Add custom styles */}
         <style>{`
-        .csv-preview-table {
-          border-collapse: separate;
-          border-spacing: 0;
-          width: 100%;
-        }
-
-        .csv-preview-table thead tr {
-          background-color: #f8f9fa;
-          position: sticky;
-          top: 0;
-          z-index: 1;
-        }
-
-        .csv-preview-table th,
-        .csv-preview-table td {
-          padding: 0.75rem 1rem;
-          border-bottom: 1px solid #dee2e6;
-          white-space: nowrap;
-        }
-
-        .csv-preview-table tbody tr:hover {
-          background-color: #f1f3f5;
-        }
-
-        .csv-preview-table td {
-          color: #343a40;
-          font-size: 0.9rem;
-        }
-
-        .csv-preview-table th {
-          font-weight: 600;
-          color: #212529;
-          font-size: 0.95rem;
-        }
-      `}</style>
+          .csv-preview-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+          }
+          .csv-preview-table thead tr {
+            background-color: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+          }
+          .csv-preview-table th,
+          .csv-preview-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #dee2e6;
+            white-space: nowrap;
+          }
+          .csv-preview-table tbody tr:hover {
+            background-color: #f1f3f5;
+          }
+          .csv-preview-table td {
+            color: #343a40;
+            font-size: 0.9rem;
+          }
+          .csv-preview-table th {
+            font-weight: 600;
+            color: #212529;
+            font-size: 0.95rem;
+          }
+        `}</style>
       </div>
     );
   };
@@ -141,14 +147,14 @@ const FilePreviewModal = ({ show, onClose, userDetails, file }) => {
         {previewData.type === "image" ? (
           <div className="text-center">
             <img
-              src={previewData.url}
+              src={previewData.previewUrl}
               alt="File Preview"
               className="img-fluid rounded shadow-sm"
               style={{ maxHeight: "400px" }}
             />
           </div>
         ) : previewData.type === "csv" ? (
-          renderCsvTable(previewData.preview)
+          renderCsvTable(previewData.previewText)
         ) : (
           <Alert variant="warning">Unsupported file type.</Alert>
         )}
