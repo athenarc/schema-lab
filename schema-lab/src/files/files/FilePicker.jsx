@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import {
   Card,
+  Form,
+  InputGroup,
   Spinner,
   Row,
   Col,
@@ -9,10 +11,15 @@ import {
   Button,
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFolder, faRedo } from "@fortawesome/free-solid-svg-icons";
+import {
+  faFolder,
+  faRedo,
+  faSearch,
+  faCheckSquare,
+  faSquareXmark,
+} from "@fortawesome/free-solid-svg-icons";
 import { getFiles } from "../../api/v1/files";
 import { formatBytes, timestampToDateOptions } from "../utils/utils";
-import { IconBase } from "react-icons/lib";
 
 export function FileCard({ file, isSelected, onToggle }) {
   return (
@@ -82,11 +89,81 @@ export function FileCard({ file, isSelected, onToggle }) {
   );
 }
 
-export function FilesList({ files, selectedFiles, toggleFile }) {
+export function FilesList({
+  files,
+  selectedFiles,
+  toggleFile,
+  setSelectedFiles,
+}) {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredFiles = useMemo(() => {
+    if (!searchTerm) return files;
+    const lower = searchTerm.toLowerCase();
+    return files.filter((f) => f.path.toLowerCase().includes(lower));
+  }, [files, searchTerm]);
+
+  const allSelected =
+    filteredFiles.length > 0 &&
+    filteredFiles.every((file) =>
+      selectedFiles.some((f) => f?.path === file?.path)
+    );
+
+  const handleSelectAll = () => {
+    if (allSelected) {
+      setSelectedFiles((prev) =>
+        prev.filter((f) => !filteredFiles.some((file) => file.path === f.path))
+      );
+    } else {
+      const newFiles = filteredFiles.filter(
+        (file) => !selectedFiles.some((f) => f.path === file.path)
+      );
+      setSelectedFiles((prev) => [...prev, ...newFiles]);
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedFiles([]);
+  };
+
   return (
     <Container fluid className="p-2 mb-3">
+      <Row className="align-items-center mb-3">
+        <Col xs={12} md={6} className="mb-2 mb-md-0">
+          <InputGroup>
+            <InputGroup.Text className="bg-light">
+              <FontAwesomeIcon icon={faSearch} />
+            </InputGroup.Text>
+            <Form.Control
+              placeholder="Search files..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </InputGroup>
+        </Col>
+
+        <Col
+          xs={12}
+          md={6}
+          className="d-flex justify-content-md-end gap-2 flex-wrap"
+        >
+          <Button
+            variant={allSelected ? "outline-secondary" : "outline-primary"}
+            onClick={handleSelectAll}
+          >
+            <FontAwesomeIcon icon={faCheckSquare} className="me-1" />
+            {allSelected ? "Deselect All" : "Select All"}
+          </Button>
+
+          <Button variant="outline-danger" onClick={handleClearSelection}>
+            <FontAwesomeIcon icon={faSquareXmark} className="me-1" />
+            Clear
+          </Button>
+        </Col>
+      </Row>
+
       <Row xs={1} sm={2} md={3} lg={4} className="g-3">
-        {files.map((file, index) => {
+        {filteredFiles.map((file, index) => {
           const isSelected = selectedFiles.some((f) => f?.path === file?.path);
           return (
             <Col key={index}>
@@ -99,11 +176,20 @@ export function FilesList({ files, selectedFiles, toggleFile }) {
           );
         })}
       </Row>
+
+      {filteredFiles.length === 0 && (
+        <div className="text-center text-muted mt-3">No files found.</div>
+      )}
     </Container>
   );
 }
 
-export function Folders({ files, selectedFiles, toggleFile }) {
+export function Folders({
+  files,
+  selectedFiles,
+  toggleFile,
+  setSelectedFiles,
+}) {
   const [selectedFolder, setSelectedFolder] = useState(null);
 
   const folders = Array.from(
@@ -153,6 +239,7 @@ export function Folders({ files, selectedFiles, toggleFile }) {
         <FilesList
           files={filesInSelectedFolder}
           selectedFiles={selectedFiles}
+          setSelectedFiles={setSelectedFiles}
           toggleFile={toggleFile}
         />
       </Col>
@@ -264,6 +351,7 @@ export default function FilePicker({ userDetails }) {
           <Folders
             files={files}
             selectedFiles={selectedFiles}
+            setSelectedFiles={setSelectedFiles}
             toggleFile={toggleFile}
           />
         )}
