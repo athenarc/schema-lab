@@ -127,8 +127,8 @@ export function FilesList({
   };
 
   return (
-    <Container fluid className="p-2 mb-3">
-      <Row className="align-items-center mb-3">
+    <Container fluid className="p-2 mb-3 ">
+      <Row className="align-items-center mb-3 pb-3 border-bottom">
         <Col xs={12} md={6} className="mb-2 mb-md-0">
           <InputGroup>
             <InputGroup.Text className="bg-light">
@@ -162,7 +162,14 @@ export function FilesList({
         </Col>
       </Row>
 
-      <Row xs={1} sm={2} md={3} lg={4} className="g-3">
+      <Row
+        xs={1}
+        sm={2}
+        md={3}
+        lg={4}
+        className="py-2 g-3 overflow-y-auto"
+        style={{ maxHeight: "200px" }}
+      >
         {filteredFiles.map((file, index) => {
           const isSelected = selectedFiles.some((f) => f?.path === file?.path);
           return (
