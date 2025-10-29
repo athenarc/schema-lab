@@ -93,7 +93,7 @@ export function FilesList({
   files,
   selectedFiles,
   toggleFile,
-  setSelectedFiles,
+  handleSetSelectedFiles,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -111,19 +111,19 @@ export function FilesList({
 
   const handleSelectAll = () => {
     if (allSelected) {
-      setSelectedFiles((prev) =>
+      handleSetSelectedFiles((prev) =>
         prev.filter((f) => !filteredFiles.some((file) => file.path === f.path))
       );
     } else {
       const newFiles = filteredFiles.filter(
         (file) => !selectedFiles.some((f) => f.path === file.path)
       );
-      setSelectedFiles((prev) => [...prev, ...newFiles]);
+      handleSetSelectedFiles((prev) => [...prev, ...newFiles]);
     }
   };
 
   const handleClearSelection = () => {
-    setSelectedFiles([]);
+    handleSetSelectedFiles([]);
   };
 
   return (
@@ -195,7 +195,7 @@ export function Folders({
   files,
   selectedFiles,
   toggleFile,
-  setSelectedFiles,
+  handleSetSelectedFiles,
 }) {
   const [selectedFolder, setSelectedFolder] = useState(null);
 
@@ -246,7 +246,7 @@ export function Folders({
         <FilesList
           files={filesInSelectedFolder}
           selectedFiles={selectedFiles}
-          setSelectedFiles={setSelectedFiles}
+          handleSetSelectedFiles={handleSetSelectedFiles}
           toggleFile={toggleFile}
         />
       </Col>
@@ -273,12 +273,15 @@ export function SelectedFilesPreview({ selectedFiles, handleResetFiles }) {
   );
 }
 
-export default function FilePicker({ userDetails }) {
+export default function FilePicker({
+  userDetails,
+  selectedFiles,
+  handleSetSelectedFiles,
+}) {
   // Component that displays folders and files from the user's project storage
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState([]);
   const [error, setError] = useState(null);
-  const [selectedFiles, setSelectedFiles] = useState([]);
 
   const fetchFiles = useCallback(() => {
     setLoading(true);
@@ -310,7 +313,7 @@ export default function FilePicker({ userDetails }) {
   }, [fetchFiles]);
 
   const toggleFile = (file) => {
-    setSelectedFiles((prev) => {
+    handleSetSelectedFiles((prev) => {
       const alreadySelected = prev.some((f) => f.path === file.path);
       if (alreadySelected) {
         return prev.filter((f) => f.path !== file.path);
@@ -319,8 +322,9 @@ export default function FilePicker({ userDetails }) {
     });
   };
   const handleResetFiles = () => {
-    setSelectedFiles([]);
+    handleSetSelectedFiles([]);
   };
+
   return (
     <Card className="border-0 shadow-sm rounded-3 mb-4">
       <Card.Header className="py-3">
@@ -358,7 +362,7 @@ export default function FilePicker({ userDetails }) {
           <Folders
             files={files}
             selectedFiles={selectedFiles}
-            setSelectedFiles={setSelectedFiles}
+            handleSetSelectedFiles={handleSetSelectedFiles}
             toggleFile={toggleFile}
           />
         )}
