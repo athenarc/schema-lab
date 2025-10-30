@@ -9,6 +9,7 @@ import {
   Container,
   Stack,
   Button,
+  Collapse,
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -34,7 +35,14 @@ export function FileCard({ file, isSelected, onToggle }) {
         backgroundColor: isSelected ? "#f0f7ff" : "white",
         transform: isSelected ? "scale(1.02)" : "scale(1)",
         transition: "all 0.2s ease-in-out",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
       }}
+      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f8f9fa")}
+      onMouseLeave={(e) =>
+        (e.currentTarget.style.backgroundColor = isSelected
+          ? "#f0f7ff"
+          : "white")
+      }
       onClick={onToggle}
     >
       {isSelected && (
@@ -91,7 +99,7 @@ export function FileCard({ file, isSelected, onToggle }) {
   );
 }
 
-export function FilesCardList({
+export function FileGrid({
   files,
   selectedFiles,
   toggleFile,
@@ -170,9 +178,9 @@ export function FilesCardList({
         md={3}
         lg={4}
         className="py-2 g-3 overflow-y-auto"
-        style={{ maxHeight: "200px" }}
+        style={{ maxHeight: "300px" }}
       >
-        {filteredFiles.map((file, index) => {
+        {filteredFiles?.map((file, index) => {
           const isSelected = selectedFiles.some((f) => f?.path === file?.path);
           return (
             <Col key={index}>
@@ -186,8 +194,10 @@ export function FilesCardList({
         })}
       </Row>
 
-      {filteredFiles.length === 0 && (
-        <div className="text-center text-muted mt-3">No files found.</div>
+      {filteredFiles?.length === 0 && (
+        <div className="text-center text-muted mt-3">
+          This folder has no files.
+        </div>
       )}
     </Container>
   );
@@ -236,25 +246,28 @@ export function FolderTree({
         </span>
       </Stack>
 
-      {(expanded || isRoot) &&
-        Object.entries(folderData).map(([sub, data]) => {
-          if (sub === "files" || sub === "totalFiles") return null;
-          return (
-            <FolderTree
-              key={sub}
-              folderName={sub}
-              folderData={data}
-              level={level + 1}
-              onSelectFolder={onSelectFolder}
-              selectedFolder={selectedFolder}
-            />
-          );
-        })}
+      <Collapse in={expanded || isRoot}>
+        <div>
+          {Object.entries(folderData).map(([sub, data]) => {
+            if (sub === "files" || sub === "totalFiles") return null;
+            return (
+              <FolderTree
+                key={sub}
+                folderName={sub}
+                folderData={data}
+                level={level + 1}
+                onSelectFolder={onSelectFolder}
+                selectedFolder={selectedFolder}
+              />
+            );
+          })}
+        </div>
+      </Collapse>
     </div>
   );
 }
 
-export function Folders({
+export function FolderBrowser({
   foldersMap = {},
   selectedFiles,
   toggleFile,
@@ -262,10 +275,11 @@ export function Folders({
 }) {
   const [selectedFolder, setSelectedFolder] = useState("/");
 
-  const selectedFolderData =
-    selectedFolder === "/"
+  const selectedFolderData = useMemo(() => {
+    return selectedFolder === "/"
       ? foldersMap["/"]
       : findNestedFolder(foldersMap, selectedFolder);
+  }, [selectedFolder, foldersMap]);
 
   return (
     <Row>
@@ -288,7 +302,7 @@ export function Folders({
       </Col>
 
       <Col md={8}>
-        <FilesCardList
+        <FileGrid
           files={selectedFolderData?.files || []}
           selectedFiles={selectedFiles}
           handleSetSelectedFiles={handleSetSelectedFiles}
@@ -310,7 +324,7 @@ function findNestedFolder(obj, target) {
   return null;
 }
 
-export function SelectedFilesPreview({ selectedFiles, handleResetFiles }) {
+export function SelectionSummary({ selectedFiles, handleResetFiles }) {
   return (
     <Stack direction="horizontal" className="p-2 w-100 justify-content-between">
       <div>
@@ -333,8 +347,7 @@ function groupFilesByFolder(files) {
   const root = { "/": { files: [] } };
 
   for (const file of files) {
-    const parts = file?.path?.replace(/^\/+/, "").split("/");
-
+    const parts = file.path.replace(/^\/+/, "").split("/");
     let current = root["/"];
 
     if (parts.length === 1) {
@@ -342,38 +355,36 @@ function groupFilesByFolder(files) {
       continue;
     }
 
-    for (let i = 0; i < parts.length - 1; i++) {
-      const folder = parts[i];
-      if (!current[folder]) {
-        current[folder] = { files: [] };
-      }
+    for (const folder of parts.slice(0, -1)) {
+      current[folder] ??= { files: [] };
       current = current[folder];
     }
 
     current.files.push(file);
   }
 
-  function calculateTotalFiles(folder) {
-    let total = folder.files?.length || 0;
-    for (const key in folder) {
-      if (key === "files" || key === "totalFiles") continue;
-      total += calculateTotalFiles(folder[key]);
-    }
-    folder.totalFiles = total;
-    return total;
-  }
+  const calculateTotalFiles = (folder) => {
+    const subTotals = Object.entries(folder)
+      .filter(([k]) => k !== "files" && k !== "totalFiles")
+      .reduce((sum, [, data]) => sum + calculateTotalFiles(data), 0);
+    folder.totalFiles = (folder.files?.length || 0) + subTotals;
+    return folder.totalFiles;
+  };
 
   calculateTotalFiles(root["/"]);
-
   return root;
 }
 
-export default function FilePicker({
+export default function FileBrowser({
   userDetails,
   selectedFiles,
   handleSetSelectedFiles,
 }) {
   // Component that displays folders and files from the user's project storage
+  // TODOs 
+  // 1) Maybe handle better selectedFile. Right now is an array of file paths. Could be an array of file objects.
+  // 2) Use maybe workspace or a default path for "path" param in inputs/outputs
+  // 3) Maybe display better selected files. E.g., display selected files in folder rows.
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [folderMap, setFolderMap] = useState({});
@@ -407,15 +418,18 @@ export default function FilePicker({
     fetchFiles();
   }, [fetchFiles]);
 
-  const toggleFile = (file) => {
-    handleSetSelectedFiles((prev) => {
-      const alreadySelected = prev.some((f) => f.path === file.path);
-      if (alreadySelected) {
-        return prev.filter((f) => f.path !== file.path);
-      }
-      return [...prev, file];
-    });
-  };
+  const toggleFile = useCallback(
+    (file) => {
+      handleSetSelectedFiles((prev) => {
+        const alreadySelected = prev.some((f) => f.path === file.path);
+        return alreadySelected
+          ? prev.filter((f) => f.path !== file.path)
+          : [...prev, file];
+      });
+    },
+    [handleSetSelectedFiles]
+  );
+
   const handleResetFiles = () => {
     handleSetSelectedFiles([]);
   };
@@ -423,7 +437,10 @@ export default function FilePicker({
   return (
     <Card className="border-0 shadow-sm rounded-3 mb-4">
       <Card.Header className="py-3">
-        Pick Files
+        File Browser
+        <small className="text-muted ms-2">
+          ({Object.keys(folderMap["/"] || {}).length - 2} folders)
+        </small>
         <FontAwesomeIcon
           icon={faRedo}
           className="ms-2 text-primary"
@@ -454,7 +471,7 @@ export default function FilePicker({
         )}
 
         {!loading && Object.keys(folderMap)?.length > 0 && (
-          <Folders
+          <FolderBrowser
             foldersMap={folderMap}
             selectedFiles={selectedFiles}
             handleSetSelectedFiles={handleSetSelectedFiles}
@@ -463,7 +480,7 @@ export default function FilePicker({
         )}
       </Card.Body>
       <Card.Footer className="d-flex justify-content-between p-2">
-        <SelectedFilesPreview
+        <SelectionSummary
           selectedFiles={selectedFiles}
           handleResetFiles={handleResetFiles}
         />

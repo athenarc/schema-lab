@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useCallback } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Form,
@@ -20,7 +20,7 @@ import { UserDetailsContext } from "../utils/components/auth/AuthProvider";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FaAngleRight, FaAngleDown } from "react-icons/fa";
 
-import FilePicker from "../files/files/FilePicker";
+import FileBrowser from "../files/files/FilePicker";
 
 const TaskForm = () => {
   const navigate = useNavigate();
@@ -110,7 +110,7 @@ const TaskForm = () => {
       Array.isArray(taskData?.inputs) &&
         setSelectedFiles(
           taskData?.inputs?.map((input) => ({
-            path: input?.url?.replace("s3://", "") || "",
+            path: input?.url || "",
           }))
         );
 
@@ -197,8 +197,8 @@ const TaskForm = () => {
     const { name, description, tags } = basicData;
     const inputs = selectedFiles?.map((file) => ({
       name: file?.name,
-      url: "s3://" + String(file?.path),
-      path: "/data-volume//" + file?.path,
+      url: file?.path,
+      path: "/data-volume/" + file?.path?.split("/").pop(),
       type: "FILE",
       content: "",
     }));
@@ -222,6 +222,7 @@ const TaskForm = () => {
 
   const handleConfirmSubmit = () => {
     const requestData = prepareRequestData();
+
     runTaskPost(userDetails.apiKey, requestData)
       .then((response) => {
         if (response.ok) {
@@ -570,7 +571,7 @@ const TaskForm = () => {
                   />
                 </Accordion.Header>
                 <Accordion.Body>
-                  <FilePicker
+                  <FileBrowser
                     userDetails={userDetails}
                     selectedFiles={selectedFiles}
                     handleSetSelectedFiles={setSelectedFiles}
@@ -1017,7 +1018,13 @@ const TaskForm = () => {
                       description: basicData.description,
                       tags: basicData.tags,
                       executors,
-                      inputs,
+                      inputs: selectedFiles?.map((file) => ({
+                        name: file?.name,
+                        url: file?.path,
+                        path: "/data-volume/" + file?.path?.split("/").pop(),
+                        type: "FILE",
+                        content: "",
+                      })),
                       outputs,
                       // volumes,
                       resources,
