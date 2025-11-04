@@ -22,7 +22,7 @@ export function FolderBrowser({
     <Row className="flex-grow-1 h-100">
       <Col md={4} className="overflow-auto">
         <Container fluid className="p-2">
-          {Object.entries(foldersMap).map(
+          {Object?.entries(foldersMap)?.map(
             ([folder, data]) =>
               folder !== "files" &&
               folder !== "totalFiles" && (
@@ -40,7 +40,6 @@ export function FolderBrowser({
 
       <Col
         md={8}
-        className="overflow-auto"
         style={{ borderLeft: "1px solid #dee2e6" }}
       >
         <FileGrid

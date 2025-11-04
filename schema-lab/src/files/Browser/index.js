@@ -1,12 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  Card,
-  Spinner,
-  Row,
-  Col,
-  Tooltip,
-  OverlayTrigger,
-} from "react-bootstrap";
+import { Card, Row, Col, Tooltip, OverlayTrigger } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRedo } from "@fortawesome/free-solid-svg-icons";
 import { getFiles } from "../../api/v1/files";
@@ -79,7 +72,7 @@ export default function FileBrowser({
   return (
     <Card
       className="border-0 shadow-sm rounded-3 h-100 d-flex flex-column"
-      style={{ minHeight: "400px" }}
+      style={{ minHeight: "500px" }}
     >
       <Card.Header className="p-2">
         File Browser

@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Form, InputGroup, Row, Col, Container, Button } from "react-bootstrap";
+import { useState, useMemo, useEffect } from "react";
+import { Form, InputGroup, Container, Button } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSearch,
@@ -9,6 +9,7 @@ import {
 
 import { FileCard } from "./FileCard";
 import { useDebounce } from "../utils/utils";
+import LoadingComponent from "../utils/LoadingComponent";
 
 export function FileGrid({
   files,
@@ -17,48 +18,53 @@ export function FileGrid({
   handleSetSelectedFiles,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
-  const debouncedSearchTerm = useDebounce(searchTerm);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const filteredFiles = useMemo(() => {
     if (!debouncedSearchTerm) return files;
-    const lower = debouncedSearchTerm?.toLowerCase();
-    return files?.filter((f) => f?.path?.toLowerCase()?.includes(lower));
+    const lower = debouncedSearchTerm.toLowerCase();
+    return files.filter((f) => f.path.toLowerCase().includes(lower));
   }, [files, debouncedSearchTerm]);
 
+  useEffect(() => {
+    if (searchTerm) setSearchLoading(true);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    setSearchLoading(false);
+  }, [debouncedSearchTerm]);
+
   const allSelected =
-    filteredFiles?.length > 0 &&
-    filteredFiles?.every((file) =>
-      selectedFiles?.some((f) => f?.path === file?.path)
+    filteredFiles.length > 0 &&
+    filteredFiles.every((file) =>
+      selectedFiles.some((f) => f.path === file.path)
     );
 
   const handleSelectAll = () => {
     if (allSelected) {
       handleSetSelectedFiles((prev) =>
-        prev?.filter(
-          (f) => !filteredFiles?.some((file) => file?.path === f?.path)
-        )
+        prev.filter((f) => !filteredFiles.some((file) => file.path === f.path))
       );
     } else {
-      const newFiles = filteredFiles?.filter(
-        (file) => !selectedFiles?.some((f) => f?.path === file?.path)
+      const newFiles = filteredFiles.filter(
+        (file) => !selectedFiles.some((f) => f.path === file.path)
       );
       handleSetSelectedFiles((prev) => [...prev, ...newFiles]);
     }
   };
 
   const handleClearSelection = () => {
-    // function that clears all selected files in the folder
     handleSetSelectedFiles((prev) =>
-      prev?.filter(
-        (f) => !filteredFiles?.some((file) => file?.path === f?.path)
-      )
+      prev.filter((f) => !filteredFiles.some((file) => file.path === f.path))
     );
   };
 
   return (
-    <Container fluid className="p-2">
-      <Row className="align-items-center pb-3 border-bottom">
-        <Col xs={12} md={6} className="mb-2 mb-md-0">
+    <Container fluid className="p-2 h-100 d-flex flex-column">
+      <div className="d-flex flex-column flex-md-row align-items-center justify-content-between mb-3 gap-2 border-bottom pb-3">
+        <div className="flex-grow-1 me-md-2" style={{ minWidth: 0 }}>
           <InputGroup>
             <InputGroup.Text className="bg-light">
               <FontAwesomeIcon icon={faSearch} />
@@ -69,13 +75,9 @@ export function FileGrid({
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </InputGroup>
-        </Col>
+        </div>
 
-        <Col
-          xs={12}
-          md={6}
-          className="d-flex justify-content-md-end gap-2 flex-wrap"
-        >
+        <div className="d-flex gap-2 mt-2 mt-md-0 flex-shrink-0">
           <Button
             variant={allSelected ? "outline-secondary" : "outline-primary"}
             onClick={handleSelectAll}
@@ -83,39 +85,52 @@ export function FileGrid({
             <FontAwesomeIcon icon={faCheckSquare} className="me-1" />
             {allSelected ? "Deselect All" : "Select All"}
           </Button>
-
           <Button variant="outline-danger" onClick={handleClearSelection}>
             <FontAwesomeIcon icon={faSquareXmark} className="me-1" />
             Clear
           </Button>
-        </Col>
-      </Row>
+        </div>
+      </div>
 
-      <Row
-        xs={1}
-        sm={2}
-        md={3}
-        lg={4}
-        className="py-2 g-3 overflow-y-auto"
-        style={{ maxHeight: "300px" }}
+      <div
+        className="overflow-y-auto p-2 flex-grow-0"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+          gap: "1rem",
+          maxHeight: "42vh",
+        }}
       >
-        {filteredFiles?.map((file, index) => {
-          const isSelected = selectedFiles?.some((f) => f?.path === file?.path);
-          return (
-            <Col key={index}>
+        {!searchLoading && filteredFiles.length > 0
+          ? filteredFiles.map((file) => (
               <FileCard
+                key={file.path}
                 file={file}
-                isSelected={isSelected}
+                isSelected={selectedFiles.some((f) => f.path === file.path)}
                 onToggle={() => toggleFile(file)}
               />
-            </Col>
-          );
-        })}
-      </Row>
-
-      {filteredFiles?.length === 0 && (
-        <div className="text-center text-muted mt-3">
-          This folder has no files.
+            ))
+          : !searchLoading && (
+              <div
+                className="text-center text-muted mt-3"
+                style={{ gridColumn: "1 / -1" }}
+              >
+                {debouncedSearchTerm
+                  ? `No results found for "${debouncedSearchTerm}"`
+                  : "This folder has no files."}
+              </div>
+            )}
+      </div>
+      {searchLoading && (
+        <div
+          className="overflow-y-auto p-2 flex-grow-1 d-flex justify-content-center align-items-center"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+            gap: "1rem",
+          }}
+        >
+          <LoadingComponent message="Searching files..." />
         </div>
       )}
     </Container>
