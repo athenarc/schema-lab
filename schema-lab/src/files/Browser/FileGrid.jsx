@@ -8,6 +8,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import { FileCard } from "./FileCard";
+import { useDebounce } from "../utils/utils";
 
 export function FileGrid({
   files,
@@ -16,34 +17,42 @@ export function FileGrid({
   handleSetSelectedFiles,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm);
 
   const filteredFiles = useMemo(() => {
-    if (!searchTerm) return files;
-    const lower = searchTerm.toLowerCase();
-    return files.filter((f) => f.path.toLowerCase().includes(lower));
-  }, [files, searchTerm]);
+    if (!debouncedSearchTerm) return files;
+    const lower = debouncedSearchTerm?.toLowerCase();
+    return files?.filter((f) => f?.path?.toLowerCase()?.includes(lower));
+  }, [files, debouncedSearchTerm]);
 
   const allSelected =
-    filteredFiles.length > 0 &&
-    filteredFiles.every((file) =>
-      selectedFiles.some((f) => f?.path === file?.path)
+    filteredFiles?.length > 0 &&
+    filteredFiles?.every((file) =>
+      selectedFiles?.some((f) => f?.path === file?.path)
     );
 
   const handleSelectAll = () => {
     if (allSelected) {
       handleSetSelectedFiles((prev) =>
-        prev.filter((f) => !filteredFiles.some((file) => file.path === f.path))
+        prev?.filter(
+          (f) => !filteredFiles?.some((file) => file?.path === f?.path)
+        )
       );
     } else {
-      const newFiles = filteredFiles.filter(
-        (file) => !selectedFiles.some((f) => f.path === file.path)
+      const newFiles = filteredFiles?.filter(
+        (file) => !selectedFiles?.some((f) => f?.path === file?.path)
       );
       handleSetSelectedFiles((prev) => [...prev, ...newFiles]);
     }
   };
 
   const handleClearSelection = () => {
-    handleSetSelectedFiles([]);
+    // function that clears all selected files in the folder
+    handleSetSelectedFiles((prev) =>
+      prev?.filter(
+        (f) => !filteredFiles?.some((file) => file?.path === f?.path)
+      )
+    );
   };
 
   return (
@@ -55,7 +64,7 @@ export function FileGrid({
               <FontAwesomeIcon icon={faSearch} />
             </InputGroup.Text>
             <Form.Control
-              placeholder="Search files..."
+              placeholder="Search files in the folder..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -91,7 +100,7 @@ export function FileGrid({
         style={{ maxHeight: "300px" }}
       >
         {filteredFiles?.map((file, index) => {
-          const isSelected = selectedFiles.some((f) => f?.path === file?.path);
+          const isSelected = selectedFiles?.some((f) => f?.path === file?.path);
           return (
             <Col key={index}>
               <FileCard

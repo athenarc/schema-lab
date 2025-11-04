@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowDownAZ,
@@ -111,6 +112,22 @@ const calculateFoldersCount = (folderData) => {
   return count;
 };
 
+const useDebounce = (value, delay = 300) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 export {
   timestampToDateOptions,
   formatBytes,
@@ -121,4 +138,5 @@ export {
   ColumnSortIcon,
   getFilenameFromPath,
   fileOverwrite,
+  useDebounce,
 };
