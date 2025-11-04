@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Button, Spinner, Alert } from "react-bootstrap";
-import { unzipFile } from "../../api/v1/files"; // Your API call
+import { Button, Spinner } from "react-bootstrap";
+import { unzipFile } from "../../api/v1/files";
 import { faFileArchive } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 

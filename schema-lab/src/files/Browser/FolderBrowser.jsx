@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Row, Col, Container } from "react-bootstrap";
-import { findNestedFolder } from "../../utils/utils";
+import { findNestedFolder } from "../utils/utils";
 import { FolderTree } from "./FolderTree";
 import { FileGrid } from "./FileGrid";
 

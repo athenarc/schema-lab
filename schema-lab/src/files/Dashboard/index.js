@@ -8,7 +8,7 @@ import { Col, Container, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { getProjectName } from "../../api/v1/actions";
 import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 
-const Files = () => {
+const FilesDashboard = () => {
   const { userDetails } = useContext(UserDetailsContext);
   const [projectName, setProjectName] = useState(null);
   const [files, setFiles] = useState([]);
@@ -98,4 +98,4 @@ const Files = () => {
   );
 };
 
-export default Files;
+export default FilesDashboard;

@@ -19,8 +19,7 @@ import { runTaskPost } from "../api/v1/actions";
 import { UserDetailsContext } from "../utils/components/auth/AuthProvider";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FaAngleRight, FaAngleDown } from "react-icons/fa";
-
-import FileBrowser from "../files/files/FileBrowser/index.jsx";
+import FileBrowser from "../files/Browser/";
 
 const TaskForm = () => {
   const navigate = useNavigate();

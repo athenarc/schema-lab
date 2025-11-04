@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
-import { fileOverwrite } from "../../utils/utils";
+import { fileOverwrite } from "../utils/utils";
 
 const FileUploadModal = ({ show, onClose, files = [], onFileSelected }) => {
   const [file, setFile] = useState(null);

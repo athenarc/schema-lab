@@ -10,7 +10,7 @@ import {
   Spinner,
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import FileUploadModal from "./modals/FileUpload";
+import FileUploadModal from "../modals/FileUpload";
 import {
   ColumnSortIcon,
   formatBytes,
@@ -25,10 +25,10 @@ import {
   faFileDownload,
   faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
-import DeleteConfirmationModal from "./modals/DeleteConfirmationModal";
+import DeleteConfirmationModal from "../modals/DeleteConfirmationModal";
 import { deleteFile, downloadFile, uploadFile } from "../../api/v1/files";
-import FileEditModal from "./modals/FileEdit";
-import FilePreviewModal from "./modals/FilePreview";
+import FileEditModal from "../modals/FileEdit";
+import FilePreviewModal from "../modals/FilePreview";
 import FileUploadProgress from "./FileUploadProgress";
 import FileUnzipper from "./FileUnzipper";
 

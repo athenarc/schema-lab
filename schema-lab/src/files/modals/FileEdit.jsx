@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
-import { renameOrMoveFile } from "../../../api/v1/files";
+import { renameOrMoveFile } from "../../api/v1/files";
 
 const FileUploadModal = ({
   show,

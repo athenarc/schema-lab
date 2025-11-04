@@ -1,7 +1,7 @@
 import { Card } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFolder } from "@fortawesome/free-solid-svg-icons";
-import { formatBytes, timestampToDateOptions } from "../../utils/utils";
+import { formatBytes, timestampToDateOptions } from "../utils/utils";
 
 export function FileCard({ file, isSelected, onToggle }) {
   return (

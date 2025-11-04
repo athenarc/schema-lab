@@ -9,7 +9,7 @@ import {
   Col,
   Card,
 } from "react-bootstrap";
-import { getFileTypePreview } from "../../../api/v1/files";
+import { getFileTypePreview } from "../../api/v1/files";
 
 const FilePreviewModal = ({ show, onClose, userDetails, file }) => {
   const [loading, setLoading] = useState(false);

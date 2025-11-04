@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Card, Spinner, Row, Col } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRedo } from "@fortawesome/free-solid-svg-icons";
-import { getFiles } from "../../../api/v1/files";
-import { groupFilesByFolder } from "../../utils/utils";
+import { getFiles } from "../../api/v1/files";
+import { groupFilesByFolder } from "../utils/utils";
 import { SelectedFilesSummary } from "./SelectedFIlesSummary";
 
 import { FolderBrowser } from "./FolderBrowser";
