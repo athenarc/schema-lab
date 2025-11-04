@@ -14,6 +14,7 @@ import { groupFilesByFolder, calculateFoldersCount } from "../utils/utils";
 import { SelectedFilesSummary } from "./SelectedFIlesSummary";
 
 import { FolderBrowser } from "./FolderBrowser";
+import LoadingComponent from "../utils/LoadingComponent";
 
 export default function FileBrowser({
   userDetails,
@@ -99,12 +100,7 @@ export default function FileBrowser({
       </Card.Header>
 
       <Card.Body className="p-2 flex-grow-1 d-flex flex-column">
-        {loading && (
-          <div className="d-flex flex-column align-items-center m-3">
-            <Spinner animation="border" role="status" variant="primary" />
-            <div className="mt-2">Loading files...</div>
-          </div>
-        )}
+        {loading && <LoadingComponent message="Loading files..." />}
 
         {!loading && Object?.keys(folderMap)?.length === 0 && (
           <Row>
