@@ -137,8 +137,8 @@ export function FileGrid({
   };
 
   return (
-    <Container fluid className="p-2 mb-3 ">
-      <Row className="align-items-center mb-3 pb-3 border-bottom">
+    <Container fluid className="p-2">
+      <Row className="align-items-center pb-3 border-bottom">
         <Col xs={12} md={6} className="mb-2 mb-md-0">
           <InputGroup>
             <InputGroup.Text className="bg-light">
@@ -282,9 +282,9 @@ export function FolderBrowser({
   }, [selectedFolder, foldersMap]);
 
   return (
-    <Row>
-      <Col md={4}>
-        <Container fluid className="p-2 mb-3">
+    <Row className="flex-grow-1 h-100">
+      <Col md={4} className="overflow-auto">
+        <Container fluid className="p-2">
           {Object.entries(foldersMap).map(
             ([folder, data]) =>
               folder !== "files" &&
@@ -301,7 +301,11 @@ export function FolderBrowser({
         </Container>
       </Col>
 
-      <Col md={8}>
+      <Col
+        md={8}
+        className="overflow-auto"
+        style={{ borderLeft: "1px solid #dee2e6" }}
+      >
         <FileGrid
           files={selectedFolderData?.files || []}
           selectedFiles={selectedFiles}
@@ -381,10 +385,11 @@ export default function FileBrowser({
   handleSetSelectedFiles,
 }) {
   // Component that displays folders and files from the user's project storage
-  // TODOs 
+  // TODOs
   // 1) Maybe handle better selectedFile. Right now is an array of file paths. Could be an array of file objects.
   // 2) Use maybe workspace or a default path for "path" param in inputs/outputs
   // 3) Maybe display better selected files. E.g., display selected files in folder rows.
+  // 4) Fix File Browser (-2 folders) count in header when no files are present.
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [folderMap, setFolderMap] = useState({});
@@ -435,7 +440,10 @@ export default function FileBrowser({
   };
 
   return (
-    <Card className="border-0 shadow-sm rounded-3 mb-4">
+    <Card
+      className="border-0 shadow-sm rounded-3 h-100 d-flex flex-column"
+      style={{ minHeight: "400px" }}
+    >
       <Card.Header className="py-3">
         File Browser
         <small className="text-muted ms-2">
@@ -450,7 +458,7 @@ export default function FileBrowser({
         />
       </Card.Header>
 
-      <Card.Body className="p-2">
+      <Card.Body className="p-2 flex-grow-1 d-flex flex-column">
         {loading && (
           <div className="d-flex flex-column align-items-center m-3">
             <Spinner animation="border" role="status" variant="primary" />
