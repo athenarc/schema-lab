@@ -69,6 +69,14 @@ function findNestedFolder(obj, target) {
   return null;
 }
 
+const calculateTotalFiles = (folder) => {
+  const subTotals = Object.entries(folder)
+    .filter(([k]) => k !== "files" && k !== "totalFiles")
+    .reduce((sum, [, data]) => sum + calculateTotalFiles(data), 0);
+  folder.totalFiles = (folder.files?.length || 0) + subTotals;
+  return folder.totalFiles;
+};
+
 function groupFilesByFolder(files) {
   const root = { "/": { files: [] } };
 
@@ -89,22 +97,25 @@ function groupFilesByFolder(files) {
     current.files.push(file);
   }
 
-  const calculateTotalFiles = (folder) => {
-    const subTotals = Object.entries(folder)
-      .filter(([k]) => k !== "files" && k !== "totalFiles")
-      .reduce((sum, [, data]) => sum + calculateTotalFiles(data), 0);
-    folder.totalFiles = (folder.files?.length || 0) + subTotals;
-    return folder.totalFiles;
-  };
-
   calculateTotalFiles(root["/"]);
   return root;
 }
+
+const calculateFoldersCount = (folderData) => {
+  let count = 0;
+  for (const key in folderData) {
+    if (key !== "files" && key !== "totalFiles") {
+      count += 1 + calculateFoldersCount(folderData[key]);
+    }
+  }
+  return count;
+};
 
 export {
   timestampToDateOptions,
   formatBytes,
   isPreviewable,
+  calculateFoldersCount,
   findNestedFolder,
   groupFilesByFolder,
   ColumnSortIcon,

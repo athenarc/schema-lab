@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
-import { Card, Spinner, Row, Col } from "react-bootstrap";
+import {
+  Card,
+  Spinner,
+  Row,
+  Col,
+  Tooltip,
+  OverlayTrigger,
+} from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRedo } from "@fortawesome/free-solid-svg-icons";
 import { getFiles } from "../../api/v1/files";
-import { groupFilesByFolder } from "../utils/utils";
+import { groupFilesByFolder, calculateFoldersCount } from "../utils/utils";
 import { SelectedFilesSummary } from "./SelectedFIlesSummary";
 
 import { FolderBrowser } from "./FolderBrowser";
@@ -73,18 +80,22 @@ export default function FileBrowser({
       className="border-0 shadow-sm rounded-3 h-100 d-flex flex-column"
       style={{ minHeight: "400px" }}
     >
-      <Card.Header className="py-3">
+      <Card.Header className="p-2">
         File Browser
         <small className="text-muted ms-2">
-          ({Object.keys(folderMap["/"] || {}).length - 2} folders)
+          ({calculateFoldersCount(folderMap["/"] || {})} folders)
         </small>
-        <FontAwesomeIcon
-          icon={faRedo}
-          className="ms-2 text-primary"
-          title="Refresh Files"
-          style={{ cursor: "pointer" }}
-          onClick={fetchFiles}
-        />
+        <OverlayTrigger
+          placement="top"
+          overlay={<Tooltip id="refresh-tooltip">Refresh Files</Tooltip>}
+        >
+          <FontAwesomeIcon
+            icon={faRedo}
+            className="ms-2 text-primary"
+            style={{ cursor: "pointer" }}
+            onClick={fetchFiles}
+          />
+        </OverlayTrigger>
       </Card.Header>
 
       <Card.Body className="p-2 flex-grow-1 d-flex flex-column">
@@ -95,7 +106,7 @@ export default function FileBrowser({
           </div>
         )}
 
-        {!loading && Object.keys(folderMap)?.length === 0 && (
+        {!loading && Object?.keys(folderMap)?.length === 0 && (
           <Row>
             <Col className="text-center">
               {error ? (
@@ -107,7 +118,7 @@ export default function FileBrowser({
           </Row>
         )}
 
-        {!loading && Object.keys(folderMap)?.length > 0 && (
+        {!loading && Object?.keys(folderMap)?.length > 0 && (
           <FolderBrowser
             foldersMap={folderMap}
             selectedFiles={selectedFiles}
