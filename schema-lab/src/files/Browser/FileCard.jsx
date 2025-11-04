@@ -6,8 +6,8 @@ import { formatBytes, timestampToDateOptions } from "../utils/utils";
 export function FileCard({ file, isSelected, onToggle }) {
   return (
     <Card
-      className={`position-relative p-2 border-0 shadow-sm rounded-3 ${
-        isSelected ? "border-primary border-2" : "border-light"
+      className={`position-relative p-2 border-1 shadow-sm rounded-3 ${
+        isSelected ? "border-primary border-2" : "border-1"
       }`}
       style={{
         cursor: "pointer",
