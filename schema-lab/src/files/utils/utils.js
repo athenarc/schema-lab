@@ -58,10 +58,55 @@ const fileOverwrite = ({ fileToUpload, files }) => {
   });
 };
 
+function findNestedFolder(obj, target) {
+  for (const key in obj) {
+    if (key === target) return obj[key];
+    if (typeof obj[key] === "object") {
+      const found = findNestedFolder(obj[key], target);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function groupFilesByFolder(files) {
+  const root = { "/": { files: [] } };
+
+  for (const file of files) {
+    const parts = file.path.replace(/^\/+/, "").split("/");
+    let current = root["/"];
+
+    if (parts.length === 1) {
+      current.files.push(file);
+      continue;
+    }
+
+    for (const folder of parts.slice(0, -1)) {
+      current[folder] ??= { files: [] };
+      current = current[folder];
+    }
+
+    current.files.push(file);
+  }
+
+  const calculateTotalFiles = (folder) => {
+    const subTotals = Object.entries(folder)
+      .filter(([k]) => k !== "files" && k !== "totalFiles")
+      .reduce((sum, [, data]) => sum + calculateTotalFiles(data), 0);
+    folder.totalFiles = (folder.files?.length || 0) + subTotals;
+    return folder.totalFiles;
+  };
+
+  calculateTotalFiles(root["/"]);
+  return root;
+}
+
 export {
   timestampToDateOptions,
   formatBytes,
   isPreviewable,
+  findNestedFolder,
+  groupFilesByFolder,
   ColumnSortIcon,
   getFilenameFromPath,
   fileOverwrite,
