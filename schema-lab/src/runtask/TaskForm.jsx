@@ -12,6 +12,7 @@ import {
   Tooltip,
   Modal,
   Alert,
+  InputGroup,
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark, faPlus } from "@fortawesome/free-solid-svg-icons";
@@ -19,7 +20,9 @@ import { runTaskPost } from "../api/v1/actions";
 import { UserDetailsContext } from "../utils/components/auth/AuthProvider";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FaAngleRight, FaAngleDown } from "react-icons/fa";
+import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
 import FileBrowser from "../files/Browser/";
+import { validateContainerPath } from "../files/utils/utils";
 
 const TaskForm = () => {
   const navigate = useNavigate();
@@ -39,6 +42,11 @@ const TaskForm = () => {
   const [inputs, setInputs] = useState([
     { name: "", description: "", url: "", path: "", content: "", type: "" },
   ]);
+  const [containerInputPath, setContainerInputPath] = useState({
+    path: "/inputs/",
+    isValid: true,
+    errorMsg: "",
+  });
   const [outputs, setOutputs] = useState([
     { name: "", description: "", url: "", path: "", type: "" },
   ]);
@@ -197,7 +205,7 @@ const TaskForm = () => {
     const inputs = selectedFiles?.map((file) => ({
       name: file?.name,
       url: file?.path,
-      path: "/data-volume/" + file?.path?.split("/").pop(),
+      path: containerInputPath?.path + file?.path?.split("/").pop(),
       type: "FILE",
       content: "",
     }));
@@ -318,6 +326,16 @@ const TaskForm = () => {
         i === index ? { ...output, [name]: value } : output
       )
     );
+  };
+
+  const handleContainerInputPathChange = (value) => {
+    const errorMsg = validateContainerPath(value);
+    setContainerInputPath({
+      path: value,
+      isValid: !errorMsg,
+      errorMsg: errorMsg || "",
+    });
+    console.log(containerInputPath);
   };
 
   const handleResourceChange = (event) => {
@@ -560,172 +578,99 @@ const TaskForm = () => {
             >
               <Accordion.Item eventKey="0">
                 <Accordion.Header>
-                  File Inputs (Optional)&nbsp;
+                  File Inputs (Optional)
                   <FontAwesomeIcon
                     icon={faInfoCircle}
-                    className="ms-2"
+                    className="ms-2 text-muted"
                     data-bs-toggle="tooltip"
                     data-bs-placement="top"
-                    title="Input information is optional."
+                    title="Add files that your task needs to access inside the container."
                   />
                 </Accordion.Header>
-                <Accordion.Body>
-                  <FileBrowser
-                    userDetails={userDetails}
-                    selectedFiles={selectedFiles}
-                    handleSetSelectedFiles={setSelectedFiles}
-                  />
-                </Accordion.Body>
-              </Accordion.Item>
-              {/* Inputs */}
-              {/* <Accordion.Item eventKey="1">
-                <Accordion.Header>
-                  Inputs Information (Optional)&nbsp;
-                  <FontAwesomeIcon
-                    icon={faInfoCircle}
-                    className="ms-2"
-                    data-bs-toggle="tooltip"
-                    data-bs-placement="top"
-                    title="Input information is optional, but if provided, both URL and Path are required."
-                  />
-                </Accordion.Header>
-                <Accordion.Body>
-                  {inputs.map((input, index) => (
-                    <div key={index} className="mb-4">
-                      <Form.Group as={Row} className="mb-3">
-                        <Form.Label column sm="3" className="fw-bold">
-                          Name
-                        </Form.Label>
-                        <Col sm="8">
+
+                <Accordion.Body className="pt-4">
+                  {/* Section Title + Subtitle */}
+                  <div className="mb-4">
+                    <h6 className="fw-semibold mb-1">Container Input Path</h6>
+                    <small className="text-muted">
+                      Files you select will be placed inside the task’s
+                      container at this path. Choose a location carefully to
+                      avoid unintended overwrites.
+                    </small>
+                  </div>
+
+                  <Form.Group as={Row} className="align-items-start mb-4">
+                    <Form.Label column sm="3" className="fw-bold pt-2">
+                      Path <span className="text-danger">*</span>
+                    </Form.Label>
+
+                    <Col sm="8">
+                      <OverlayTrigger
+                        placement="top"
+                        overlay={
+                          <Tooltip>
+                            Enter a directory path inside the container.
+                            <br />
+                            The task may overwrite existing files in this
+                            location.
+                          </Tooltip>
+                        }
+                      >
+                        <InputGroup>
                           <Form.Control
                             type="text"
-                            name="name"
-                            value={input.name}
-                            onChange={(e) => handleInputChange(index, e)}
-                            placeholder="Type name..."
-                          />
-                        </Col>
-                      </Form.Group>
-
-                      <Form.Group as={Row} className="mb-3">
-                        <Form.Label column sm="3" className="fw-bold">
-                          Description
-                        </Form.Label>
-                        <Col sm="8">
-                          <Form.Control
-                            as="textarea"
-                            rows={2}
-                            name="description"
-                            value={input.description}
-                            onChange={(e) => handleInputChange(index, e)}
-                            placeholder="Type description..."
-                          />
-                        </Col>
-                      </Form.Group>
-
-                      <Form.Group as={Row} className="mb-3">
-                        <Form.Label column sm="3" className="fw-bold">
-                          URL <span className="text-danger">*</span>
-                        </Form.Label>
-                        <Col sm="8">
-                          <OverlayTrigger
-                            placement="top"
-                            overlay={
-                              <Tooltip>
-                                Location of a file or directory within your home
-                                directory on the remote storage..
-                              </Tooltip>
+                            name="path"
+                            value={containerInputPath?.path}
+                            onChange={(e) =>
+                              handleContainerInputPathChange(e.target.value)
                             }
-                          >
-                            <Form.Control
-                              type="text"
-                              name="url"
-                              value={input.url}
-                              onChange={(e) => handleInputChange(index, e)}
-                              placeholder="Type URL..."
-                              required={
-                                !!(
-                                  input.name ||
-                                  input.description ||
-                                  input.type ||
-                                  input.path
-                                )
-                              }
-                            />
-                          </OverlayTrigger>
-                        </Col>
-                      </Form.Group>
-
-                      <Form.Group as={Row} className="mb-3">
-                        <Form.Label column sm="3" className="fw-bold">
-                          Path <span className="text-danger">*</span>
-                        </Form.Label>
-                        <Col sm="8">
-                          <OverlayTrigger
-                            placement="top"
-                            overlay={
-                              <Tooltip id={`tooltip-env`}>
-                                Location where the file or directory will be
-                                stored inside the task's container after the
-                                task completes.
-                              </Tooltip>
+                            onBlur={(e) => {
+                              const msg = validateContainerPath(e.target.value);
+                              setContainerInputPath({
+                                path: e.target.value,
+                                isValid: !msg,
+                                errorMsg: msg || "",
+                              });
+                            }}
+                            placeholder="/workspace/data/"
+                            isInvalid={
+                              !containerInputPath?.isValid &&
+                              !!selectedFiles?.length
                             }
-                          >
-                            <Form.Control
-                              type="text"
-                              name="path"
-                              value={input.path}
-                              onChange={(e) => handleInputChange(index, e)}
-                              placeholder="Type path..."
-                              required={
-                                !!(
-                                  input.name ||
-                                  input.description ||
-                                  input.type ||
-                                  input.url
-                                )
-                              }
-                            />
-                          </OverlayTrigger>
-                        </Col>
-                      </Form.Group>
+                            required={!!selectedFiles?.length}
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            {containerInputPath?.errorMsg}
+                          </Form.Control.Feedback>
+                        </InputGroup>
+                      </OverlayTrigger>
 
-                      <Form.Group as={Row} className="mb-3">
-                        <Form.Label column sm="3" className="fw-bold">
-                          Type
-                        </Form.Label>
-                        <Col sm="8">
-                          <Form.Select
-                            name="type"
-                            value={input.type}
-                            onChange={(e) => handleInputChange(index, e)}
-                          >
-                            <option value="">Select Type</option>
-                            <option value="FILE">FILE</option>
-                            <option value="DIRECTORY">DIRECTORY</option>
-                          </Form.Select>
-                        </Col>
-                      </Form.Group>
-                    </div>
-                  ))}
-                  <div className="d-flex justify-content-start gap-2 mt-4">
-                    <Button variant="primary" onClick={addInputField}>
-                      <FontAwesomeIcon icon={faPlus} className="me-2" />
-                      Add
-                    </Button>
-                    <Button
-                      variant="danger"
-                      onClick={() =>
-                        removeInputField(inputs[inputs.length - 1]?.id)
-                      }
-                      disabled={inputs.length === 1}
-                    >
-                      <FontAwesomeIcon icon={faXmark} className="me-2" />
-                      Remove
-                    </Button>
+                      {/* Show warning only if user has selected files */}
+                      {selectedFiles?.length > 0 && (
+                        <div className="alert alert-warning mt-3 mb-0 py-2 px-3 d-flex align-items-center gap-2 small">
+                          <FontAwesomeIcon icon={faTriangleExclamation} />
+                          <span>
+                            Files copied to this path may{" "}
+                            <strong>overwrite</strong> existing data used by the
+                            container image.
+                          </span>
+                        </div>
+                      )}
+                    </Col>
+                  </Form.Group>
+                  {/* File Browser */}
+                  <div className="border-top pt-4">
+                    <h6 className="fw-semibold mb-3">
+                      Select Files to Include
+                    </h6>
+                    <FileBrowser
+                      userDetails={userDetails}
+                      selectedFiles={selectedFiles}
+                      handleSetSelectedFiles={setSelectedFiles}
+                    />
                   </div>
                 </Accordion.Body>
-              </Accordion.Item> */}
+              </Accordion.Item>
 
               {/* Outputs */}
               <Accordion.Item eventKey="2">
@@ -966,7 +911,11 @@ const TaskForm = () => {
               >
                 Back
               </Button>
-              <Button variant="success" type="submit">
+              <Button
+                variant="success"
+                type="submit"
+                disabled={containerInputPath?.isValid === false}
+              >
                 Submit
               </Button>
             </div>
@@ -1020,7 +969,9 @@ const TaskForm = () => {
                       inputs: selectedFiles?.map((file) => ({
                         name: file?.name,
                         url: file?.path,
-                        path: "/data-volume/" + file?.path?.split("/").pop(),
+                        path:
+                          containerInputPath?.path +
+                          file?.path?.split("/").pop(),
                         type: "FILE",
                         content: "",
                       })),

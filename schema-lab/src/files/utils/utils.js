@@ -126,7 +126,27 @@ const useDebounce = (value, delay = 300) => {
   }, [value, delay]);
 
   return debouncedValue;
-}
+};
+
+const validateContainerPath = (value) => {
+  if (!value || !value.trim()) {
+    return "The path can not be empty.";
+  }
+
+  if (!value.startsWith("/")) {
+    return "The path must start with '/'.";
+  }
+
+  if (value?.includes(".")) {
+    return "Path can not contain '.' characters.";
+  }
+
+  if (!value.endsWith("/")) {
+    return "It is recommended to end with '/' to indicate a folder.";
+  }
+
+  return null; // Valid
+};
 
 export {
   timestampToDateOptions,
@@ -139,4 +159,5 @@ export {
   getFilenameFromPath,
   fileOverwrite,
   useDebounce,
+  validateContainerPath,
 };
