@@ -148,6 +148,32 @@ const validateContainerPath = (value) => {
   return null; // Valid
 };
 
+// Utility: Find longest common directory prefix
+const getCommonDirectoryPrefix = (paths) => {
+  if (!paths || paths.length === 0) return "";
+
+  // Split each path into segments
+  const splitPaths = paths.map(
+    (p) => p.split("/").filter(Boolean) // remove empty parts from leading slash
+  );
+
+  let prefixSegments = [];
+
+  // Compare segment by segment
+  for (let i = 0; i < splitPaths[0].length; i++) {
+    const segment = splitPaths[0][i];
+    if (splitPaths.every((parts) => parts[i] === segment)) {
+      prefixSegments.push(segment);
+    } else {
+      break;
+    }
+  }
+
+  if (prefixSegments.length === 0) return "/"; // only root matches
+
+  return "/" + prefixSegments.join("/") + "/"; // always end with /
+};
+
 export {
   timestampToDateOptions,
   formatBytes,
@@ -160,4 +186,5 @@ export {
   fileOverwrite,
   useDebounce,
   validateContainerPath,
+  getCommonDirectoryPrefix,
 };
