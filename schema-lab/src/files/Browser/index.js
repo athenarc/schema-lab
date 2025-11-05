@@ -7,7 +7,7 @@ import { groupFilesByFolder, calculateFoldersCount } from "../utils/utils";
 import { SelectedFilesSummary } from "./SelectedFIlesSummary";
 
 import { FolderBrowser } from "./FolderBrowser";
-import LoadingComponent from "../utils/LoadingComponent";
+import LoadingComponent from "../utils/LoadingComponent"; 
 
 export default function FileBrowser({
   userDetails,
@@ -16,17 +16,14 @@ export default function FileBrowser({
 }) {
   // Component that displays folders and files from the user's project storage
   // TODOs
-  // 1) Maybe handle better selectedFile. Right now is an array of file paths. Could be an array of file objects.
-  // 2) Use maybe workspace or a default path for "path" param in inputs/outputs
-  // 3) Maybe display better selected files. E.g., display selected files in folder rows.
-  // 4) Fix File Browser (-2 folders) count in header when no files are present.
+  // Maybe display better selected files. E.g., display selected files in folder rows.
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [folderMap, setFolderMap] = useState({});
 
   const fetchFiles = useCallback(() => {
     setLoading(true);
-    getFiles({ auth: userDetails.apiKey, recursive: "yes" })
+    getFiles({ auth: userDetails?.apiKey, recursive: "yes" })
       .then((res) => {
         if (!res.ok) {
           if (res.status === 500) {
@@ -42,12 +39,12 @@ export default function FileBrowser({
       })
       .catch((err) => {
         console.error("Failed to fetch files:", err.message);
-        setError(err.message);
+        setError(err?.message);
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [userDetails.apiKey]);
+  }, [userDetails?.apiKey]);
 
   useEffect(() => {
     fetchFiles();
@@ -56,9 +53,9 @@ export default function FileBrowser({
   const toggleFile = useCallback(
     (file) => {
       handleSetSelectedFiles((prev) => {
-        const alreadySelected = prev.some((f) => f.path === file.path);
+        const alreadySelected = prev.some((f) => f?.path === file?.path);
         return alreadySelected
-          ? prev.filter((f) => f.path !== file.path)
+          ? prev?.filter((f) => f?.path !== file?.path)
           : [...prev, file];
       });
     },
