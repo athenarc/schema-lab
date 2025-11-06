@@ -24,8 +24,8 @@ export function FileGrid({
 
   const filteredFiles = useMemo(() => {
     if (!debouncedSearchTerm) return files;
-    const lower = debouncedSearchTerm.toLowerCase();
-    return files.filter((f) => f.path.toLowerCase().includes(lower));
+    const lower = debouncedSearchTerm?.toLowerCase();
+    return files?.filter((f) => f?.path?.toLowerCase()?.includes(lower));
   }, [files, debouncedSearchTerm]);
 
   useEffect(() => {
@@ -37,19 +37,19 @@ export function FileGrid({
   }, [debouncedSearchTerm]);
 
   const allSelected =
-    filteredFiles.length > 0 &&
-    filteredFiles.every((file) =>
-      selectedFiles.some((f) => f.path === file.path)
+    filteredFiles?.length > 0 &&
+    filteredFiles?.every((file) =>
+      selectedFiles?.some((f) => f?.path === file?.path)
     );
 
   const handleSelectAll = () => {
     if (allSelected) {
       handleSetSelectedFiles((prev) =>
-        prev.filter((f) => !filteredFiles.some((file) => file.path === f.path))
+        prev?.filter((f) => !filteredFiles?.some((file) => file?.path === f?.path))
       );
     } else {
-      const newFiles = filteredFiles.filter(
-        (file) => !selectedFiles.some((f) => f.path === file.path)
+      const newFiles = filteredFiles?.filter(
+        (file) => !selectedFiles?.some((f) => f.path === file.path)
       );
       handleSetSelectedFiles((prev) => [...prev, ...newFiles]);
     }
@@ -57,7 +57,7 @@ export function FileGrid({
 
   const handleClearSelection = () => {
     handleSetSelectedFiles((prev) =>
-      prev.filter((f) => !filteredFiles.some((file) => file.path === f.path))
+      prev?.filter((f) => !filteredFiles?.some((file) => file?.path === f?.path))
     );
   };
 
@@ -72,7 +72,7 @@ export function FileGrid({
             <Form.Control
               placeholder="Search files in the folder..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => setSearchTerm(e?.target?.value)}
             />
           </InputGroup>
         </div>
@@ -101,12 +101,12 @@ export function FileGrid({
           maxHeight: "42vh",
         }}
       >
-        {!searchLoading && filteredFiles.length > 0
-          ? filteredFiles.map((file) => (
+        {!searchLoading && filteredFiles?.length > 0
+          ? filteredFiles?.map((file) => (
               <FileCard
-                key={file.path}
+                key={file?.path}
                 file={file}
-                isSelected={selectedFiles.some((f) => f.path === file.path)}
+                isSelected={selectedFiles?.some((f) => f?.path === file?.path)}
                 onToggle={() => toggleFile(file)}
               />
             ))
