@@ -2,9 +2,9 @@ import { useState, useMemo, useEffect } from "react";
 import { Container } from "react-bootstrap";
 
 import { FileCard } from "./FileCard";
-import { useDebounce } from "../utils/utils";
 import LoadingComponent from "../utils/LoadingComponent";
 import { FileListControls } from "./FileListControls";
+import { useDebounce } from "../utils/hooks";
 
 export function FileGrid({
   files,

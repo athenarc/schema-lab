@@ -31,7 +31,7 @@ import FileBrowser from "../files/Browser/";
 import {
   validateContainerPath,
   getCommonDirectoryPrefix,
-} from "../files/utils/utils";
+} from "../files/utils/paths";
 
 const TaskForm = () => {
   const navigate = useNavigate();

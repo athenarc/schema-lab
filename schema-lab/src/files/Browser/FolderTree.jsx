@@ -6,7 +6,7 @@ import {
   faCaretDown,
   faCaretRight,
 } from "@fortawesome/free-solid-svg-icons";
-import { folderContainsFiles } from "../utils/utils";
+import { folderContainsFiles } from "../utils/folders";
 
 export function FolderTree({
   folderName,

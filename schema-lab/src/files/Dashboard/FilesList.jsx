@@ -14,10 +14,7 @@ import FileUploadModal from "../modals/FileUpload";
 import {
   ColumnSortIcon,
   formatBytes,
-  getFilenameFromPath,
-  isPreviewable,
   timestampToDateOptions,
-  fileOverwrite,
 } from "../utils/utils";
 import {
   faTrash,
@@ -31,6 +28,11 @@ import FileEditModal from "../modals/FileEdit";
 import FilePreviewModal from "../modals/FilePreview";
 import FileUploadProgress from "./FileUploadProgress";
 import FileUnzipper from "./FileUnzipper";
+import {
+  wouldOverwriteFile,
+  isPreviewableFile,
+  getBaseFilename,
+} from "../utils/files";
 
 const FilesList = ({ files, userDetails, onFetchFiles, error, loading }) => {
   // Delete states
@@ -185,7 +187,7 @@ const FilesList = ({ files, userDetails, onFetchFiles, error, loading }) => {
   const handleFileSelected = useCallback(
     (file) => {
       setSelectedFile(file);
-      setIsOverwrite(fileOverwrite({ fileToUpload: file, files }));
+      setIsOverwrite(wouldOverwriteFile({ fileToUpload: file, files }));
       setShowFileUploadModal(false);
       startUpload(file);
     },
@@ -306,7 +308,7 @@ const FilesList = ({ files, userDetails, onFetchFiles, error, loading }) => {
         )}
         {!loading &&
           sortedFiles.map((file) => {
-            const previewable = isPreviewable(file?.path);
+            const previewable = isPreviewableFile(file?.path);
             return (
               <Row
                 key={file.path}
@@ -314,7 +316,7 @@ const FilesList = ({ files, userDetails, onFetchFiles, error, loading }) => {
               >
                 <Col xs={12} md={6} className="text-truncate">
                   <div className="fw-bold d-md-none">File Name</div>
-                  {getFilenameFromPath(file?.path)}
+                  {getBaseFilename(file?.path)}
                 </Col>
                 <Col xs={12} md={1}>
                   <div className="fw-bold d-md-none">Size</div>

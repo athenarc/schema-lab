@@ -3,7 +3,7 @@ import { Card, Row, Col, Tooltip, OverlayTrigger } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRedo } from "@fortawesome/free-solid-svg-icons";
 import { getFiles } from "../../api/v1/files";
-import { groupFilesByFolder, calculateFoldersCount } from "../utils/utils";
+import { buildFolderTree, countFolders } from "../utils/folders";
 import { SelectedFilesSummary } from "./SelectedFIlesSummary";
 
 import { FolderBrowser } from "./FolderBrowser";
@@ -36,7 +36,7 @@ export default function FileBrowserCard({
         return res?.json();
       })
       .then((data) => {
-        setFolderMap(groupFilesByFolder(data || []));
+        setFolderMap(buildFolderTree(data || []));
         setError(null);
       })
       .catch((err) => {
@@ -76,7 +76,7 @@ export default function FileBrowserCard({
       <Card.Header className="p-2">
         File Browser
         <small className="text-muted ms-2">
-          ({calculateFoldersCount(folderMap["/"] || {})} folders)
+          ({countFolders(folderMap["/"] || {})} folders)
         </small>
         <OverlayTrigger
           placement="top"

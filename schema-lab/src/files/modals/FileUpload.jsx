@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
-import { fileOverwrite } from "../utils/utils";
+import { wouldOverwriteFile } from "../utils/files";
 
 const FileUploadModal = ({ show, onClose, files = [], onFileSelected }) => {
   const [file, setFile] = useState(null);
@@ -9,7 +9,7 @@ const FileUploadModal = ({ show, onClose, files = [], onFileSelected }) => {
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     setFile(selectedFile);
-    setIsOverwrite(fileOverwrite({ fileToUpload: selectedFile, files }));
+    setIsOverwrite(wouldOverwriteFile({ fileToUpload: selectedFile, files }));
   };
 
   const handleUploadClick = () => {
