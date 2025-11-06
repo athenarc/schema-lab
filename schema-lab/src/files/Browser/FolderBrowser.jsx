@@ -7,7 +7,7 @@ import { FileGrid } from "./FileGrid";
 export function FolderBrowser({
   foldersMap = {},
   selectedFiles,
-  toggleFile,
+  handleToggleFile,
   handleSetSelectedFiles,
 }) {
   const [selectedFolder, setSelectedFolder] = useState("/");
@@ -46,7 +46,7 @@ export function FolderBrowser({
           files={selectedFolderData?.files || []}
           selectedFiles={selectedFiles}
           handleSetSelectedFiles={handleSetSelectedFiles}
-          toggleFile={toggleFile}
+          handleToggleFile={handleToggleFile}
         />
       </Col>
     </Row>

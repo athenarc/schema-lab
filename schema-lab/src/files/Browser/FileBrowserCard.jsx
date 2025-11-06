@@ -11,8 +11,8 @@ import LoadingComponent from "../utils/LoadingComponent";
 import { UserDetailsContext } from "../../utils/components/auth/AuthProvider";
 
 export default function FileBrowserCard({
-  selectedFiles = null,
-  handleSetSelectedFiles = () => {},
+  selectedFiles,
+  handleSetSelectedFiles,
 }) {
   // Component that displays folders and files from the user's project storage
   //
@@ -111,7 +111,7 @@ export default function FileBrowserCard({
             foldersMap={folderMap}
             selectedFiles={selectedFiles}
             handleSetSelectedFiles={handleSetSelectedFiles}
-            toggleFile={toggleFile}
+            handleToggleFile={toggleFile}
           />
         )}
       </Card.Body>

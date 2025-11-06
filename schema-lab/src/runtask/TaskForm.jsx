@@ -359,7 +359,6 @@ const TaskForm = () => {
       isValid: !errorMsg,
       errorMsg: errorMsg || "",
     });
-    console.log(containerInputPath);
   };
 
   const handleResourceChange = (event) => {

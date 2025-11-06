@@ -14,7 +14,7 @@ import LoadingComponent from "../utils/LoadingComponent";
 export function FileGrid({
   files,
   selectedFiles,
-  toggleFile,
+  handleToggleFile,
   handleSetSelectedFiles,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -107,7 +107,7 @@ export function FileGrid({
                 key={file?.path}
                 file={file}
                 isSelected={selectedFiles?.some((f) => f?.path === file?.path)}
-                onToggle={() => toggleFile(file)}
+                onToggle={() => handleToggleFile(file)}
               />
             ))
           : !searchLoading && (
