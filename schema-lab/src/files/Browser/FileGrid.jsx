@@ -1,15 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
-import { Form, InputGroup, Container, Button } from "react-bootstrap";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faSearch,
-  faCheckSquare,
-  faSquareXmark,
-} from "@fortawesome/free-solid-svg-icons";
+import { Container } from "react-bootstrap";
 
 import { FileCard } from "./FileCard";
 import { useDebounce } from "../utils/utils";
 import LoadingComponent from "../utils/LoadingComponent";
+import { FileListControls } from "./FileListControls";
 
 export function FileGrid({
   files,
@@ -45,7 +40,9 @@ export function FileGrid({
   const handleSelectAll = () => {
     if (allSelected) {
       handleSetSelectedFiles((prev) =>
-        prev?.filter((f) => !filteredFiles?.some((file) => file?.path === f?.path))
+        prev?.filter(
+          (f) => !filteredFiles?.some((file) => file?.path === f?.path)
+        )
       );
     } else {
       const newFiles = filteredFiles?.filter(
@@ -57,41 +54,21 @@ export function FileGrid({
 
   const handleClearSelection = () => {
     handleSetSelectedFiles((prev) =>
-      prev?.filter((f) => !filteredFiles?.some((file) => file?.path === f?.path))
+      prev?.filter(
+        (f) => !filteredFiles?.some((file) => file?.path === f?.path)
+      )
     );
   };
 
   return (
     <Container fluid className="p-2 h-100 d-flex flex-column">
-      <div className="d-flex flex-column flex-md-row align-items-center justify-content-between mb-3 gap-2 border-bottom pb-3">
-        <div className="flex-grow-1 me-md-2" style={{ minWidth: 0 }}>
-          <InputGroup>
-            <InputGroup.Text className="bg-light">
-              <FontAwesomeIcon icon={faSearch} />
-            </InputGroup.Text>
-            <Form.Control
-              placeholder="Search files in the folder..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e?.target?.value)}
-            />
-          </InputGroup>
-        </div>
-
-        <div className="d-flex gap-2 mt-2 mt-md-0 flex-shrink-0">
-          <Button
-            variant={allSelected ? "outline-secondary" : "outline-primary"}
-            onClick={handleSelectAll}
-          >
-            <FontAwesomeIcon icon={faCheckSquare} className="me-1" />
-            {allSelected ? "Deselect All" : "Select All"}
-          </Button>
-          <Button variant="outline-danger" onClick={handleClearSelection}>
-            <FontAwesomeIcon icon={faSquareXmark} className="me-1" />
-            Clear
-          </Button>
-        </div>
-      </div>
-
+      <FileListControls
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        allSelected={allSelected}
+        handleSelectAll={handleSelectAll}
+        handleClearSelection={handleClearSelection}
+      />
       <div
         className="overflow-y-auto p-2 flex-grow-0"
         style={{

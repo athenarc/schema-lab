@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
-import { Row, Col, Container } from "react-bootstrap";
+import { Row, Col } from "react-bootstrap";
 import { findNestedFolder } from "../utils/utils";
-import { FolderTree } from "./FolderTree";
 import { FileGrid } from "./FileGrid";
+import { FolderRows } from "./FolderRows";
 
 export function FolderBrowser({
   foldersMap = {},
@@ -13,6 +13,9 @@ export function FolderBrowser({
   const [selectedFolder, setSelectedFolder] = useState("/");
 
   const selectedFolderData = useMemo(() => {
+    // Get the data for the currently selected folder
+    // If the current folder is root ("/"), return the root folder data
+    // data => files and nested folders
     return selectedFolder === "/"
       ? foldersMap["/"]
       : findNestedFolder(foldersMap, selectedFolder);
@@ -21,27 +24,14 @@ export function FolderBrowser({
   return (
     <Row className="flex-grow-1 h-100">
       <Col md={4} className="overflow-auto">
-        <Container fluid className="p-2">
-          {Object?.entries(foldersMap)?.map(
-            ([folder, data]) =>
-              folder !== "files" &&
-              folder !== "totalFiles" && (
-                <FolderTree
-                  key={folder}
-                  folderName={folder}
-                  folderData={data}
-                  onSelectFolder={setSelectedFolder}
-                  selectedFolder={selectedFolder}
-                />
-              )
-          )}
-        </Container>
+        <FolderRows
+          foldersMap={foldersMap}
+          setSelectedFolder={setSelectedFolder}
+          selectedFolder={selectedFolder}
+          selectedFiles={selectedFiles}
+        />
       </Col>
-
-      <Col
-        md={8}
-        style={{ borderLeft: "1px solid #dee2e6" }}
-      >
+      <Col md={8} style={{ borderLeft: "1px solid #dee2e6" }}>
         <FileGrid
           files={selectedFolderData?.files || []}
           selectedFiles={selectedFiles}

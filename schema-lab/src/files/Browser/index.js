@@ -2,6 +2,13 @@ import { useEffect, useState } from "react";
 import FileBrowserCard from "./FileBrowserCard";
 
 export default function FileBrowser({ selectedFiles, handleSetSelectedFiles }) {
+  // Component that displays folders and files from the user's project storage
+  //
+  // This component can be used in a controlled manner by providing
+  // `selectedFiles` and `handleSetSelectedFiles` props.
+  // If these props are not provided, it will manage its own state internally.
+
+  // Determine if the component is controlled or uncontrolled
   const isControlled = selectedFiles !== undefined && selectedFiles !== null;
 
   const [selectedFilesLocal, setSelectedFilesLocal] = useState([]);
@@ -20,7 +27,6 @@ export default function FileBrowser({ selectedFiles, handleSetSelectedFiles }) {
       setSelectedFilesLocal(files);
     }
   };
-
   return (
     <FileBrowserCard
       selectedFiles={isControlled ? selectedFiles : selectedFilesLocal}

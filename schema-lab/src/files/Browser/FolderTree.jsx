@@ -6,6 +6,7 @@ import {
   faCaretDown,
   faCaretRight,
 } from "@fortawesome/free-solid-svg-icons";
+import { folderContainsFiles } from "../utils/utils";
 
 export function FolderTree({
   folderName,
@@ -13,13 +14,16 @@ export function FolderTree({
   level = 0,
   onSelectFolder,
   selectedFolder,
+  selectedFiles,
 }) {
   const isRoot = level === 0;
   const [expanded, setExpanded] = useState(isRoot);
+
   const hasSubfolders = Object.keys(folderData).some(
     (k) =>
       k !== "files" && k !== "totalFiles" && typeof folderData[k] === "object"
   );
+
   return (
     <div style={{ marginLeft: level * 16 }}>
       <Stack
@@ -45,23 +49,24 @@ export function FolderTree({
 
         <FontAwesomeIcon icon={faFolder} />
         <span>{folderName}</span>
-        <span className="ms-auto text-muted small">
-          ({folderData?.totalFiles || folderData.files?.length || 0})
+        <span className="ms-auto text-muted small" style={{fontWeight: folderContainsFiles(folderData, selectedFiles) ? 'bold' : 'normal'}}>
+          ({folderData?.totalFiles || folderData?.files?.length || 0})
         </span>
       </Stack>
 
       <Collapse in={expanded || isRoot}>
         <div>
-          {Object.entries(folderData).map(([sub, data]) => {
-            if (sub === "files" || sub === "totalFiles") return null;
+          {Object?.entries(folderData)?.map(([folder, folderData]) => {
+            if (folder === "files" || folder === "totalFiles") return null;
             return (
               <FolderTree
-                key={sub}
-                folderName={sub}
-                folderData={data}
+                key={folder}
+                folderName={folder}
+                folderData={folderData}
                 level={level + 1}
                 onSelectFolder={onSelectFolder}
                 selectedFolder={selectedFolder}
+                selectedFiles={selectedFiles}
               />
             );
           })}
