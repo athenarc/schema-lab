@@ -55,6 +55,10 @@ export default function FileBrowser({ inputs, setInputs, mode = "picker" }) {
   // In picker mode the user selects files and the path where they will be mounted in the container.
   //
   // Inputs is an array of file input objects with properties: name, url, path, type, content.
+  // TODOS
+  // When files are uploaded/deleted/renamed the refresh that follows loses the traversed folder state.
+  // Add file preview
+  // Add informational messages for empty states and errors.
   const isControlled = Boolean(inputs && setInputs);
   const [containerInputsPath, setContainerInputsPath] = useState({
     path: "",

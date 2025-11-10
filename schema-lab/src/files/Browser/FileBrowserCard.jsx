@@ -1,9 +1,13 @@
-import { useCallback, useEffect, useState, useContext } from "react";
+import { useCallback, useEffect, useState, useContext, useMemo } from "react";
 import { Card, Row, Col, Tooltip, OverlayTrigger } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRedo } from "@fortawesome/free-solid-svg-icons";
 import { getFiles } from "../../api/v1/files";
-import { buildFolderTree, countFolders } from "../utils/folders";
+import {
+  buildFolderTree,
+  countFolders,
+  findNestedFolder,
+} from "../utils/folders";
 import { SelectedFilesSummary } from "./SelectedFIlesSummary";
 
 import { FolderBrowser } from "./FolderBrowser";
@@ -22,6 +26,7 @@ export default function FileBrowserCard({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [folderMap, setFolderMap] = useState({});
+  const [selectedFolder, setSelectedFolder] = useState("/");
   const { userDetails } = useContext(UserDetailsContext);
 
   const fetchFiles = useCallback(() => {
@@ -69,6 +74,15 @@ export default function FileBrowserCard({
     handleSetSelectedFiles([]);
   };
 
+  const selectedFolderData = useMemo(() => {
+    // Get the data for the currently selected folder
+    // If the current folder is root ("/"), return the root folder data
+    // data => files and nested folders
+    return selectedFolder === "/"
+      ? folderMap["/"]
+      : findNestedFolder(folderMap, selectedFolder);
+  }, [selectedFolder, folderMap]);
+
   return (
     <Card
       className="border-0 shadow-sm rounded-3 flex-grow-1 h-100 d-flex flex-column"
@@ -112,6 +126,9 @@ export default function FileBrowserCard({
             foldersMap={folderMap}
             selectedFiles={selectedFiles}
             handleSetSelectedFiles={handleSetSelectedFiles}
+            selectedFolder={selectedFolder}
+            setSelectedFolder={setSelectedFolder}
+            selectedFolderData={selectedFolderData}
             handleToggleFile={mode === "picker" ? toggleFile : () => {}}
             handleRefreshFiles={fetchFiles}
             mode={mode}

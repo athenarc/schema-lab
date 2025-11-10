@@ -1,29 +1,19 @@
-import { useState, useMemo } from "react";
 import { Row, Col } from "react-bootstrap";
-import { findNestedFolder } from "../utils/folders";
 import { FileGrid } from "./FileGrid";
 import { FolderRows } from "./FolderRows";
 
 export function FolderBrowser({
   foldersMap = {},
   selectedFiles,
+  selectedFolder = "/",
+  setSelectedFolder,
+  selectedFolderData,
   handleToggleFile,
   handleSetSelectedFiles,
   handleRefreshFiles,
   mode,
   userDetails,
 }) {
-  const [selectedFolder, setSelectedFolder] = useState("/");
-
-  const selectedFolderData = useMemo(() => {
-    // Get the data for the currently selected folder
-    // If the current folder is root ("/"), return the root folder data
-    // data => files and nested folders
-    return selectedFolder === "/"
-      ? foldersMap["/"]
-      : findNestedFolder(foldersMap, selectedFolder);
-  }, [selectedFolder, foldersMap]);
-
   return (
     <Row className="flex-grow-1 h-100">
       <Col md={4} className="overflow-auto">
