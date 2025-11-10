@@ -12,26 +12,14 @@ import {
   Tooltip,
   Modal,
   Alert,
-  InputGroup,
-  Popover,
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faXmark,
-  faPlus,
-  faSquareCheck,
-  faSquareXmark,
-} from "@fortawesome/free-solid-svg-icons";
+import { faXmark, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { runTaskPost } from "../api/v1/actions";
 import { UserDetailsContext } from "../utils/components/auth/AuthProvider";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FaAngleRight, FaAngleDown } from "react-icons/fa";
-import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
-import FileBrowser from "../files/Browser/";
-import {
-  validateContainerPath,
-  getCommonDirectoryPrefix,
-} from "../files/utils/paths";
+import FileBrowser from "../files/Browser";
 
 const TaskForm = () => {
   const navigate = useNavigate();
@@ -51,11 +39,6 @@ const TaskForm = () => {
   const [inputs, setInputs] = useState([
     { name: "", description: "", url: "", path: "", content: "", type: "" },
   ]);
-  const [containerInputPath, setContainerInputPath] = useState({
-    path: "/inputs/",
-    isValid: true,
-    errorMsg: "",
-  });
   const [outputs, setOutputs] = useState([
     { name: "", description: "", url: "", path: "", type: "" },
   ]);
@@ -69,7 +52,7 @@ const TaskForm = () => {
   // const [volumes, setVolumes] = useState([]);
   const [showJson, setShowJson] = useState(false);
   const { userDetails } = useContext(UserDetailsContext);
-  const [selectedFiles, setSelectedFiles] = useState([]);
+
   // Fill input boxes with data if UUID already exists
   useEffect(() => {
     if (taskData) {
@@ -122,28 +105,6 @@ const TaskForm = () => {
               },
             ]
       );
-
-      Array.isArray(taskData?.inputs) &&
-        setSelectedFiles(
-          taskData?.inputs?.map((input) => ({
-            path: input?.url || "",
-          }))
-        );
-
-      // Find common path prefix in input paths and set as container input path
-      const inputPaths = taskData?.inputs
-        ?.map((input) => input?.path)
-        .filter(Boolean);
-
-      if (inputPaths && inputPaths.length > 0) {
-        const prefix = getCommonDirectoryPrefix(inputPaths);
-
-        setContainerInputPath({
-          path: prefix,
-          isValid: true,
-          errorMsg: "",
-        });
-      }
 
       setOutputs(
         Array.isArray(taskData.outputs)
@@ -226,13 +187,6 @@ const TaskForm = () => {
 
   const prepareRequestData = () => {
     const { name, description, tags } = basicData;
-    const inputs = selectedFiles?.map((file) => ({
-      name: file?.name,
-      url: file?.path,
-      path: containerInputPath?.path + file?.path?.split("/").pop(),
-      type: "FILE",
-      content: "",
-    }));
     const data = {
       name,
       description,
@@ -343,6 +297,19 @@ const TaskForm = () => {
     // setVolumes([]);
   };
 
+  const handleInputChange = (index, e) => {
+    const { name, value } = e.target;
+    setInputs(
+      inputs.map((input, i) =>
+        i === index ? { ...input, [name]: value } : input
+      )
+    );
+  };
+
+  // const handleFileBrowserInputChange = (files) => {
+  //   setInputs(files);
+  // };
+
   const handleOutputChange = (index, e) => {
     const { name, value } = e.target;
     setOutputs(
@@ -350,15 +317,6 @@ const TaskForm = () => {
         i === index ? { ...output, [name]: value } : output
       )
     );
-  };
-
-  const handleContainerInputPathChange = (value) => {
-    const errorMsg = validateContainerPath(value);
-    setContainerInputPath({
-      path: value,
-      isValid: !errorMsg,
-      errorMsg: errorMsg || "",
-    });
   };
 
   const handleResourceChange = (event) => {
@@ -374,6 +332,22 @@ const TaskForm = () => {
       [name]: newValue,
     }));
   };
+
+  // const addInputField = () => {
+  //   const newInput = {
+  //     name: "",
+  //     description: "",
+  //     url: "",
+  //     path: "",
+  //     content: "",
+  //     type: "",
+  //   };
+  //   setInputs((prevInputs) => [...prevInputs, newInput]);
+  // };
+
+  // const removeInputField = () => {
+  //   setInputs((prevInputs) => prevInputs.slice(0, -1));
+  // };
 
   const addOutputField = () => {
     const newInput = { name: "", description: "", url: "", path: "", type: "" };
@@ -599,202 +573,29 @@ const TaskForm = () => {
               onSelect={handleToggle}
               className="mb-4"
             >
+              {/* Inputs */}
               <Accordion.Item eventKey="0">
                 <Accordion.Header>
-                  File Inputs (Optional)
+                  Inputs Information (Optional)&nbsp;
                   <FontAwesomeIcon
                     icon={faInfoCircle}
-                    className="ms-2 text-muted"
+                    className="ms-2"
                     data-bs-toggle="tooltip"
                     data-bs-placement="top"
-                    title="Add files that your task needs to access inside the container."
+                    title="Input information is optional, but if provided, both URL and Path are required."
                   />
                 </Accordion.Header>
-
-                <Accordion.Body className="pt-4">
-                  {/* Section Title + Subtitle */}
-                  <div className="mb-4">
-                    <h6 className="fw-semibold mb-1">Container Input Path</h6>
-                    <small className="text-muted">
-                      Files you select will be placed inside the task’s
-                      container at this path. Choose a location carefully to
-                      avoid unintended overwrites.
-                    </small>
-                  </div>
-
-                  <Form.Group as={Row} className="align-items-start mb-4">
-                    <Form.Label column sm="3" className="fw-bold pt-2">
-                      Path <span className="text-danger">*</span>
-                    </Form.Label>
-
-                    <Col sm="8">
-                      <InputGroup>
-                        <Form.Control
-                          type="text"
-                          name="path"
-                          value={containerInputPath?.path}
-                          onChange={(e) =>
-                            handleContainerInputPathChange(e.target.value)
-                          }
-                          onBlur={(e) => {
-                            const msg = validateContainerPath(e.target.value);
-                            setContainerInputPath({
-                              path: e.target.value,
-                              isValid: !msg,
-                              errorMsg: msg || "",
-                            });
-                          }}
-                          placeholder="/inputs/"
-                          isInvalid={
-                            !containerInputPath?.isValid &&
-                            !!selectedFiles?.length
-                          }
-                          required={!!selectedFiles?.length}
-                        />
-
-                        {/* Popover Help Button */}
-                        <OverlayTrigger
-                          trigger="click"
-                          placement="right"
-                          overlay={
-                            <Popover
-                              id="path-rules-popover"
-                              style={{ maxWidth: "300px", borderRadius: "8px" }}
-                            >
-                              <Popover.Header
-                                as="h6"
-                                className="py-2 px-3 bg-primary text-white"
-                                style={{
-                                  fontSize: "1rem",
-                                  fontWeight: 600,
-                                  borderBottom: "1px solid #e5e7eb",
-                                  borderRadius: "8px 8px 0 0",
-                                }}
-                              >
-                                Container Input Path Rules
-                              </Popover.Header>
-
-                              <Popover.Body className="small px-3 py-3">
-                                <p
-                                  className="mb-2"
-                                  style={{
-                                    lineHeight: "1.4",
-                                    fontSize: "0.85rem",
-                                  }}
-                                >
-                                  Select a directory inside the task's container
-                                  where your selected files will be mounted.
-                                </p>
-
-                                <ul
-                                  className="mt-2 ps-3"
-                                  style={{
-                                    marginBottom: "0.5rem",
-                                    fontSize: "0.85rem",
-                                  }}
-                                >
-                                  <li>
-                                    Must start with <code>/</code>
-                                  </li>
-                                  <li>
-                                    Should end with <code>/</code> when
-                                    referring to a directory
-                                  </li>
-                                  <li>
-                                    Should not contain <code>.</code> characters
-                                  </li>
-                                </ul>
-
-                                <hr className="my-3" />
-
-                                <div
-                                  className="fw-semibold mb-1"
-                                  style={{ fontSize: "0.85rem" }}
-                                >
-                                  Valid Examples
-                                  <FontAwesomeIcon
-                                    icon={faSquareCheck}
-                                    className="ms-2 text-success"
-                                  />
-                                </div>
-                                <div
-                                  className="bg-light border rounded px-2 py-2 mb-3"
-                                  style={{
-                                    fontFamily: "monospace",
-                                    fontSize: "0.8rem",
-                                  }}
-                                >
-                                  /inputs/ <br />
-                                  /workspace/data/ <br />
-                                  /mnt/data/custom/
-                                </div>
-
-                                <div
-                                  className="fw-semibold mb-1"
-                                  style={{ fontSize: "0.85rem" }}
-                                >
-                                  Not Allowed
-                                  <FontAwesomeIcon
-                                    icon={faSquareXmark}
-                                    className="ms-2 text-danger"
-                                  />
-                                </div>
-                                <div
-                                  className="bg-light border rounded px-2 py-2"
-                                  style={{
-                                    fontFamily: "monospace",
-                                    fontSize: "0.8rem",
-                                  }}
-                                >
-                                  inputs <br />
-                                  /inputs <br />
-                                  /data/file.txt <br />
-                                  /data/../secret
-                                </div>
-                              </Popover.Body>
-                            </Popover>
-                          }
-                        >
-                          <Button variant="outline-secondary">
-                            <FontAwesomeIcon icon={faInfoCircle} />
-                          </Button>
-                        </OverlayTrigger>
-
-                        <Form.Control.Feedback type="invalid">
-                          {containerInputPath?.errorMsg}
-                        </Form.Control.Feedback>
-                      </InputGroup>
-
-                      {/* Show warning only if user has selected files */}
-                      {selectedFiles?.length > 0 && (
-                        <div className="alert alert-warning mt-3 mb-0 py-2 px-3 d-flex align-items-center gap-2 small">
-                          <FontAwesomeIcon icon={faTriangleExclamation} />
-                          <span>
-                            Files copied to this location may{" "}
-                            <strong>overwrite</strong> existing files in the
-                            container.
-                          </span>
-                        </div>
-                      )}
-                    </Col>
-                  </Form.Group>
-
-                  {/* File Browser */}
-                  <div className="border-top pt-4">
-                    <h6 className="fw-semibold mb-3">
-                      Select Files to Include
-                    </h6>
-                    <FileBrowser
-                      userDetails={userDetails}
-                      selectedFiles={selectedFiles}
-                      handleSetSelectedFiles={setSelectedFiles}
-                    />
-                  </div>
+                <Accordion.Body>
+                  <FileBrowser
+                    mode="picker"
+                    setInputs={setInputs}
+                    inputs={inputs}
+                  />
                 </Accordion.Body>
               </Accordion.Item>
 
               {/* Outputs */}
-              <Accordion.Item eventKey="2">
+              <Accordion.Item eventKey="1">
                 <Accordion.Header>
                   Outputs Information (Optional)&nbsp;
                   <FontAwesomeIcon
@@ -1032,11 +833,7 @@ const TaskForm = () => {
               >
                 Back
               </Button>
-              <Button
-                variant="success"
-                type="submit"
-                disabled={containerInputPath?.isValid === false}
-              >
+              <Button variant="success" type="submit">
                 Submit
               </Button>
             </div>
@@ -1087,15 +884,7 @@ const TaskForm = () => {
                       description: basicData.description,
                       tags: basicData.tags,
                       executors,
-                      inputs: selectedFiles?.map((file) => ({
-                        name: file?.name,
-                        url: file?.path,
-                        path:
-                          containerInputPath?.path +
-                          file?.path?.split("/").pop(),
-                        type: "FILE",
-                        content: "",
-                      })),
+                      inputs,
                       outputs,
                       // volumes,
                       resources,

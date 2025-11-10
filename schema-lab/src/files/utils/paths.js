@@ -1,6 +1,7 @@
 export const validateContainerPath = (path) => {
   // Validates a string that will be the container path that will serve as the inputs directory
   // Returns an error message string if invalid, or null if valid
+
   if (path === undefined || path === null) return "The path cannot be empty.";
   if (!path?.trim()) return "The path cannot be empty.";
   if (!path?.startsWith("/")) return "The path must start with '/'.";
