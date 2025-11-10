@@ -13,6 +13,7 @@ import { UserDetailsContext } from "../../utils/components/auth/AuthProvider";
 export default function FileBrowserCard({
   selectedFiles,
   handleSetSelectedFiles,
+  mode = "browse",
 }) {
   // Component that displays folders and files from the user's project storage
   //
@@ -111,7 +112,10 @@ export default function FileBrowserCard({
             foldersMap={folderMap}
             selectedFiles={selectedFiles}
             handleSetSelectedFiles={handleSetSelectedFiles}
-            handleToggleFile={toggleFile}
+            handleToggleFile={mode === "picker" ? toggleFile : () => {}}
+            handleRefreshFiles={fetchFiles}
+            mode={mode}
+            userDetails={userDetails}
           />
         )}
       </Card.Body>
@@ -119,6 +123,7 @@ export default function FileBrowserCard({
         <SelectedFilesSummary
           selectedFiles={selectedFiles}
           handleResetFiles={handleResetFiles}
+          mode={mode}
         />
       </Card.Footer>
     </Card>

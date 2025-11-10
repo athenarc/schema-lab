@@ -9,7 +9,9 @@ const FileUploadModal = ({ show, onClose, files = [], onFileSelected }) => {
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     setFile(selectedFile);
-    setIsOverwrite(wouldOverwriteFile({ fileToUpload: selectedFile, files }));
+    setIsOverwrite(
+      wouldOverwriteFile({ fileToUpload: selectedFile, existingFiles: files })
+    );
   };
 
   const handleUploadClick = () => {

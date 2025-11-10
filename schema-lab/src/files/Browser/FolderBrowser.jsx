@@ -9,6 +9,9 @@ export function FolderBrowser({
   selectedFiles,
   handleToggleFile,
   handleSetSelectedFiles,
+  handleRefreshFiles,
+  mode,
+  userDetails,
 }) {
   const [selectedFolder, setSelectedFolder] = useState("/");
 
@@ -37,6 +40,9 @@ export function FolderBrowser({
           selectedFiles={selectedFiles}
           handleSetSelectedFiles={handleSetSelectedFiles}
           handleToggleFile={handleToggleFile}
+          handleRefreshFiles={handleRefreshFiles}
+          mode={mode}
+          userDetails={userDetails}
         />
       </Col>
     </Row>

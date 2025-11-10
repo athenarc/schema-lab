@@ -70,7 +70,7 @@ export default function FileBrowser({ inputs, setInputs, mode = "picker" }) {
 
     if (!isControlled) {
       return;
-    } // <-- important
+    }
     if (onMountCall.current) {
       setSelectedFilesLocal(mapInputsToSelectedFiles(inputs));
       if (validateEmptyInputs(inputs)) {
@@ -95,7 +95,7 @@ export default function FileBrowser({ inputs, setInputs, mode = "picker" }) {
         errorMsg: errorMsg || "",
       });
 
-      if (!isControlled) return; // <-- important
+      if (!isControlled) return;
       setInputs((prev) =>
         prev.map((input) => ({
           ...input,
@@ -154,6 +154,7 @@ export default function FileBrowser({ inputs, setInputs, mode = "picker" }) {
       <FileBrowserCard
         selectedFiles={selectedFilesLocal}
         handleSetSelectedFiles={onSelectedFilesChange}
+        mode={mode}
       />
     </div>
   );

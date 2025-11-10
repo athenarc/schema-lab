@@ -11,6 +11,9 @@ export function FileGrid({
   selectedFiles,
   handleToggleFile,
   handleSetSelectedFiles,
+  handleRefreshFiles,
+  mode,
+  userDetails,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
@@ -68,6 +71,10 @@ export function FileGrid({
         allSelected={allSelected}
         handleSelectAll={handleSelectAll}
         handleClearSelection={handleClearSelection}
+        mode={mode}
+        userDetails={userDetails}
+        handleRefreshFiles={handleRefreshFiles}
+        files={files}
       />
       <div
         className="overflow-y-auto p-2 flex-grow-0"
@@ -85,6 +92,8 @@ export function FileGrid({
                 file={file}
                 isSelected={selectedFiles?.some((f) => f?.path === file?.path)}
                 onToggle={() => handleToggleFile(file)}
+                handleRefreshFiles={handleRefreshFiles}
+                mode={mode}
               />
             ))
           : !searchLoading && (

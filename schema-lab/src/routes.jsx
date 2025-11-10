@@ -30,6 +30,7 @@ import ViewExperiments from "./dashboard/tasks/expriment/preview/index";
 import ExperimentListDetails from "./dashboard/tasks/expriment/details";
 import ExperimentDetails from "./dashboard/tasks/expriment/details/ExperimentDetails";
 import EditExperiment from "./dashboard/tasks/expriment/edit";
+import FileBrowser from "./files/Browser";
 
 const ProtectedRoutes = () => {
   const { userDetails } = useContext(UserDetailsContext);
@@ -66,7 +67,8 @@ const router = createBrowserRouter(
           <Route index element={<Navigate to="description" />} />
           <Route path="description" element={<ExperimentDetails />} />
         </Route>
-        <Route path="/files" element={<FilesDashboard />} />
+        <Route path="/files" element={<FileBrowser mode="browser" />} />
+        {/* <Route path="/files" element={<FilesDashboard />} /> */}
         <Route path="/task-details/:uuid" element={<Details />}>
           <Route index element={<Navigate to="executors" />} />
           <Route path="executors" element={<Executors />} />

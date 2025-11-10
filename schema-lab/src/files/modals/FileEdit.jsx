@@ -76,9 +76,8 @@ const FileUploadModal = ({
     setRenameSuccess(false);
 
     try {
-      const basePath = oldPath.substring(0, oldPath.lastIndexOf("\\") + 1);
+      const basePath = oldPath.substring(0, oldPath.lastIndexOf("/") + 1);
       const newPath = basePath + newFilename;
-
       await renameOrMoveFile({
         auth: userDetails,
         oldPath,

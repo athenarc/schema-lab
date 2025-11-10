@@ -16,5 +16,5 @@ export const isPreviewableFile = (path) => {
 export const wouldOverwriteFile = ({ fileToUpload, existingFiles }) => {
   if (!fileToUpload) return false;
   const uploadName = getBaseFilename(fileToUpload?.name);
-  return existingFiles.some((f) => getBaseFilename(f?.path) === uploadName);
+  return existingFiles?.some((f) => getBaseFilename(f?.path) === uploadName);
 };
