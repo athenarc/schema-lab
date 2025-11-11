@@ -23,8 +23,10 @@ function validateEmptyInputs(inputs) {
     const input = inputs[0];
     if (
       (!input?.name || input?.name?.trim() === "") &&
+      (!input?.path || input?.path?.trim() === "") &&
       (!input?.url || input?.url?.trim() === "") &&
-      (!input?.path || input?.path?.trim() === "")
+      (!input?.type || input?.type?.trim() === "") &&
+      (!input?.content || input?.content?.trim() === "")
     ) {
       return true;
     }
@@ -59,6 +61,7 @@ export default function FileBrowser({ inputs, setInputs, mode = "picker" }) {
   // When files are uploaded/deleted/renamed the refresh that follows loses the traversed folder state.
   // Add file preview
   // Add informational messages for empty states and errors.
+  // What should we do when a file does not exist?
   const isControlled = Boolean(inputs && setInputs);
   const [containerInputsPath, setContainerInputsPath] = useState({
     path: "",
@@ -76,10 +79,11 @@ export default function FileBrowser({ inputs, setInputs, mode = "picker" }) {
       return;
     }
     if (onMountCall.current) {
-      setSelectedFilesLocal(mapInputsToSelectedFiles(inputs));
       if (validateEmptyInputs(inputs)) {
         return;
       }
+
+      setSelectedFilesLocal(mapInputsToSelectedFiles(inputs));
       setContainerInputsPath({
         path: getCommonDirectoryPath(inputs),
         isValid: true,
@@ -119,7 +123,7 @@ export default function FileBrowser({ inputs, setInputs, mode = "picker" }) {
             ? filesOrUpdater(prev)
             : filesOrUpdater;
 
-        if (!files || files.length === 0) {
+        if (!files || files?.length === 0) {
           if (isControlled) setInputs([]);
           return [];
         }
