@@ -1,6 +1,6 @@
 import { Card } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFolder } from "@fortawesome/free-solid-svg-icons";
+import { faFile } from "@fortawesome/free-solid-svg-icons";
 import { formatBytes, timestampToDateOptions } from "../utils/utils";
 import { FileDropdownActions } from "./FileDropdownActions";
 
@@ -72,7 +72,7 @@ export function FileCard({
 
       <Card.Body className="d-flex flex-column align-items-center justify-content-center text-center">
         <FontAwesomeIcon
-          icon={faFolder}
+          icon={faFile}
           size="2x"
           className="mb-2"
           style={{
