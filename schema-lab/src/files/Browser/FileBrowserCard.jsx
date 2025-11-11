@@ -138,6 +138,7 @@ export default function FileBrowserCard({
       </Card.Body>
       <Card.Footer className="d-flex justify-content-between p-2">
         <SelectedFilesSummary
+          folderMap={folderMap}
           selectedFiles={selectedFiles}
           handleResetFiles={handleResetFiles}
           mode={mode}

@@ -44,11 +44,11 @@ export const countFolders = (folder) => {
 };
 
 // Check if a folder tree contains any of the given files
-export const folderContainsFiles = (folder, files) => {
+export const folderContainsFiles = (folder = {}, files = []) => {
   if (!folder || typeof folder !== "object") return false;
-  const filePaths = new Set(files.map((f) => f.path));
+  const filePaths = new Set(files?.map((f) => f?.path));
 
-  if (folder.files?.some((f) => filePaths.has(f.path))) return true;
+  if (folder?.files?.some((f) => filePaths?.has(f?.path))) return true;
 
   for (const key in folder) {
     if (key !== "files" && key !== "totalFiles") {
@@ -58,6 +58,16 @@ export const folderContainsFiles = (folder, files) => {
 
   return false;
 };
+
+export function folderDoesNotContainFiles(folder = {}, files = []) {
+  const missingFiles = [];
+  for (const file of files) {
+    if (!folderContainsFiles(folder, [file])) {
+      missingFiles.push(file);
+    }
+  }
+  return missingFiles.length > 0 ? missingFiles : false;
+}
 
 // Find a nested folder by key
 export const findNestedFolder = (obj, target) => {

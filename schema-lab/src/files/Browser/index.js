@@ -78,7 +78,7 @@ export default function FileBrowser({ inputs, setInputs, mode = "picker" }) {
     if (!isControlled) {
       return;
     }
-    if (onMountCall.current) {
+    if (onMountCall?.current) {
       if (validateEmptyInputs(inputs)) {
         return;
       }
