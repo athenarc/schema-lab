@@ -13,6 +13,8 @@ export function FolderBrowser({
   handleRefreshFiles,
   mode,
   userDetails,
+  expandedFolders,
+  setExpandedFolders,
 }) {
   return (
     <Row className="flex-grow-1 h-100">
@@ -22,6 +24,8 @@ export function FolderBrowser({
           setSelectedFolder={setSelectedFolder}
           selectedFolder={selectedFolder}
           selectedFiles={selectedFiles}
+          expandedFolders={expandedFolders}
+          setExpandedFolders={setExpandedFolders}
         />
       </Col>
       <Col md={8} style={{ borderLeft: "1px solid #dee2e6" }}>

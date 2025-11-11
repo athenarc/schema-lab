@@ -27,7 +27,24 @@ export default function FileBrowserCard({
   const [error, setError] = useState(null);
   const [folderMap, setFolderMap] = useState({});
   const [selectedFolder, setSelectedFolder] = useState("/");
+  const [expandedFolders, setExpandedFolders] = useState({});
   const { userDetails } = useContext(UserDetailsContext);
+
+  const expandFolderPath = useCallback((path) => {
+    const parts = path.split("/").filter(Boolean); // ["minio", "outputs", "test"]
+
+    let current = "";
+    const expanded = {};
+    for (const part of parts) {
+      current += "/" + part;
+      expanded[current] = true;
+    }
+    setExpandedFolders(expanded);
+  }, []);
+
+  useEffect(() => {
+    if (selectedFolder) expandFolderPath(selectedFolder);
+  }, [selectedFolder, expandFolderPath]);
 
   const fetchFiles = useCallback(() => {
     setLoading(true);
@@ -133,6 +150,8 @@ export default function FileBrowserCard({
             handleRefreshFiles={fetchFiles}
             mode={mode}
             userDetails={userDetails}
+            expandedFolders={expandedFolders}
+            setExpandedFolders={setExpandedFolders}
           />
         )}
       </Card.Body>
