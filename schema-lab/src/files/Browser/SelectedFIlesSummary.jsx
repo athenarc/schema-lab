@@ -6,6 +6,7 @@ import {
   ProgressBar,
   Alert,
 } from "react-bootstrap";
+import { useCallback, useEffect } from "react";
 import { folderDoesNotContainFiles } from "../utils/folders";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -15,6 +16,7 @@ import {
   faTriangleExclamation,
   faTimesCircle,
   faUpload,
+  faRotateRight,
 } from "@fortawesome/free-solid-svg-icons";
 
 export function SelectedFilesSummary({
@@ -22,7 +24,8 @@ export function SelectedFilesSummary({
   selectedFiles,
   handleResetFiles,
   mode,
-  status, // { message, statusType, status, progress }
+  status, // { message, statusType, status, progress, onDismiss, onRetry, onCancel }
+  handleSetStatus,
 }) {
   const missingFiles = folderDoesNotContainFiles?.(folderMap, selectedFiles);
 
@@ -51,7 +54,26 @@ export function SelectedFilesSummary({
         return faCircleInfo;
     }
   };
+  const handleDismiss = useCallback(() => {
+    handleSetStatus((prev) => ({
+      ...prev,
+      message: "",
+      statusType: "",
+      status: 0,
+    }));
+  }, [handleSetStatus]);
 
+  // Auto-dismiss alerts after 5 seconds
+  useEffect(() => {
+    if (
+      status?.message &&
+      status?.statusType !== "uploading" &&
+      !(status?.statusType === "error" && status?.onRetry)
+    ) {
+      const timer = setTimeout(() => handleDismiss(), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [status, handleDismiss]);
   return (
     <div className="p-2 w-100">
       {/* Mode: Picker */}
@@ -115,10 +137,21 @@ export function SelectedFilesSummary({
                 variant="primary"
                 style={{ height: "1.2rem" }}
               />
+              {status?.onCancel && (
+                <div className="text-center mt-2">
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() => status?.onCancel?.()}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Informational / Success / Error / Warning */}
+          {/* Info / Success / Error / Warning */}
           {status?.message && status?.statusType !== "uploading" && (
             <Alert
               variant={getStatusVariant?.(status?.statusType)}
@@ -128,23 +161,26 @@ export function SelectedFilesSummary({
                 <FontAwesomeIcon icon={getStatusIcon?.(status?.statusType)} />
                 <span>{status?.message}</span>
               </div>
-              {status?.onDismiss && (
+              <div className="d-flex align-items-center gap-2">
+                {status?.statusType === "error" && status?.onRetry && (
+                  <Button
+                    variant="outline-light"
+                    size="sm"
+                    onClick={() => status?.onRetry?.()}
+                  >
+                    <FontAwesomeIcon icon={faRotateRight} className="me-1" />
+                    Retry
+                  </Button>
+                )}
                 <Button
                   variant="outline-light"
                   size="sm"
-                  onClick={() => status?.onDismiss?.()}
+                  onClick={() => handleDismiss()}
                 >
                   ×
                 </Button>
-              )}
+              </div>
             </Alert>
-          )}
-
-          {/* Fallback - Idle state */}
-          {!status?.message && !status?.statusType && (
-            <div className="text-muted small text-center py-2">
-              <em>No current activity</em>
-            </div>
           )}
         </div>
       )}

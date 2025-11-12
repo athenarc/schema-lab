@@ -167,6 +167,7 @@ export default function FileBrowserCard({
           selectedFiles={selectedFiles}
           handleResetFiles={handleResetFiles}
           status={status}
+          handleSetStatus={onSetStatus}
           mode={mode}
         />
       </Card.Footer>

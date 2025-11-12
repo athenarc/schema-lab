@@ -23,6 +23,8 @@ const FileUploadModal = ({ show, onClose, files = [], onFileSelected }) => {
 
   const handleClose = () => {
     if (!file) setIsOverwrite(false);
+    setFile(null);
+    setIsOverwrite(false);
     onClose();
   };
 

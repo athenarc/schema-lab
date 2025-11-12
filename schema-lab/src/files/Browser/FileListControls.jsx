@@ -6,10 +6,9 @@ import {
   faSquareXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import FileUploadModal from "../modals/FileUpload";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import { wouldOverwriteFile } from "../utils/files";
 import { uploadFile } from "../../api/v1/files";
-import FileUploadProgress from "../Dashboard/FileUploadProgress";
 import { getCommonDirectoryPrefix } from "../utils/paths";
 
 export function FileListControls({
@@ -26,13 +25,16 @@ export function FileListControls({
 }) {
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [isOverwrite, setIsOverwrite] = useState(false);
-  const [uploadAbortController, setUploadAbortController] = useState(null);
+
+  // Use ref for AbortController to avoid async state issues
+  const uploadAbortControllerRef = useRef(null);
 
   const cancelUpload = useCallback(() => {
-    uploadAbortController?.abort();
-  }, [uploadAbortController]);
+    if (uploadAbortControllerRef.current) {
+      uploadAbortControllerRef.current.abort();
+    }
+  }, []);
+
   const currentPath = getCommonDirectoryPrefix(files.map((f) => f.path));
 
   const startUpload = useCallback(
@@ -40,7 +42,7 @@ export function FileListControls({
       if (!file) return;
 
       const controller = new AbortController();
-      setUploadAbortController(controller);
+      uploadAbortControllerRef.current = controller;
 
       setUploading(true);
       handleSetStatus({
@@ -48,11 +50,13 @@ export function FileListControls({
         statusType: "uploading",
         status: 0,
         progress: 0,
+        onDismiss: cancelUpload,
+        onRetry: () => startUpload(file),
+        onCancel: cancelUpload,
       });
 
       try {
         await uploadFile({
-          // replace trailing /slash from path
           path: currentPath?.replace(/\/$/, ""),
           file,
           auth: userDetails?.apiKey,
@@ -61,14 +65,12 @@ export function FileListControls({
           signal: controller.signal,
         });
 
-        handleSetStatus((prev) => ({
-          ...prev,
-          progress: 100,
+        handleSetStatus({
           message: "File uploaded successfully.",
           statusType: "success",
           status: 200,
-        }));
-        setSelectedFile(null);
+          progress: 100,
+        });
       } catch (err) {
         if (err.name === "AbortError") {
           handleSetStatus({
@@ -76,6 +78,7 @@ export function FileListControls({
             statusType: "error",
             status: 0,
             progress: 0,
+            onCancel: null,
           });
         } else {
           handleSetStatus({
@@ -83,27 +86,30 @@ export function FileListControls({
             statusType: "error",
             status: 500,
             progress: 0,
+            onRetry: () => startUpload(file),
           });
         }
       } finally {
         setUploading(false);
-        setUploadAbortController(null);
+        uploadAbortControllerRef.current = null;
         handleRefreshFiles();
       }
     },
-    [currentPath, handleRefreshFiles, userDetails?.apiKey, handleSetStatus]
+    [
+      currentPath,
+      handleRefreshFiles,
+      userDetails?.apiKey,
+      handleSetStatus,
+      cancelUpload,
+    ]
   );
+
   const handleFileSelected = useCallback(
     (file) => {
-      setSelectedFile(file);
-
-      setIsOverwrite(
-        wouldOverwriteFile({ fileToUpload: file, existingFiles: files })
-      );
       setShowFileUploadModal(false);
       startUpload(file);
     },
-    [files, startUpload]
+    [startUpload]
   );
 
   return (
@@ -121,6 +127,7 @@ export function FileListControls({
             />
           </InputGroup>
         </div>
+
         {mode === "picker" && (
           <div className="d-flex gap-2 mt-2 mt-md-0 flex-shrink-0">
             <Button
@@ -136,6 +143,7 @@ export function FileListControls({
             </Button>
           </div>
         )}
+
         {mode === "browser" && (
           <Button
             variant="primary"
@@ -154,27 +162,6 @@ export function FileListControls({
           files={files}
         />
       </div>
-      {/* <FileUploadProgress
-        uploading={uploading}
-        selectedFile={selectedFile}
-        uploadError={uploadError}
-        uploadSuccess={uploadSuccess}
-        setUploadError={setUploadError}
-        setSelectedFile={setSelectedFile}
-        setUploadSuccess={setUploadSuccess}
-        uploadProgress={uploadProgress}
-        isOverwrite={isOverwrite}
-        cancelUpload={cancelUpload}
-        startUpload={startUpload}
-        unzipError={unzipError}
-        setUnzipError={setUnzipError}
-        unzipSuccess={unzipSuccess}
-        setUnzipSuccess={setUnzipSuccess}
-        deleteError={deleteError}
-        setDeleteError={setDeleteError}
-        deleteSuccess={deleteSuccess}
-        setDeleteSuccess={setDeleteSuccess}
-      /> */}
     </>
   );
 }
