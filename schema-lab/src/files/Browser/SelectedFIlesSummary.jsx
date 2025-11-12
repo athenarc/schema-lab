@@ -63,7 +63,6 @@ export function SelectedFilesSummary({
     }));
   }, [handleSetStatus]);
 
-  // Auto-dismiss alerts after 5 seconds
   useEffect(() => {
     if (
       status?.message &&
@@ -117,12 +116,12 @@ export function SelectedFilesSummary({
 
       {/* Mode: Browser */}
       {mode === "browser" && (
-        <div className="">
-          {/* Upload Progress */}
+        <div className="d-flex flex-column gap-2">
+          {/* Upload Card */}
           {status?.statusType === "uploading" && (
-            <div className="mb-3">
-              <div className="d-flex justify-content-between align-items-center mb-1">
-                <div className="d-flex align-items-center gap-2 text-muted small">
+            <div className="p-3 bg-light rounded shadow-sm border">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <div className="d-flex align-items-center gap-2 text-muted">
                   <FontAwesomeIcon icon={faUpload} />
                   Uploading file...
                 </div>
@@ -135,14 +134,14 @@ export function SelectedFilesSummary({
                 animated
                 striped
                 variant="primary"
-                style={{ height: "1.2rem" }}
+                style={{ height: "1.5rem", borderRadius: "0.5rem" }}
               />
               {status?.onCancel && (
-                <div className="text-center mt-2">
+                <div className="d-flex justify-content-end mt-2">
                   <Button
                     variant="outline-danger"
                     size="sm"
-                    onClick={() => status?.onCancel?.()}
+                    onClick={status.onCancel}
                   >
                     Cancel
                   </Button>
@@ -151,31 +150,79 @@ export function SelectedFilesSummary({
             </div>
           )}
 
-          {/* Info / Success / Error / Warning */}
+          {/* Status Alerts */}
           {status?.message && status?.statusType !== "uploading" && (
             <Alert
-              variant={getStatusVariant?.(status?.statusType)}
-              className="d-flex align-items-center justify-content-between py-2 px-3 mb-0"
+              className="d-flex justify-content-between align-items-center p-2 rounded mb-0"
+              style={{
+                color: "#000",
+                backgroundColor:
+                  status?.statusType === "success"
+                    ? "rgba(40, 167, 69, 0.1)"
+                    : status?.statusType === "error"
+                    ? "rgba(220, 53, 69, 0.1)"
+                    : status?.statusType === "warning"
+                    ? "rgba(255, 193, 7, 0.1)"
+                    : "rgba(23, 162, 184, 0.1)",
+                border: `1px solid ${
+                  status?.statusType === "success"
+                    ? "#28a745"
+                    : status?.statusType === "error"
+                    ? "#dc3545"
+                    : status?.statusType === "warning"
+                    ? "#ffc107"
+                    : "#17a2b8"
+                }`,
+              }}
             >
               <div className="d-flex align-items-center gap-2">
-                <FontAwesomeIcon icon={getStatusIcon?.(status?.statusType)} />
+                <FontAwesomeIcon
+                  icon={getStatusIcon(status?.statusType)}
+                  style={{
+                    color:
+                      status?.statusType === "success"
+                        ? "#28a745"
+                        : status?.statusType === "error"
+                        ? "#dc3545"
+                        : status?.statusType === "warning"
+                        ? "#ffc107"
+                        : "#17a2b8",
+                  }}
+                />
                 <span>{status?.message}</span>
               </div>
-              <div className="d-flex align-items-center gap-2">
+              <div className="d-flex align-items-center gap-1">
                 {status?.statusType === "error" && status?.onRetry && (
                   <Button
-                    variant="outline-light"
+                    variant="outline-secondary"
                     size="sm"
-                    onClick={() => status?.onRetry?.()}
+                    onClick={status.onRetry}
                   >
                     <FontAwesomeIcon icon={faRotateRight} className="me-1" />
                     Retry
                   </Button>
                 )}
                 <Button
-                  variant="outline-light"
+                  style={{
+                    color:
+                      status?.statusType === "success"
+                        ? "#28a745"
+                        : status?.statusType === "error"
+                        ? "#dc3545"
+                        : status?.statusType === "warning"
+                        ? "#ffc107"
+                        : "#17a2b8",
+                    border: "none",
+                    backgroundColor: "transparent",
+                    padding: "0 8px",
+                    fontSize: "1.2rem",
+                    lineHeight: "1",
+                    borderRadius: "0.25rem",
+                    boxShadow: "none",
+                    textDecoration: "none",
+                  }}
                   size="sm"
-                  onClick={() => handleDismiss()}
+                  onClick={handleDismiss}
                 >
                   ×
                 </Button>
