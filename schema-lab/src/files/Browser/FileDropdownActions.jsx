@@ -11,11 +11,14 @@ import FileEditModal from "../modals/FileEdit";
 import { deleteFile } from "../../api/v1/files";
 import { UserDetailsContext } from "../../utils/components/auth/AuthProvider";
 
-export function FileDropdownActions({ onRename, file, handleRefreshFiles }) {
+export function FileDropdownActions({
+  onRename,
+  file,
+  handleRefreshFiles,
+  handleSetStatus,
+}) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
-  const [deleteSuccess, setDeleteSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [showFileEditModal, setShowFileEditModal] = useState(false);
 
   const { userDetails } = useContext(UserDetailsContext);
@@ -30,26 +33,51 @@ export function FileDropdownActions({ onRename, file, handleRefreshFiles }) {
 
   const handleDelete = useCallback(
     async (file) => {
-      setDeleteLoading(true);
-      setDeleteError("");
-      setDeleteSuccess(false);
+      setLoading(true);
+      handleSetStatus({
+        message: "Deleting file...",
+        statusType: "info",
+        status: 0,
+      });
+      // setDeleteError("");
+      // setDeleteSuccess(false);
       try {
         await deleteFile({
           auth: userDetails?.apiKey,
           path: file?.path,
         });
 
-        setDeleteSuccess(true);
+        // setDeleteSuccess(true);
       } catch (err) {
-        setDeleteError(err?.message || "Delete failed");
+        handleSetStatus({
+          message: "Error deleting file.",
+          statusType: "error",
+          status: err?.status || 500,
+        });
+        // setDeleteError(err?.message || "Delete failed");
       } finally {
+        handleSetStatus({
+          message: "File deleted successfully.",
+          statusType: "success",
+          status: 200,
+        });
         handleRefreshFiles();
-        setDeleteLoading(false);
+        setLoading(false);
         setShowDeleteModal(false);
       }
     },
-    [handleRefreshFiles, userDetails?.apiKey]
+    [handleRefreshFiles, userDetails?.apiKey, handleSetStatus]
   );
+
+  const handleUpdateSuccess = () => {
+    handleSetStatus({
+      message: "File renamed successfully.",
+      statusType: "success",
+      status: 200,
+    });
+    handleRefreshFiles();
+    setShowFileEditModal(false);
+  };
 
   return (
     <Dropdown
@@ -67,7 +95,7 @@ export function FileDropdownActions({ onRename, file, handleRefreshFiles }) {
         show={showFileEditModal}
         onClose={() => setShowFileEditModal(false)}
         file={file}
-        onUpdateSuccess={handleRefreshFiles}
+        onUpdateSuccess={handleUpdateSuccess}
         userDetails={userDetails?.apiKey}
       />
       <Dropdown.Toggle
@@ -79,16 +107,13 @@ export function FileDropdownActions({ onRename, file, handleRefreshFiles }) {
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
-        <Dropdown.Item
-          onClick={() => handleFileEdit(file)}
-          disabled={deleteLoading}
-        >
+        <Dropdown.Item onClick={() => handleFileEdit(file)} disabled={loading}>
           <FontAwesomeIcon icon={faPen} className="me-2" />
           Rename
         </Dropdown.Item>
         <Dropdown.Item
           onClick={() => handleConfirmDelete(file)}
-          disabled={deleteLoading}
+          disabled={loading}
         >
           <FontAwesomeIcon icon={faTrash} className="me-2 text-danger" />
           Delete

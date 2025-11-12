@@ -14,6 +14,7 @@ export function FileGrid({
   handleRefreshFiles,
   mode,
   userDetails,
+  handleSetStatus,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
@@ -75,6 +76,7 @@ export function FileGrid({
         userDetails={userDetails}
         handleRefreshFiles={handleRefreshFiles}
         files={files}
+        handleSetStatus={handleSetStatus}
       />
       <div
         className="overflow-y-auto p-2 flex-grow-0"
@@ -94,6 +96,7 @@ export function FileGrid({
                 onToggle={() => handleToggleFile(file)}
                 handleRefreshFiles={handleRefreshFiles}
                 mode={mode}
+                handleSetStatus={handleSetStatus}
               />
             ))
           : !searchLoading && (

@@ -15,6 +15,7 @@ export function FolderBrowser({
   userDetails,
   expandedFolders,
   setExpandedFolders,
+  handleSetStatus,
 }) {
   return (
     <Row className="flex-grow-1 h-100">
@@ -37,6 +38,7 @@ export function FolderBrowser({
           handleRefreshFiles={handleRefreshFiles}
           mode={mode}
           userDetails={userDetails}
+          handleSetStatus={handleSetStatus}
         />
       </Col>
     </Row>

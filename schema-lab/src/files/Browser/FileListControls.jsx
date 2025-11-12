@@ -22,12 +22,10 @@ export function FileListControls({
   userDetails,
   files = [],
   handleRefreshFiles,
+  handleSetStatus,
 }) {
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadError, setUploadError] = useState("");
-  const [uploadSuccess, setUploadSuccess] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isOverwrite, setIsOverwrite] = useState(false);
   const [uploadAbortController, setUploadAbortController] = useState(null);
@@ -45,9 +43,12 @@ export function FileListControls({
       setUploadAbortController(controller);
 
       setUploading(true);
-      setUploadProgress(0);
-      setUploadError("");
-      setUploadSuccess(false);
+      handleSetStatus({
+        message: "Uploading file...",
+        statusType: "uploading",
+        status: 0,
+        progress: 0,
+      });
 
       try {
         await uploadFile({
@@ -55,18 +56,34 @@ export function FileListControls({
           path: currentPath?.replace(/\/$/, ""),
           file,
           auth: userDetails?.apiKey,
-          onProgress: (p) => setUploadProgress(p),
+          onProgress: (p) =>
+            handleSetStatus((prev) => ({ ...prev, progress: p })),
           signal: controller.signal,
         });
 
-        setUploadProgress(100);
-        setUploadSuccess(true);
+        handleSetStatus((prev) => ({
+          ...prev,
+          progress: 100,
+          message: "File uploaded successfully.",
+          statusType: "success",
+          status: 200,
+        }));
         setSelectedFile(null);
       } catch (err) {
         if (err.name === "AbortError") {
-          setUploadError("Upload cancelled by user");
+          handleSetStatus({
+            message: "Upload cancelled by user",
+            statusType: "error",
+            status: 0,
+            progress: 0,
+          });
         } else {
-          setUploadError(err.message || "Upload failed");
+          handleSetStatus({
+            message: err.message || "Upload failed",
+            statusType: "error",
+            status: 500,
+            progress: 0,
+          });
         }
       } finally {
         setUploading(false);
@@ -74,7 +91,7 @@ export function FileListControls({
         handleRefreshFiles();
       }
     },
-    [currentPath, handleRefreshFiles, userDetails?.apiKey]
+    [currentPath, handleRefreshFiles, userDetails?.apiKey, handleSetStatus]
   );
   const handleFileSelected = useCallback(
     (file) => {
@@ -137,7 +154,7 @@ export function FileListControls({
           files={files}
         />
       </div>
-      <FileUploadProgress
+      {/* <FileUploadProgress
         uploading={uploading}
         selectedFile={selectedFile}
         uploadError={uploadError}
@@ -149,15 +166,15 @@ export function FileListControls({
         isOverwrite={isOverwrite}
         cancelUpload={cancelUpload}
         startUpload={startUpload}
-        // unzipError={unzipError}
-        // setUnzipError={setUnzipError}
-        // unzipSuccess={unzipSuccess}
-        // setUnzipSuccess={setUnzipSuccess}
-        // deleteError={deleteError}
-        // setDeleteError={setDeleteError}
-        // deleteSuccess={deleteSuccess}
-        // setDeleteSuccess={setDeleteSuccess}
-      />
+        unzipError={unzipError}
+        setUnzipError={setUnzipError}
+        unzipSuccess={unzipSuccess}
+        setUnzipSuccess={setUnzipSuccess}
+        deleteError={deleteError}
+        setDeleteError={setDeleteError}
+        deleteSuccess={deleteSuccess}
+        setDeleteSuccess={setDeleteSuccess}
+      /> */}
     </>
   );
 }

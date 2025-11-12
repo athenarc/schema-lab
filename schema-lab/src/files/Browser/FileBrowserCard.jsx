@@ -29,6 +29,12 @@ export default function FileBrowserCard({
   const [folderMap, setFolderMap] = useState({});
   const [selectedFolder, setSelectedFolder] = useState("/");
   const [expandedFolders, setExpandedFolders] = useState({});
+  const [status, setStatus] = useState({
+    message: "",
+    statusType: "",
+    status: 0,
+    progress: 0,
+  });
   const { userDetails } = useContext(UserDetailsContext);
 
   const expandFolderPath = useCallback((path) => {
@@ -91,6 +97,10 @@ export default function FileBrowserCard({
     [handleSetSelectedFiles]
   );
 
+  const onSetStatus = (status) => {
+    setStatus(status);
+  };
+
   const selectedFolderData = useMemo(() => {
     return findNestedFolder(folderMap, selectedFolder) || { files: [] };
   }, [selectedFolder, folderMap]);
@@ -147,6 +157,7 @@ export default function FileBrowserCard({
             userDetails={userDetails}
             expandedFolders={expandedFolders}
             setExpandedFolders={setExpandedFolders}
+            handleSetStatus={onSetStatus}
           />
         )}
       </Card.Body>
@@ -155,6 +166,7 @@ export default function FileBrowserCard({
           folderMap={folderMap}
           selectedFiles={selectedFiles}
           handleResetFiles={handleResetFiles}
+          status={status}
           mode={mode}
         />
       </Card.Footer>

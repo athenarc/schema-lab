@@ -36,6 +36,7 @@ export function FileCard({
   onRename,
   handleRefreshFiles,
   mode,
+  handleSetStatus,
 }) {
   const filename = file?.path?.split("/").pop();
 
@@ -66,6 +67,7 @@ export function FileCard({
             onDelete={onDelete}
             file={file}
             handleRefreshFiles={handleRefreshFiles}
+            handleSetStatus={handleSetStatus}
           />
         )}
       </Card.Header>
