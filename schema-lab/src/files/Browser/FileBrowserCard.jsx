@@ -106,7 +106,7 @@ export default function FileBrowserCard({
       <Card.Header className="p-2">
         File Browser
         <small className="text-muted ms-2">
-          ({countFolders(folderMap["/"] || {})} folders)
+          ({countFolders(folderMap || {})} folders)
         </small>
         <OverlayTrigger
           placement="top"
