@@ -2,6 +2,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowDownAZ,
   faArrowDownZA,
+  faCircleCheck,
+  faCircleInfo,
+  faTriangleExclamation,
+  faTimesCircle,
 } from "@fortawesome/free-solid-svg-icons";
 
 const timestampToDateOptions = {
@@ -11,6 +15,19 @@ const timestampToDateOptions = {
   hour: "2-digit",
   minute: "2-digit",
   second: "2-digit",
+};
+
+const getStatusIcon = (type) => {
+  switch (type) {
+    case "success":
+      return faCircleCheck;
+    case "error":
+      return faTimesCircle;
+    case "warning":
+      return faTriangleExclamation;
+    default:
+      return faCircleInfo;
+  }
 };
 
 const formatBytes = (bytes) => {
@@ -35,4 +52,4 @@ const ColumnSortIcon = ({ columnKey, sortKey, sortOrder }) => {
   );
 };
 
-export { timestampToDateOptions, formatBytes, ColumnSortIcon };
+export { timestampToDateOptions, formatBytes, ColumnSortIcon, getStatusIcon };

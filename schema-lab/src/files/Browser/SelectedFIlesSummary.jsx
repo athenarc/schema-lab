@@ -11,13 +11,10 @@ import { folderDoesNotContainFiles } from "../utils/folders";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faExclamationTriangle,
-  faCircleCheck,
-  faCircleInfo,
-  faTriangleExclamation,
-  faTimesCircle,
   faUpload,
   faRotateRight,
 } from "@fortawesome/free-solid-svg-icons";
+import { getStatusIcon } from "../utils/utils";
 
 export function SelectedFilesSummary({
   folderMap,
@@ -29,31 +26,6 @@ export function SelectedFilesSummary({
 }) {
   const missingFiles = folderDoesNotContainFiles?.(folderMap, selectedFiles);
 
-  const getStatusVariant = (type) => {
-    switch (type) {
-      case "success":
-        return "success";
-      case "error":
-        return "danger";
-      case "warning":
-        return "warning";
-      default:
-        return "info";
-    }
-  };
-
-  const getStatusIcon = (type) => {
-    switch (type) {
-      case "success":
-        return faCircleCheck;
-      case "error":
-        return faTimesCircle;
-      case "warning":
-        return faTriangleExclamation;
-      default:
-        return faCircleInfo;
-    }
-  };
   const handleDismiss = useCallback(() => {
     handleSetStatus((prev) => ({
       ...prev,
