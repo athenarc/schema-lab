@@ -6,6 +6,7 @@ import {
   faCaretRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { folderContainsFiles } from "../utils/folders";
+import { useEffect, useState } from "react";
 
 export function FolderTree({
   folder,
@@ -16,7 +17,13 @@ export function FolderTree({
   expandedFolders,
   setExpandedFolders,
 }) {
-  const expanded = expandedFolders?.[folder.fullPath] ?? level === 0;
+  const expanded = expandedFolders?.[folder?.fullPath] ?? level === 0;
+  const [expandedState, setExpandedState] = useState(false);
+
+  useEffect(() => {
+    setExpandedState(expanded);
+  }, [expanded]);
+
   const hasSubfolders =
     folder?.subfolders && Object.keys(folder?.subfolders ?? {})?.length > 0;
 
@@ -35,17 +42,12 @@ export function FolderTree({
         }}
         onClick={() => {
           onSelectFolder?.(folder?.fullPath);
-          if (hasSubfolders) {
-            setExpandedFolders((prev) => ({
-              ...prev,
-              [folder.fullPath]: !expanded,
-            }));
-          }
+          setExpandedState(!expandedState);
         }}
       >
         {hasSubfolders && (
           <FontAwesomeIcon
-            icon={expanded ? faCaretDown : faCaretRight}
+            icon={expandedState ? faCaretDown : faCaretRight}
             style={{ width: "1rem" }}
           />
         )}
@@ -64,7 +66,7 @@ export function FolderTree({
       </Stack>
 
       {hasSubfolders && (
-        <Collapse in={expanded}>
+        <Collapse in={expandedState}>
           <div>
             {Object.values(folder?.subfolders ?? {})?.map((sub) => (
               <FolderTree

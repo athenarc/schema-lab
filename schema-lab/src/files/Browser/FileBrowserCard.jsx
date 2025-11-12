@@ -31,15 +31,18 @@ export default function FileBrowserCard({
   const { userDetails } = useContext(UserDetailsContext);
 
   const expandFolderPath = useCallback((path) => {
-    const parts = path.split("/").filter(Boolean); // ["minio", "outputs", "test"]
-
+    const parts = path?.split("/")?.filter(Boolean);
     let current = "";
     const expanded = {};
+    if (path === "/") {
+      expanded["/"] = true;
+    }
     for (const part of parts) {
       current += "/" + part;
-      expanded[current] = true;
+      expanded[current] = !expanded[current];
     }
-    setExpandedFolders(expanded);
+
+    setExpandedFolders((prev) => ({ ...prev, ...expanded }));
   }, []);
 
   useEffect(() => {
@@ -92,12 +95,7 @@ export default function FileBrowserCard({
   };
 
   const selectedFolderData = useMemo(() => {
-    // Get the data for the currently selected folder
-    // If the current folder is root ("/"), return the root folder data
-    // data => files and nested folders
-    return selectedFolder === "/"
-      ? folderMap["/"]
-      : findNestedFolder(folderMap, selectedFolder);
+    return findNestedFolder(folderMap, selectedFolder) || { files: [] };
   }, [selectedFolder, folderMap]);
 
   return (

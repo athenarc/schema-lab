@@ -1,25 +1,4 @@
 // Groups files into a nested folder structure
-// export const buildFolderTree = (files) => {
-//   const root = { "/": { files: [] } };
-
-//   for (const file of files) {
-//     const parts = file?.path?.replace(/^\/+/, "").split("/");
-//     let current = root["/"];
-//     if (parts.length === 1) {
-//       current.files.push(file);
-//       continue;
-//     }
-//     for (const folder of parts.slice(0, -1)) {
-//       current[folder] = current[folder] ?? { files: [] };
-//       current = current[folder];
-//     }
-//     current.files.push(file);
-//   }
-
-//   calculateTotalFiles(root["/"]);
-//   return root;
-// };
-
 export const buildFolderTree = (files) => {
   const root = { name: "/", fullPath: "/", files: [], subfolders: {} };
 
@@ -52,17 +31,6 @@ export const buildFolderTree = (files) => {
   return root;
 };
 
-// Recursively calculate total files in folder tree
-// export const calculateTotalFiles = (folder) => {
-//   if (!folder || typeof folder !== "object") return 0;
-
-//   const subTotals = Object.entries(folder)
-//     .filter(([k]) => k !== "files" && k !== "totalFiles")
-//     .reduce((sum, [, data]) => sum + calculateTotalFiles(data), 0);
-
-//   folder.totalFiles = (folder.files?.length || 0) + subTotals;
-//   return folder.totalFiles;
-// };
 const calculateTotalFiles = (folder) => {
   let total = folder.files.length;
   for (const key in folder.subfolders) {
@@ -71,17 +39,7 @@ const calculateTotalFiles = (folder) => {
   folder.totalFiles = total;
   return total;
 };
-
-// Recursively count folders
-// export const countFolders = (folder) => {
-//   let count = 0;
-//   for (const key in folder) {
-//     if (key !== "files" && key !== "totalFiles") {
-//       count += 1 + countFolders(folder[key]);
-//     }
-//   }
-//   return count;
-// };
+// Count total number of folders in a folder tree
 export const countFolders = (folder) => {
   if (!folder) return 0;
   let count = Object.keys(folder.subfolders || {}).length;
