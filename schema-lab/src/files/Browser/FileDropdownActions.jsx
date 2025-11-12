@@ -1,15 +1,18 @@
-import { Dropdown } from "react-bootstrap";
+import { Button, Dropdown, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTrash,
   faPen,
   faEllipsisVertical,
+  faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
 import { useCallback, useContext, useState } from "react";
 import DeleteConfirmationModal from "../modals/DeleteConfirmationModal";
 import FileEditModal from "../modals/FileEdit";
 import { deleteFile } from "../../api/v1/files";
 import { UserDetailsContext } from "../../utils/components/auth/AuthProvider";
+import { isPreviewableFile } from "../utils/files";
+import FilePreviewModal from "../modals/FilePreview";
 
 export function FileDropdownActions({
   onRename,
@@ -20,6 +23,8 @@ export function FileDropdownActions({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showFileEditModal, setShowFileEditModal] = useState(false);
+  const [showFilePreviewModal, setShowFilePreviewModal] = useState(false);
+  const isPreviewable = isPreviewableFile(file?.path);
 
   const { userDetails } = useContext(UserDetailsContext);
 
@@ -79,6 +84,10 @@ export function FileDropdownActions({
     setShowFileEditModal(false);
   };
 
+  const handleFilePreview = useCallback((file) => {
+    setShowFilePreviewModal(true);
+  }, []);
+
   return (
     <Dropdown
       onClick={(e) => e.stopPropagation()}
@@ -96,6 +105,12 @@ export function FileDropdownActions({
         onClose={() => setShowFileEditModal(false)}
         file={file}
         onUpdateSuccess={handleUpdateSuccess}
+        userDetails={userDetails?.apiKey}
+      />
+      <FilePreviewModal
+        show={showFilePreviewModal}
+        onClose={() => setShowFilePreviewModal(false)}
+        file={file}
         userDetails={userDetails?.apiKey}
       />
       <Dropdown.Toggle
@@ -118,6 +133,26 @@ export function FileDropdownActions({
           <FontAwesomeIcon icon={faTrash} className="me-2 text-danger" />
           Delete
         </Dropdown.Item>
+        <OverlayTrigger
+          placement="bottom"
+          overlay={
+            !isPreviewable ? (
+              <Tooltip id={`tooltip-disabled-${file.path}`}>
+                Preview available only for images or CSV files.
+              </Tooltip>
+            ) : (
+              <></>
+            )
+          }
+        >
+          <Dropdown.Item
+            as="button"
+            disabled={!isPreviewable}
+            onClick={() => handleFilePreview(file)}
+          >
+            <FontAwesomeIcon icon={faMagnifyingGlass} /> Preview
+          </Dropdown.Item>
+        </OverlayTrigger>
       </Dropdown.Menu>
     </Dropdown>
   );
