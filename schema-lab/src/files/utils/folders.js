@@ -76,17 +76,6 @@ export function folderDoesNotContainFiles(folder = {}, files = []) {
 }
 
 // Find a nested folder by key
-// export const findNestedFolder = (obj, target) => {
-//   for (const key in obj) {
-//     if (key === target) return obj[key];
-//     if (typeof obj[key] === "object") {
-//       const found = findNestedFolder(obj[key], target);
-//       if (found) return found;
-//     }
-//   }
-//   return null;
-// };
-
 export const findNestedFolder = (folder, targetFullPath) => {
   if (folder.fullPath === targetFullPath) return folder;
   for (const key in folder.subfolders) {

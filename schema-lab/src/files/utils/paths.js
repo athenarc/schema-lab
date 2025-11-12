@@ -13,9 +13,15 @@ export const validateContainerPath = (path) => {
 
 export const getCommonDirectoryPrefix = (paths) => {
   // Given an array of file paths, returns the longest common directory prefix
-  // This is used in TaskForm when a task is loaded to determine the base directory for container inputs path
+  // This is used in TaskForm when 
+  // 1) a task is loaded to determine the base directory for container inputs path
+  // 2) User selects a file in FileBrowser on component mount
+  // Returns an empty string if there is no common prefix
   if (!paths?.length) return "";
+
   const splitPaths = paths?.map((p) => p?.split("/")?.filter(Boolean));
+
+  if (!splitPaths?.length || splitPaths?.length === 1) return "";
 
   let prefix = [];
   for (let i = 0; i < splitPaths[0]?.length; i++) {

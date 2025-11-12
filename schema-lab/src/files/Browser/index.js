@@ -39,7 +39,7 @@ function getCommonDirectoryPath(paths) {
   // Given an array of input file objects, extract their paths and find the common directory prefix.
   // This is necessary in task replication were multiple files have been selected and user must have specified a common container input path.
   // This path is not stored in the input objects so we need to compute it here.
-  if (!paths || paths.length === 0) return "";
+  if (!paths || paths?.length === 0) return "";
 
   const inputPaths = paths?.map((input) => input?.path).filter(Boolean);
   if (inputPaths?.length > 0) {
@@ -82,12 +82,12 @@ export default function FileBrowser({ inputs, setInputs, mode = "picker" }) {
       if (validateEmptyInputs(inputs)) {
         return;
       }
-
-      setSelectedFilesLocal(mapInputsToSelectedFiles(inputs));
+      const path = getCommonDirectoryPath(inputs);
+      const errorMsg = validateContainerPath(path);
       setContainerInputsPath({
-        path: getCommonDirectoryPath(inputs),
-        isValid: true,
-        errorMsg: "",
+        path: path,
+        isValid: !errorMsg,
+        errorMsg: errorMsg || "",
       });
 
       onMountCall.current = false;
@@ -148,6 +148,15 @@ export default function FileBrowser({ inputs, setInputs, mode = "picker" }) {
     },
     [setInputs, containerInputsPath, isControlled]
   );
+  const onResetFiles = () => {
+    setSelectedFilesLocal([]);
+    setContainerInputsPath({
+      path: "",
+      isValid: true,
+      errorMsg: "",
+    });
+    if (isControlled) setInputs([]);
+  };
 
   return (
     <div>
@@ -162,6 +171,7 @@ export default function FileBrowser({ inputs, setInputs, mode = "picker" }) {
       <FileBrowserCard
         selectedFiles={selectedFilesLocal}
         handleSetSelectedFiles={onSelectedFilesChange}
+        handleResetFiles={onResetFiles}
         mode={mode}
       />
     </div>

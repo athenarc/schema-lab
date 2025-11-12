@@ -17,6 +17,7 @@ import { UserDetailsContext } from "../../utils/components/auth/AuthProvider";
 export default function FileBrowserCard({
   selectedFiles,
   handleSetSelectedFiles,
+  handleResetFiles,
   mode = "browse",
 }) {
   // Component that displays folders and files from the user's project storage
@@ -89,10 +90,6 @@ export default function FileBrowserCard({
     },
     [handleSetSelectedFiles]
   );
-
-  const handleResetFiles = () => {
-    handleSetSelectedFiles([]);
-  };
 
   const selectedFolderData = useMemo(() => {
     return findNestedFolder(folderMap, selectedFolder) || { files: [] };
