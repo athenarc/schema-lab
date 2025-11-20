@@ -5,11 +5,12 @@ import {
   faPen,
   faEllipsisVertical,
   faMagnifyingGlass,
+  faFileDownload,
 } from "@fortawesome/free-solid-svg-icons";
 import { useCallback, useContext, useState } from "react";
 import DeleteConfirmationModal from "../modals/DeleteConfirmationModal";
 import FileEditModal from "../modals/FileEdit";
-import { deleteFile } from "../../api/v1/files";
+import { deleteFile, downloadFile } from "../../api/v1/files";
 import { UserDetailsContext } from "../../utils/components/auth/AuthProvider";
 import { isPreviewableFile } from "../utils/files";
 import FilePreviewModal from "../modals/FilePreview";
@@ -122,6 +123,17 @@ export function FileDropdownActions({
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
+        <Dropdown.Item
+          onClick={() =>
+            downloadFile({
+              auth: userDetails?.apiKey,
+              path: file.path,
+            })
+          }
+        >
+          <FontAwesomeIcon icon={faFileDownload} className="me-2" />
+          Download
+        </Dropdown.Item>
         <Dropdown.Item onClick={() => handleFileEdit(file)} disabled={loading}>
           <FontAwesomeIcon icon={faPen} className="me-2" />
           Rename

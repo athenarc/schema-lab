@@ -30,10 +30,10 @@ export default function FileBrowserCard({
   const [selectedFolder, setSelectedFolder] = useState("/");
   const [expandedFolders, setExpandedFolders] = useState({});
   const [status, setStatus] = useState({
-    message: "test",
-    statusType: "success",
+    message: "",
+    statusType: "",
     status: 0,
-    progress: 40,
+    progress: 0,
   });
   const { userDetails } = useContext(UserDetailsContext);
 
