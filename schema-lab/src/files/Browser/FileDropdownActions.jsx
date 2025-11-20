@@ -1,4 +1,10 @@
-import { Button, Dropdown, OverlayTrigger, Tooltip } from "react-bootstrap";
+import {
+  Button,
+  Dropdown,
+  OverlayTrigger,
+  Tooltip,
+  Spinner,
+} from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTrash,
@@ -29,13 +35,8 @@ export function FileDropdownActions({
 
   const { userDetails } = useContext(UserDetailsContext);
 
-  const handleConfirmDelete = () => {
-    setShowDeleteModal(true);
-  };
-
-  const handleFileEdit = () => {
-    setShowFileEditModal(true);
-  };
+  const handleConfirmDelete = () => setShowDeleteModal(true);
+  const handleFileEdit = () => setShowFileEditModal(true);
 
   const handleDelete = useCallback(
     async (file) => {
@@ -45,28 +46,20 @@ export function FileDropdownActions({
         statusType: "info",
         status: 0,
       });
-      // setDeleteError("");
-      // setDeleteSuccess(false);
       try {
-        await deleteFile({
-          auth: userDetails?.apiKey,
-          path: file?.path,
+        await deleteFile({ auth: userDetails?.apiKey, path: file?.path });
+        handleSetStatus({
+          message: "File deleted successfully.",
+          statusType: "success",
+          status: 200,
         });
-
-        // setDeleteSuccess(true);
       } catch (err) {
         handleSetStatus({
           message: "Error deleting file.",
           statusType: "error",
           status: err?.status || 500,
         });
-        // setDeleteError(err?.message || "Delete failed");
       } finally {
-        handleSetStatus({
-          message: "File deleted successfully.",
-          statusType: "success",
-          status: 200,
-        });
         handleRefreshFiles();
         setLoading(false);
         setShowDeleteModal(false);
@@ -85,16 +78,13 @@ export function FileDropdownActions({
     setShowFileEditModal(false);
   };
 
-  const handleFilePreview = useCallback((file) => {
-    setShowFilePreviewModal(true);
-  }, []);
+  const handleFilePreview = useCallback(
+    () => setShowFilePreviewModal(true),
+    []
+  );
 
   return (
-    <Dropdown
-      onClick={(e) => e.stopPropagation()}
-      align="end"
-      style={{ pointer: "cursor" }}
-    >
+    <>
       <DeleteConfirmationModal
         show={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
@@ -114,58 +104,98 @@ export function FileDropdownActions({
         file={file}
         userDetails={userDetails?.apiKey}
       />
-      <Dropdown.Toggle
-        variant="link"
-        bsPrefix="p-0 border-0 bg-transparent"
-        style={{ color: "#6c757d" }}
-      >
-        <FontAwesomeIcon icon={faEllipsisVertical} />
-      </Dropdown.Toggle>
 
-      <Dropdown.Menu>
-        <Dropdown.Item
-          onClick={() =>
-            downloadFile({
-              auth: userDetails?.apiKey,
-              path: file.path,
-            })
-          }
+      <Dropdown align="end" onClick={(e) => e.stopPropagation()}>
+        <Dropdown.Toggle
+          variant="link"
+          bsPrefix="p-0 border-0 bg-transparent"
+          style={{ color: "#6c757d", cursor: "pointer" }}
         >
-          <FontAwesomeIcon icon={faFileDownload} className="me-2" />
-          Download
-        </Dropdown.Item>
-        <Dropdown.Item onClick={() => handleFileEdit(file)} disabled={loading}>
-          <FontAwesomeIcon icon={faPen} className="me-2" />
-          Rename
-        </Dropdown.Item>
-        <Dropdown.Item
-          onClick={() => handleConfirmDelete(file)}
-          disabled={loading}
-        >
-          <FontAwesomeIcon icon={faTrash} className="me-2 text-danger" />
-          Delete
-        </Dropdown.Item>
-        <OverlayTrigger
-          placement="bottom"
-          overlay={
-            !isPreviewable ? (
-              <Tooltip id={`tooltip-disabled-${file.path}`}>
-                Preview available only for images or CSV files.
-              </Tooltip>
+          <FontAwesomeIcon icon={faEllipsisVertical} />
+        </Dropdown.Toggle>
+
+        <Dropdown.Menu>
+          {[
+            {
+              icon: faMagnifyingGlass,
+              label: "Preview",
+              onClick: handleFilePreview,
+              disabled: !isPreviewable,
+              tooltip: !isPreviewable
+                ? "Preview available only for images or CSV files."
+                : "",
+            },
+            {
+              icon: faFileDownload,
+              label: "Download",
+              onClick: () =>
+                downloadFile({ auth: userDetails?.apiKey, path: file?.path }),
+            },
+            {
+              icon: faPen,
+              label: "Rename",
+              onClick: handleFileEdit,
+              loading: loading,
+            },
+            {
+              icon: faTrash,
+              label: "Delete",
+              onClick: handleConfirmDelete,
+              loading: loading,
+              className: "text-danger",
+            },
+          ].map((item) => {
+            const content = (
+              <>
+                {item?.loading ? (
+                  <Spinner
+                    as="span"
+                    animation="border"
+                    size="sm"
+                    className={`me-2 ${item?.className || ""}`}
+                    style={{ verticalAlign: "middle" }}
+                  />
+                ) : (
+                  <FontAwesomeIcon
+                    icon={item?.icon}
+                    className={`me-2 ${item?.className || ""}`}
+                    style={{ width: "1em", textAlign: "center" }}
+                  />
+                )}
+                {item?.label}
+              </>
+            );
+
+            const dropdownItem = (
+              <Dropdown.Item
+                key={item?.label}
+                onClick={item?.onClick}
+                disabled={item?.disabled || item?.loading}
+                className={item?.className || ""}
+                style={{ display: "flex", alignItems: "center" }}
+              >
+                {content}
+              </Dropdown.Item>
+            );
+
+            return item?.tooltip && item?.disabled ? (
+              <OverlayTrigger
+                key={item?.label}
+                placement="bottom"
+                overlay={
+                  <Tooltip id={`tooltip-${item?.label}`}>
+                    {item?.tooltip}
+                  </Tooltip>
+                }
+              >
+                {dropdownItem}
+              </OverlayTrigger>
             ) : (
-              <></>
-            )
-          }
-        >
-          <Dropdown.Item
-            as="button"
-            disabled={!isPreviewable}
-            onClick={() => handleFilePreview(file)}
-          >
-            <FontAwesomeIcon icon={faMagnifyingGlass} /> Preview
-          </Dropdown.Item>
-        </OverlayTrigger>
-      </Dropdown.Menu>
-    </Dropdown>
+              dropdownItem
+            );
+          })}
+        </Dropdown.Menu>
+      </Dropdown>
+    </>
   );
 }
