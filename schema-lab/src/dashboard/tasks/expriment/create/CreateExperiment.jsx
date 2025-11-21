@@ -1,9 +1,13 @@
 import React, { useState, useContext } from 'react';
-import { Form, Button, Row, Col, Card, Container, Table, Modal } from "react-bootstrap";
+import { Form, Button, Row, Col, Card, Container, Table, Modal, Accordion, OverlayTrigger, Tooltip} from "react-bootstrap";
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import TaskStatus from "../../TaskStatus";
 import { postExperiment, putExperimentTasks } from "../../../../api/v1/actions";
 import { UserDetailsContext } from "../../../../utils/components/auth/AuthProvider";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
+import { faXmark, faPlus } from '@fortawesome/free-solid-svg-icons';
+
 
 const CreateExperiment = () => {
     const navigate = useNavigate();
@@ -16,6 +20,9 @@ const CreateExperiment = () => {
     const { userDetails } = useContext(UserDetailsContext);
     const location = useLocation();
     const [selectedTasks, setSelectedTasks] = useState(location.state?.selectedTasks || []);
+
+    const [inputs, setInputs] = useState([{ name: "", description: "", type: ""}]);
+
     const apiKey = userDetails.apiKey;
 
     const handleSubmit = (e) => {
@@ -37,6 +44,26 @@ const CreateExperiment = () => {
         if (isValid) {
             setShowConfirmModal(true);
         }
+    };
+
+    const handleInputChange = (index, e) => {
+        const { name, value } = e.target;
+        setInputs(inputs.map((input, i) =>
+            i === index ? { ...input, [name]: value } : input
+        ));
+    };
+
+    const addInputField = () => {
+        const newInput = { name: "", description: "", type: ""};
+        setInputs(prevInputs => [...prevInputs, newInput]);
+    };
+
+    const removeInputField = () => {
+        setInputs(prevInputs => prevInputs.slice(0, -1));
+    };
+
+    const handleToggle = (eventKey) => {
+        setActiveKey(activeKey === eventKey ? null : eventKey);
     };
 
     const handleConfirmSubmit = async () => {
@@ -125,6 +152,96 @@ const CreateExperiment = () => {
                                         />
                                     </Col>
                                 </Form.Group>
+
+
+                                <Accordion activeKey={activeKey} onSelect={handleToggle} className="mb-4">
+                                    <Accordion.Item eventKey="0">
+                                    <Accordion.Header>
+                                        Publications (Optional)&nbsp;
+                                        <FontAwesomeIcon 
+                                            icon={faInfoCircle} 
+                                            className="ms-2" 
+                                            data-bs-toggle="tooltip" 
+                                            data-bs-placement="top" 
+                                            title="Related publications is optional." 
+                                        />
+                                    </Accordion.Header>
+                                    <Accordion.Body>
+                                        {inputs.map((input, index) =>  (
+                                            <div key={index} className="mb-4">
+
+                                                <Form.Group as={Row} className="mb-3">
+                                                    <Form.Label column sm="3" className="fw-bold">
+                                                        Type
+                                                    </Form.Label>
+                                                    <Col sm="8">
+                                                        <Form.Select
+                                                            name="type"
+                                                            value={input.type}
+                                                            onChange={(e) => handleInputChange(index, e)}
+                                                        >
+                                                            <option value="">Select reference type</option>
+                                                            <option value="DOI">DOI</option>
+                                                            <option value="LINK">Link</option>
+                                                        </Form.Select>
+                                                    </Col>
+                                                </Form.Group>
+
+                                                <Form.Group as={Row} className="mb-3">
+                                                    <Form.Label column sm="3" className="fw-bold">
+                                                        Reference
+                                                    </Form.Label>
+                                                    <Col sm="8">
+                                                        <Form.Control
+                                                            type="text"
+                                                            name="reference"
+                                                            value={input.name}
+                                                            onChange={(e) => handleInputChange(index, e)}
+                                                            placeholder="Type link or DOI..."
+                                                        />
+                                                    </Col>
+                                                </Form.Group>
+
+                                                <Form.Group as={Row} className="mb-3">
+                                                    <Form.Label column sm="3" className="fw-bold">
+                                                        Description
+                                                    </Form.Label>
+                                                    <Col sm="8">
+                                                        <Form.Control
+                                                            as="textarea"
+                                                            rows={2}
+                                                            name="description"
+                                                            value={input.description}
+                                                            onChange={(e) => handleInputChange(index, e)}
+                                                            placeholder="Type description..."
+                                                        />
+                                                    </Col>
+                                                </Form.Group>
+                                            </div>
+                                        ))}
+                                        <div className="d-flex justify-content-start gap-2 mt-4">
+                                            <Button variant="primary" onClick={addInputField}>
+                                                <FontAwesomeIcon icon={faPlus} className="me-2" />
+                                                Add
+                                            </Button>
+                                            <Button 
+                                                variant="danger" 
+                                                onClick={() => removeInputField(inputs[inputs.length - 1]?.id)}
+                                                disabled={inputs.length === 1}
+                                            >
+                                                <FontAwesomeIcon icon={faXmark} className="me-2" />
+                                                Remove
+                                            </Button>
+                                        </div>
+                                    </Accordion.Body>
+                                </Accordion.Item>
+                            </Accordion>
+
+
+
+
+
+
                             </Card.Body>
                         </Card>
 
