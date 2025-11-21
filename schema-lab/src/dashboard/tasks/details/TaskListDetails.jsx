@@ -127,7 +127,7 @@ const TaskListDetails = () => {
         } else if (parent === 'experiments') {
             navigate(`/experiment-details/${creator}/${name}/description`);
         } else {
-            navigate('/defaultParent'); // Fallback
+            navigate(-1); // Fallback
         }
     };
     
