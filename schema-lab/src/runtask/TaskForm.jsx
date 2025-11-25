@@ -297,18 +297,18 @@ const TaskForm = () => {
     // setVolumes([]);
   };
 
-  const handleInputChange = (index, e) => {
-    const { name, value } = e.target;
-    setInputs(
-      inputs.map((input, i) =>
-        i === index ? { ...input, [name]: value } : input
-      )
-    );
-  };
-
-  // const handleFileBrowserInputChange = (files) => {
-  //   setInputs(files);
+  // const handleInputChange = (index, e) => {
+  //   const { name, value } = e.target;
+  //   setInputs(
+  //     inputs.map((input, i) =>
+  //       i === index ? { ...input, [name]: value } : input
+  //     )
+  //   );
   // };
+
+  const handleFileBrowserInputChange = (files) => {
+    setInputs(files);
+  };
 
   const handleOutputChange = (index, e) => {
     const { name, value } = e.target;
@@ -588,7 +588,8 @@ const TaskForm = () => {
                 <Accordion.Body>
                   <FileBrowser
                     mode="picker"
-                    setInputs={setInputs}
+                    // setInputs={setInputs}
+                    handleFileBrowserInputChange={handleFileBrowserInputChange}
                     inputs={inputs}
                   />
                 </Accordion.Body>

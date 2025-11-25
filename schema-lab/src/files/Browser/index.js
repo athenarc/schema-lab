@@ -5,14 +5,7 @@ import {
   getCommonDirectoryPrefix,
   validateContainerPath,
 } from "../utils/paths";
-
-function mapInputsToSelectedFiles(inputs) {
-  // Map input file objects to selected files format for FileBrowserCard
-  return inputs?.map((input) => ({
-    path: input?.url || "",
-    name: input?.name || "",
-  }));
-}
+import FileWorkflowNameInputs from "./FileWorkflowNameInputs";
 
 function validateEmptyInputs(inputs) {
   // Inputs are given as an array of file input objects by the parent component. An empty array also contains one empty object that
@@ -48,7 +41,11 @@ function getCommonDirectoryPath(paths) {
   return "";
 }
 
-export default function FileBrowser({ inputs, setInputs, mode = "picker" }) {
+export default function FileBrowser({
+  inputs,
+  handleFileBrowserInputChange,
+  mode = "picker",
+}) {
   // This component receives inputs and setInputs from parent to manage selected files
   //
   // It also manages local state for container path validation and selected files.
@@ -58,11 +55,8 @@ export default function FileBrowser({ inputs, setInputs, mode = "picker" }) {
   //
   // Inputs is an array of file input objects with properties: name, url, path, type, content.
   // TODOS
-  // When files are uploaded/deleted/renamed the refresh that follows loses the traversed folder state.
-  // Add file preview
-  // Add informational messages for empty states and errors.
-  // What should we do when a file does not exist?
-  const isControlled = Boolean(inputs && setInputs);
+
+  const isControlled = Boolean(inputs && handleFileBrowserInputChange);
   const [containerInputsPath, setContainerInputsPath] = useState({
     path: "",
     isValid: true,
@@ -73,9 +67,17 @@ export default function FileBrowser({ inputs, setInputs, mode = "picker" }) {
   const onMountCall = useRef(true);
 
   useEffect(() => {
-    // Run this only on mount to sync initial inputs to local state
-
     if (!isControlled) {
+      return;
+    }
+    if (validateEmptyInputs(inputs)) {
+      // Reset local state if clear all is triggered from parent
+      setSelectedFilesLocal([]);
+      setContainerInputsPath({
+        path: "",
+        isValid: true,
+        errorMsg: "",
+      });
       return;
     }
     if (onMountCall?.current) {
@@ -104,7 +106,7 @@ export default function FileBrowser({ inputs, setInputs, mode = "picker" }) {
       });
 
       if (!isControlled) return;
-      setInputs((prev) =>
+      handleFileBrowserInputChange((prev) =>
         prev.map((input) => ({
           ...input,
           path: newPath
@@ -113,41 +115,41 @@ export default function FileBrowser({ inputs, setInputs, mode = "picker" }) {
         }))
       );
     },
-    [setInputs, isControlled]
+    [handleFileBrowserInputChange, isControlled]
   );
-  const onSelectedFilesChange = useCallback(
-    (filesOrUpdater) => {
-      setSelectedFilesLocal((prev) => {
-        const files =
-          typeof filesOrUpdater === "function"
-            ? filesOrUpdater(prev)
-            : filesOrUpdater;
 
-        if (!files || files?.length === 0) {
-          if (isControlled) setInputs([]);
-          return [];
-        }
+  const onSelectedFilesChange = useCallback((filesOrUpdater) => {
+    setSelectedFilesLocal((prev) =>
+      typeof filesOrUpdater === "function"
+        ? filesOrUpdater(prev)
+        : filesOrUpdater
+    );
+  }, []);
 
-        if (isControlled) {
-          const newInputs = files?.map((file) => ({
-            name: file?.name || "",
-            url: file?.path || "",
-            path: containerInputsPath?.path
-              ? `${containerInputsPath?.path?.replace(/\/?$/, "/")}${file?.path
-                  ?.split("/")
-                  .pop()}`
-              : file?.path || "",
-            type: "FILE",
-            content: "",
-          }));
-          setInputs(newInputs);
-        }
+  useEffect(() => {
+    if (!isControlled) return;
 
-        return files;
-      });
-    },
-    [setInputs, containerInputsPath, isControlled]
-  );
+    if (!selectedFilesLocal || selectedFilesLocal.length === 0) {
+      if (validateEmptyInputs(inputs)) return;
+      handleFileBrowserInputChange([]);
+      return;
+    }
+
+    const newInputs = selectedFilesLocal.map((file) => ({
+      name: file?.name || "",
+      url: file?.path || "",
+      path: containerInputsPath?.path
+        ? `${containerInputsPath?.path.replace(/\/?$/, "/")}${file?.path
+            ?.split("/")
+            .pop()}`
+        : file?.path || "",
+      type: "FILE",
+      content: "",
+    }));
+
+    handleFileBrowserInputChange(newInputs);
+  }, [selectedFilesLocal, containerInputsPath, isControlled]);
+
   const onResetFiles = () => {
     setSelectedFilesLocal([]);
     setContainerInputsPath({
@@ -155,7 +157,7 @@ export default function FileBrowser({ inputs, setInputs, mode = "picker" }) {
       isValid: true,
       errorMsg: "",
     });
-    if (isControlled) setInputs([]);
+    if (isControlled) handleFileBrowserInputChange([]);
   };
 
   return (
@@ -167,6 +169,7 @@ export default function FileBrowser({ inputs, setInputs, mode = "picker" }) {
           handleContainerInputsPathChange={onContainerInputsPathChange}
         />
       )}
+      {mode === "workflow" && <FileWorkflowNameInputs />}
 
       <FileBrowserCard
         selectedFiles={selectedFilesLocal}
