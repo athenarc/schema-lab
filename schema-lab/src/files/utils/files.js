@@ -5,6 +5,13 @@ export const getBaseFilename = (path) => {
   return parts[parts?.length - 1];
 };
 
+export const removeFileExtension = (filename) => {
+  if (!filename) return "";
+  const lastDotIndex = filename.lastIndexOf(".");
+  if (lastDotIndex === -1) return filename;
+  return filename.substring(0, lastDotIndex);
+}
+
 // Checks if a file is previewable based on its extension
 export const isPreviewableFile = (path) => {
   if (!path) return false;
@@ -18,3 +25,28 @@ export const wouldOverwriteFile = ({ fileToUpload, existingFiles }) => {
   const uploadName = getBaseFilename(fileToUpload?.name);
   return existingFiles?.some((f) => getBaseFilename(f?.path) === uploadName);
 };
+
+export const validateFileName = (name) => {
+  // Validates a file name according to specified rules
+  // Rules:
+  // - Starts with a letter (A-Z, a-z)
+  // - Contains only letters, numbers, underscores (_), and hyphens (-)
+  // - Length between 1 and 255 characters
+  const nameRegex = /^[A-Za-z][A-Za-z0-9_]*$/;
+  if (!name) return "No name provided";
+  if (name.length < 1 || name.length > 255) return "Name must be between 1 and 255 characters";
+  if (!nameRegex.test(name)) return "Name contains invalid characters";
+  return ""; // Valid name
+}
+
+export const validateUniqueFileNames = (files) => {
+  const namesSet = new Set();
+  for (const file of files) {
+    const name = file?.name || "";
+    if (namesSet.has(name)) {
+      return false;
+    }
+    namesSet.add(name);
+  }
+  return true;
+}

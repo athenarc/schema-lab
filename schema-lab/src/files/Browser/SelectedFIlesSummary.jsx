@@ -48,7 +48,7 @@ export function SelectedFilesSummary({
   return (
     <div className="p-2 w-100">
       {/* Mode: Picker */}
-      {mode === "picker" && (
+      {(mode === "picker" || mode === "workflow") && (
         <Stack
           direction="horizontal"
           className="justify-content-between"

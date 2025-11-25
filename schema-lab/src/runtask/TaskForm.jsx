@@ -588,7 +588,6 @@ const TaskForm = () => {
                 <Accordion.Body>
                   <FileBrowser
                     mode="picker"
-                    // setInputs={setInputs}
                     handleFileBrowserInputChange={handleFileBrowserInputChange}
                     inputs={inputs}
                   />

@@ -151,7 +151,9 @@ export default function FileBrowserCard({
             selectedFolder={selectedFolder}
             setSelectedFolder={setSelectedFolder}
             selectedFolderData={selectedFolderData}
-            handleToggleFile={mode === "picker" ? toggleFile : () => {}}
+            handleToggleFile={
+              mode === "picker" || mode === "workflow" ? toggleFile : () => {}
+            }
             handleRefreshFiles={fetchFiles}
             mode={mode}
             userDetails={userDetails}

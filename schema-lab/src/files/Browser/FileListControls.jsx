@@ -128,7 +128,7 @@ export function FileListControls({
           </InputGroup>
         </div>
 
-        {mode === "picker" && (
+        {(mode === "picker" || mode === "workflow") && (
           <div className="d-flex gap-2 mt-2 mt-md-0 flex-shrink-0">
             <Button
               variant={allSelected ? "outline-secondary" : "outline-primary"}

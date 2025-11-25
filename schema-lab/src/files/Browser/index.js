@@ -169,8 +169,7 @@ export default function FileBrowser({
           handleContainerInputsPathChange={onContainerInputsPathChange}
         />
       )}
-      {mode === "workflow" && <FileWorkflowNameInputs />}
-
+      {mode === "workflow" && <FileWorkflowNameInputs selectedFiles={selectedFilesLocal} handleSetSelectedFiles={onSelectedFilesChange}/>}
       <FileBrowserCard
         selectedFiles={selectedFilesLocal}
         handleSetSelectedFiles={onSelectedFilesChange}
