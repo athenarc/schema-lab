@@ -136,6 +136,25 @@ export const getExperimentTaskDetails = ({ creator, name, auth }) => {
     });
 };
 
+export const getExperimentWorkflowDetails = ({ creator, name, auth }) => {
+    return apiFetch(`${config.api.url}/reproducibility/experiments/${creator}/${name}/workflows`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${auth}` }
+    });
+};
+
+
+export const putExperimentWorkflows = (apiKey, creator, name, uuid) => {
+    return apiFetch(`${config.api.url}/reproducibility/experiments/${creator}/${name}/workflows`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(uuid)
+    });
+};
+
 export const deleteExperiment = ({ creator, name, auth }) => {
     return apiFetch(`${config.api.url}/reproducibility/experiments/${creator}/${name}`, {
         method: "DELETE",
