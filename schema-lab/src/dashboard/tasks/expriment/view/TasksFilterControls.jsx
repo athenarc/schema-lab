@@ -39,7 +39,7 @@ const TasksFilterControls = () => {
                     placement="top"
                     overlay={
                         <Tooltip id="button-tooltip">
-                            Select at least one task to create an experiment
+                            Select at least one task or workflow to create an experiment
                         </Tooltip>
                     }
                 >

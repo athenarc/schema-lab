@@ -1,375 +1,233 @@
-import config from "../../config"
+import config from "../../config";
 
-export const listTasks = options => {
-    let queryParameters = [];
-    let headers = {};
-    if (options) {
-        if (options.filters) {
-            if (options.filters.view) queryParameters.push(`view=${options.filters.view}`);
-            if (options.filters.order) queryParameters.push(`order=${options.filters.order}`);
-            if (options.filters.token) queryParameters.push(`search=${options.filters.token}`);
-            if (options.filters.statuses) {
-                options.filters.statuses.forEach(status => queryParameters.push(`status=${status.toUpperCase()}`));
-            }
-            if (options.filters.limit) queryParameters.push(`limit=${options.filters.limit}`);
-            if (options.filters.offset) queryParameters.push(`offset=${options.filters.offset}`);
-        }
-        if (options.auth) {
-            headers["Authorization"] = `Bearer ${options.auth}`;
-        }
-    }
-    const qualifiedUrl=[`${config.api.url}/api/tasks`, queryParameters.join("&")].join("?");
-    return fetch(
-        qualifiedUrl,
-        {
-            method: "GET",
-            headers
-        }
-    );
-}
-
-// Get Task details
-export const retrieveTaskDetails = ({taskUUID, auth}) => {
-    const qualifiedUrl=`${config.api.url}/api/tasks/${taskUUID}`
-    return fetch(
-        qualifiedUrl,
-        {
-            method: "GET",
-            headers: {
-                'Authorization': `Bearer ${auth}`
-            }
-        }
-    ).then(response => {
-        console.log('Response status:', response.status);
-        return response;
-    });
-}
-
-// Get project name from ipatia
-export const getProjectName = (auth) => {
-    const qualifiedUrl=`${config.api.url}/api/context-info`
-    return fetch(
-        qualifiedUrl,
-        {
-            method: "GET",
-            headers: {
-                'Authorization': `Bearer ${auth}`
-            }
-        }
-    ).then(response => {
-        console.log('Project name response status:', response.status);
-        return response;
-    });
-}
-
-export const runTaskPost = async (apiKey, requestData) => {
+export const apiFetch = async (url, options = {}, navigate = () => {}) => {
     try {
-        console.log("Raw JSON Single payload:", JSON.stringify(requestData, null, 2)); // Pretty-print JSON
+        const response = await fetch(url, options);
 
-        const response = await fetch(`${config.api.url}/api/tasks`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify(requestData)
-        });
-        if (!response.ok) {
-            // Handle errors based on response status
-            throw new Error(`HTTP error! Status: ${response.status}`);
+        if (response.status === 403) {
+            const data = await safeParseJSON(response);
+            const message = data?.reason;
+
+            navigate("/");
+            throw new Error(message);
         }
-        
+
         return response;
-    } catch (error) {
-        console.error('Error during fetch:', error);
-        throw error;
+    } catch (err) {
+        throw err;
+    }
+};
+
+// Safe JSON parsing helper
+const safeParseJSON = async (response) => {
+    try {
+        return await response.json();
+    } catch {
+        return null;
     }
 };
 
 
-// Cancel a running task
-export const cancelTaskPost = ({taskUUID, auth}) => {
-    const qualifiedUrl=`${config.api.url}/api/tasks/${taskUUID}/cancel`
-    return fetch(
-        qualifiedUrl,
-        {
-            method: "POST",
-            headers: {
-                'Authorization': `Bearer ${auth}`
-            }
-        }
-    ).then(response => {
-        console.log('Cancel request response status:', response.status);
-        return response;
+export const listTasks = (options = {}) => {
+    const headers = options.auth ? { Authorization: `Bearer ${options.auth}` } : {};
+    const queryParameters = [];
+
+    const filters = options.filters || {};
+    if (filters.view) queryParameters.push(`view=${filters.view}`);
+    if (filters.order) queryParameters.push(`order=${filters.order}`);
+    if (filters.token) queryParameters.push(`search=${filters.token}`);
+    if (filters.statuses) queryParameters.push(...filters.statuses.map(s => `status=${s.toUpperCase()}`));
+    if (filters.limit) queryParameters.push(`limit=${filters.limit}`);
+    if (filters.offset) queryParameters.push(`offset=${filters.offset}`);
+
+    const queryString = queryParameters.length ? `?${queryParameters.join("&")}` : "";
+    return apiFetch(`${config.api.url}/api/tasks${queryString}`, {
+        method: "GET",
+        headers
     });
-}
+};
 
+export const retrieveTaskDetails = ({ taskUUID, auth }) => {
+    return apiFetch(`${config.api.url}/api/tasks/${taskUUID}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${auth}` }
+    });
+};
 
-// Get Experiments
-export const getExperiments = options => {
-    let queryParameters = [];
-    let headers = {};
+export const runTaskPost = (apiKey, requestData) => {
+    return apiFetch(`${config.api.url}/api/tasks`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(requestData)
+    });
+};
 
-    if (options) {
-        if (options.filters) {
-            if (options.filters.view) queryParameters.push(`view=${options.filters.view}`);
-            if (options.filters.order) queryParameters.push(`order=${options.filters.order}`);
-            if (options.filters.token) queryParameters.push(`search=${options.filters.token}`);
-            if (options.filters.limit) queryParameters.push(`limit=${options.filters.limit}`);
-            if (options.filters.offset) queryParameters.push(`offset=${options.filters.offset}`);
-        }
-        if (options.auth) {
-            headers["Authorization"] = `Bearer ${options.auth}`;
-        }
-    }
+export const cancelTaskPost = ({ taskUUID, auth }) => {
+    return apiFetch(`${config.api.url}/api/tasks/${taskUUID}/cancel`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${auth}` }
+    });
+};
 
-    const queryString = queryParameters.length ? `?${queryParameters.join("&")}` : '';
-    const qualifiedUrl = `${config.api.url}/reproducibility/experiments${queryString}`;
+// -------------------------------------------
+// Experiments Endpoints
+// -------------------------------------------
+export const getExperiments = (options = {}) => {
+    const headers = options.auth ? { Authorization: `Bearer ${options.auth}` } : {};
+    const filters = options.filters || {};
+    const queryParameters = [];
 
-    return fetch(qualifiedUrl, {
+    if (filters.view) queryParameters.push(`view=${filters.view}`);
+    if (filters.order) queryParameters.push(`order=${filters.order}`);
+    if (filters.token) queryParameters.push(`search=${filters.token}`);
+    if (filters.limit) queryParameters.push(`limit=${filters.limit}`);
+    if (filters.offset) queryParameters.push(`offset=${filters.offset}`);
+
+    const queryString = queryParameters.length ? `?${queryParameters.join("&")}` : "";
+    return apiFetch(`${config.api.url}/reproducibility/experiments${queryString}`, {
         method: "GET",
         headers
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`Failed to fetch experiments: ${response.statusText}`);
+    .then(response => response.json())
+    .then(data => Array.isArray(data) ? { count: data.length, results: data } : data);
+};
+
+export const getExperimentDetails = ({ creator, name, auth }) => {
+    return apiFetch(`${config.api.url}/reproducibility/experiments/${creator}/${name}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${auth}` }
+    });
+};
+
+export const postExperiment = (apiKey, requestData) => {
+    return apiFetch(`${config.api.url}/reproducibility/experiments`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(requestData)
+    }).then(async response => {
+        if (response.status === 409) {
+            throw new Error("Experiment name already exists. Please choose a different name.");
         }
         return response.json();
-    })
-    .then(data => {
-        if (Array.isArray(data)) {
-            return {
-                count: data.length,
-                results: data
-            };
-        }
-        return data;
-    })
-    .catch(error => {
-        console.error('Error fetching experiments:', error);
-        return { count: 0, results: [] };
+    });
+};
+
+export const putExperimentTasks = (apiKey, creator, name, uuid) => {
+    return apiFetch(`${config.api.url}/reproducibility/experiments/${creator}/${name}/tasks`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(uuid)
+    });
+};
+
+export const getExperimentTaskDetails = ({ creator, name, auth }) => {
+    return apiFetch(`${config.api.url}/reproducibility/experiments/${creator}/${name}/tasks`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${auth}` }
+    });
+};
+
+export const getExperimentWorkflowDetails = ({ creator, name, auth }) => {
+    return apiFetch(`${config.api.url}/reproducibility/experiments/${creator}/${name}/workflows`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${auth}` }
     });
 };
 
 
-// Get Experiment details
-export const getExperimentDetails = ({creator, name, auth}) => {
-    const qualifiedUrl=`${config.api.url}/reproducibility/experiments/${creator}/${name}`
-    return fetch(
-        qualifiedUrl,
-        {
-            method: "GET",
-            headers: {
-                'Authorization': `Bearer ${auth}`
-            }
-        }
-    ).then(response => {
-        console.log('Response status:', response.status);
-        return response;
+export const putExperimentWorkflows = (apiKey, creator, name, uuid) => {
+    return apiFetch(`${config.api.url}/reproducibility/experiments/${creator}/${name}/workflows`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(uuid)
     });
-}
+};
 
+export const deleteExperiment = ({ creator, name, auth }) => {
+    return apiFetch(`${config.api.url}/reproducibility/experiments/${creator}/${name}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${auth}` }
+    });
+};
 
-// Post Experiment
-export const postExperiment = async (apiKey, requestData) => {
-    try {
-        const response = await fetch(`${config.api.url}/reproducibility/experiments`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify(requestData)
-        });
-
+export const editExperiment = (creator, name, apiKey, experimentData) => {
+    return apiFetch(`${config.api.url}/reproducibility/experiments/${creator}/${name}`, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(experimentData)
+    }).then(async response => {
         if (!response.ok) {
-            // Check for 409 Conflict status code (name already exists)
-            if (response.status === 409) {
-                throw new Error("Experiment name already exists. Please choose a different name.");
-            }
-            // Handle other errors based on response status
-            throw new Error(`HTTP error! Status: ${response.status}`);
+            const errorData = await safeParseJSON(response);
+            throw new Error(`Error ${response.status}: ${errorData?.message || response.statusText}`);
         }
-
-        const responseData = await response.json();
-        return responseData;
-    } catch (error) {
-        console.error('Error during fetch:', error);
-        throw error;
-    }
+        return response;
+    });
 };
 
 
-// Put Experiment task details
-export const putExperimentTasks = async (apiKey, creator, name, uuid) => {
-    try {
-        const response = await fetch(`${config.api.url}/reproducibility/experiments/${creator}/${name}/tasks`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify(uuid)
-        });
-        
-        if (!response.ok) {
-            // Handle errors based on response status
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        
-        return response;
-    } catch (error) {
-        console.error('Error during fetch:', error);
-        throw error;
-    }
+export const runWorkflowTaskPost = (apiKey, requestData) => {
+    return apiFetch(`${config.api.url}/api/workflows`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(requestData)
+    });
+};
+
+export const listWorkflowTasks = (options = {}) => {
+    const headers = options.auth ? { Authorization: `Bearer ${options.auth}` } : {};
+    const filters = options.filters || {};
+    const queryParameters = [];
+
+    if (filters.view) queryParameters.push(`view=${filters.view}`);
+    if (filters.order) queryParameters.push(`order=${filters.order}`);
+    if (filters.token) queryParameters.push(`search=${filters.token}`);
+    if (filters.statuses) queryParameters.push(...filters.statuses.map(s => `status=${s.toUpperCase()}`));
+    if (filters.limit) queryParameters.push(`limit=${filters.limit}`);
+    if (filters.offset) queryParameters.push(`offset=${filters.offset}`);
+
+    const queryString = queryParameters.length ? `?${queryParameters.join("&")}` : "";
+    return apiFetch(`${config.api.url}/api/workflows${queryString}`, {
+        method: "GET",
+        headers
+    });
+};
+
+export const retrieveWorkflowTaskDetails = ({ taskUUID, auth }) => {
+    return apiFetch(`${config.api.url}/api/workflows/${taskUUID}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${auth}` }
+    });
+};
+
+export const cancelWorkflowTaskPost = ({ taskUUID, auth }) => {
+    return apiFetch(`${config.api.url}/api/workflows/${taskUUID}/cancel`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${auth}` }
+    });
 };
 
 
-// Get task details for experiment
-export const getExperimentTaskDetails = ({creator, name, auth}) => {
-    const qualifiedUrl=`${config.api.url}/reproducibility/experiments/${creator}/${name}/tasks`
-    return fetch(
-        qualifiedUrl,
-        {
-            method: "GET",
-            headers: {
-                'Authorization': `Bearer ${auth}`
-            }
-        }
-    ).then(response => {
-        console.log('Response status:', response.status);
-        return response;
+export const getProjectName = (auth) => {
+    return apiFetch(`${config.api.url}/api/context-info`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${auth}` }
     });
-}
-
-
-// Get task details for experiment
-export const deleteExperiment = ({creator, name, auth}) => {
-    const qualifiedUrl=`${config.api.url}/reproducibility/experiments/${creator}/${name}`
-    return fetch(
-        qualifiedUrl,
-        {
-            method: "DELETE",
-            headers: {
-                'Authorization': `Bearer ${auth}`
-            }
-        }
-    ).then(response => {
-        console.log('Response status:', response.status);
-        return response;
-    });
-}
-
-
-// Edit an experiment
-export const editExperiment = async (creator, name, apiKey, experimentdata) => {
-    try {
-        const response = await fetch(`${config.api.url}/reproducibility/experiments/${creator}/${name}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify(experimentdata)
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Error ${response.status}: ${errorData.message || response.statusText}`);
-        }
-        
-        return response;
-    } catch (error) {
-        console.error('Error during fetch:', error);
-        throw error;
-    }
 };
-
-
-// POST a workflow task
-export const runWorkflowTaskPost = async (apiKey, requestData) => {
-    try {
-        const response = await fetch(`${config.api.url}/api/workflows`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify(requestData)
-        });
-        
-        if (!response.ok) {
-            // Handle errors based on response status
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        
-        return response;
-    } catch (error) {
-        console.error('Error during post workflow:', error);
-        throw error;
-    }
-};
-
-// List workflow tasks
-export const listWorkflowTasks = options => {
-    let queryParameters = [];
-    let headers = {};
-    if (options) {
-        if (options.filters) {
-            if (options.filters.view) queryParameters.push(`view=${options.filters.view}`);
-            if (options.filters.order) queryParameters.push(`order=${options.filters.order}`);
-            if (options.filters.token) queryParameters.push(`search=${options.filters.token}`);
-            if (options.filters.statuses) {
-                options.filters.statuses.forEach(status => queryParameters.push(`status=${status.toUpperCase()}`));
-            }
-            if (options.filters.limit) queryParameters.push(`limit=${options.filters.limit}`);
-            if (options.filters.offset) queryParameters.push(`offset=${options.filters.offset}`);
-        }
-        if (options.auth) {
-            headers["Authorization"] = `Bearer ${options.auth}`;
-        }
-    }
-    const qualifiedUrl=[`${config.api.url}/api/workflows`, queryParameters.join("&")].join("?");
-    return fetch(
-        qualifiedUrl,
-        {
-            method: "GET",
-            headers
-        }
-    );
-}
-
-
-// Get workflow Task details
-export const retrieveWorkflowTaskDetails = ({taskUUID, auth}) => {
-    const qualifiedUrl=`${config.api.url}/api/workflows/${taskUUID}`
-    return fetch(
-        qualifiedUrl,
-        {
-            method: "GET",
-            headers: {
-                'Authorization': `Bearer ${auth}`
-            }
-        }
-    ).then(response => {
-        console.log('Response status:', response.status);
-        return response;
-    });
-}
-
-// Cancel a workflow running task
-export const cancelWorkflowTaskPost = ({taskUUID, auth}) => {
-    const qualifiedUrl=`${config.api.url}/api/workflows/${taskUUID}/cancel`
-    return fetch(
-        qualifiedUrl,
-        {
-            method: "POST",
-            headers: {
-                'Authorization': `Bearer ${auth}`
-            }
-        }
-    ).then(response => {
-        console.log('Cancel request response status:', response.status);
-        return response;
-    });
-}
