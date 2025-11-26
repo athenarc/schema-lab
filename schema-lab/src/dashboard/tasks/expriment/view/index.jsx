@@ -18,7 +18,7 @@ const Experiment = ({ taskDetails }) => {
                     <TasksPaginationControls />
                     <Row className="p-3 mb-5">
                         <Col>
-                            <ExperimentTaskList />
+                           <ExperimentTaskList />
                         </Col>
                     </Row>
                 </TasksListProvider>
