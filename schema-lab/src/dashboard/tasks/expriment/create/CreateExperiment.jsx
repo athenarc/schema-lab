@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { Form, Button, Row, Col, Card, Container, Table, Modal, Accordion, OverlayTrigger, Tooltip} from "react-bootstrap";
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import TaskStatus from "../../TaskStatus";
-import { postExperiment, putExperimentTasks } from "../../../../api/v1/actions";
+import { postExperiment, putExperimentTasks, putExperimentWorkflows } from "../../../../api/v1/actions";
 import { UserDetailsContext } from "../../../../utils/components/auth/AuthProvider";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
@@ -67,30 +67,39 @@ const CreateExperiment = () => {
     };
 
     const handleConfirmSubmit = async () => {
-        const experimentData = {
-            name: experimentName,
-            description: description
-        };
+    const experimentData = { name: experimentName, description };
 
-        const taskUuids = selectedTasks.map((task) => task.uuid);
+    const taskUuids = selectedTasks
+        .filter(t => t.type === "task")
+        .map(t => t.uuid);
 
-        try {
-            // Step 1: Post Experiment data (name and description)
-            const postResponse = await postExperiment(apiKey, experimentData);
-            // Step 2: Post Task Details
-            const putResponse = await putExperimentTasks(apiKey, postResponse.creator, experimentName, taskUuids);
-            setShowConfirmModal(false);
-            setShowModal(true);
+    const workflowTaskUuids = selectedTasks
+        .filter(t => t.type === "workflow")
+        .map(t => t.uuid);
+console.log("taskUuids:",taskUuids," workflowTaskUuids:",workflowTaskUuids);
+    try {
+        const postResponse = await postExperiment(apiKey, experimentData);
 
-        } catch (error) {
-            setErrorMessage(
-                <>Experiment name <strong>{experimentName}</strong> must be unique. Please choose a different name.</>
-            );
-            setTimeout(() => setErrorMessage(null), 3000);
-            setShowConfirmModal(false);
-            console.error(error);
+        if (taskUuids.length > 0) {
+            await putExperimentTasks(apiKey, postResponse.creator, experimentName, taskUuids);
         }
-    };
+
+        if (workflowTaskUuids.length > 0) {
+            await putExperimentWorkflows(apiKey, postResponse.creator, experimentName, workflowTaskUuids);
+        }
+
+        setShowConfirmModal(false);
+        setShowModal(true);
+    } catch (error) {
+        setErrorMessage(
+            <>Experiment name <strong>{experimentName}</strong> must be unique. Please choose a different name.</>
+        );
+        setTimeout(() => setErrorMessage(null), 3000);
+        setShowConfirmModal(false);
+        console.error(error);
+    }
+};
+
 
     const handleCancelBack = () => {
         setShowConfirmModal(false);

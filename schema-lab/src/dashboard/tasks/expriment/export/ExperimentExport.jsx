@@ -8,7 +8,8 @@ import {
   getExperimentDetails,
   getExperimentTaskDetails,
   retrieveTaskDetails,
-  retrieveWorkflowTaskDetails
+  retrieveWorkflowTaskDetails,
+  getExperimentWorkflowDetails
 } from "../../../../api/v1/actions";
 import { UserDetailsContext } from "../../../../utils/components/auth/AuthProvider";
 
@@ -67,130 +68,137 @@ const ExportExp = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [roCrateJson, setRoCrateJson] = useState(null);
 
-  // Fetch experiment details + list of task UUIDs
+  // Fetch experiment details + list of task/wokflow UUIDs
   useEffect(() => {
-    if (!creator || !name || !userDetails?.apiKey) return;
+  if (!creator || !name || !userDetails?.apiKey) return;
 
-    const fetchExperimentAndTasks = async () => {
-      setIsLoading(true);
-      try {
-        const expResponse = await getExperimentDetails({ creator, name, auth: userDetails.apiKey });
-        if (!expResponse.ok) throw new Error(`Experiment fetch failed: ${expResponse.status}`);
-        const expData = await expResponse.json();
+  const fetchExperimentAndTasks = async () => {
+    setIsLoading(true);
+    try {
+      const expResponse = await getExperimentDetails({ creator, name, auth: userDetails.apiKey });
+      if (!expResponse.ok) throw new Error(`Experiment fetch failed: ${expResponse.status}`);
+      const expData = await expResponse.json();
 
-        const taskListResponse = await getExperimentTaskDetails({ creator, name, auth: userDetails.apiKey });
-        if (!taskListResponse.ok) throw new Error(`Task list fetch failed: ${taskListResponse.status}`);
-        const taskListData = await taskListResponse.json();
+      // Fetch tasks
+      const taskListResponse = await getExperimentTaskDetails({ creator, name, auth: userDetails.apiKey });
+      if (!taskListResponse.ok) throw new Error(`Task list fetch failed: ${taskListResponse.status}`);
+      const taskListData = await taskListResponse.json();
 
-        setExperimentDetails(expData);
+      // Fetch workflow tasks
+      const workflowListResponse = await getExperimentWorkflowDetails({ creator, name, auth: userDetails.apiKey });
+      let workflowListData = [];
+      if (workflowListResponse.ok) {
+        workflowListData = await workflowListResponse.json();
+      }
 
-        // Fetch detailed info for each task sequentially or in parallel:
-        const fetchDetailedTasks = async () => {
-          const detailedTasks = [];
-          for (const task of taskListData) {
-            try {
-              let response = await retrieveTaskDetails({ taskUUID: task.uuid, auth: userDetails.apiKey });
-              if (response.status === 404) {
-                response = await retrieveWorkflowTaskDetails({ taskUUID: task.uuid, auth: userDetails.apiKey });
-              }
-              if (!response.ok) {
-                throw new Error(`Error fetching task details for ${task.uuid} status: ${response.status}`);
-              }
-              const data = await response.json();
+      setExperimentDetails(expData);
 
-              detailedTasks.push({
-                uuid: task.uuid,
-                name: data.name,
-                execution_order: data.execution_order,
-                state: data.state,
-                executors: data.executors,
-                inputs: data.inputs,
-                outputs: data.outputs,
-              });
-            } catch (err) {
-              console.warn(`Failed to fetch task details for ${task.uuid}: ${err.message}`);
-              // Optionally push partial info or skip this task
+      // Fetch detailed info for each task/workflow sequentially or in parallel
+      const fetchDetailedItems = async () => {
+        const detailedItems = [];
+
+        const fetchTaskOrWorkflowDetails = async (item, type) => {
+          try {
+            let response;
+            if (type === "task") {
+              response = await retrieveTaskDetails({ taskUUID: item.uuid, auth: userDetails.apiKey });
+            } else {
+              response = await retrieveWorkflowTaskDetails({ taskUUID: item.uuid, auth: userDetails.apiKey });
             }
+
+            if (!response.ok) {
+              throw new Error(`Error fetching ${type} details for ${item.uuid}: ${response.status}`);
+            }
+
+            const data = await response.json();
+            detailedItems.push({ type, uuid: item.uuid, ...data });
+          } catch (err) {
+            console.warn(`Failed to fetch ${type} details for ${item.uuid}: ${err.message}`);
           }
-          return detailedTasks;
         };
 
-        const detailedTasks = await fetchDetailedTasks();
-        setTasks(detailedTasks);
-        setError(null);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+        // Tasks
+        for (const task of taskListData) await fetchTaskOrWorkflowDetails(task, "task");
+        // Workflows
+        for (const wf of workflowListData) await fetchTaskOrWorkflowDetails(wf, "workflow");
 
-    fetchExperimentAndTasks();
-  }, [creator, name, userDetails]);
+        return detailedItems;
+      };
 
-  const generateRoCrateMetadata = () => {
-    if (!experimentDetails) return null;
-
-    const graph = [
-    {
-        "@id": "ro-crate-metadata.json",
-        "@type": "CreativeWork",
-        "conformsTo": { "@id": "https://w3id.org/ro/crate/1.1" },
-        "about": { "@id": "./" }
-    },
-    {
-        "@id": "./",
-        "@type": "Dataset",
-        "name": experimentDetails.name,
-        ...(experimentDetails.description && { description: experimentDetails.description }),
-        "creator": { "@id": "#creator" },
-        "hasPart": tasks.map(task => ({ "@id": task.uuid }))
-    },
-    {
-        "@id": "#creator",
-        "@type": "Person",
-        "name": experimentDetails.creator
-    },
-    ...tasks.map(task => ({
-        "@id": task.uuid,
-        "@type": "SoftwareApplication",
-        "name": task.name || task.uuid,
-        ...(task.state?.length > 0 && task.state[task.state.length - 1].updated_at ? {
-        "dateModified": new Date(task.state[task.state.length - 1].updated_at).toISOString()
-        } : {}),
-        ...(task.executors && task.executors.length > 0 ? {
-        "hasPart": task.executors.map((executor, exIdx) => ({
-            "@id": `${task.uuid}-executor-${exIdx}`,
-            "@type": "SoftwareApplication",
-            "name": executor.name || executor.id || `Executor ${exIdx + 1}`,
-            "commandLine": Array.isArray(executor.command) ? executor.command : [executor.command || "Unknown command"],
-            ...(executor.image ? { "image": { "@id": executor.image } } : {}),
-            ...(task.inputs && task.inputs.length > 0 ? {
-            "input": task.inputs.map((input, inIdx) => ({
-                "@type": input.type === "FILE" ? "File" : "Dataset",
-                "@id": `${task.uuid}-executor-${exIdx}-input-${inIdx}`,
-                "name": input.url || `Input file ${inIdx + 1}`,
-                "path": input.path || "Unknown path"
-            }))
-            } : {}),
-            ...(task.outputs && task.outputs.length > 0 ? {
-            "output": task.outputs.map((output, outIdx) => ({
-                "@type": output.type === "FILE" ? "File" : "Dataset",
-                "@id": `${task.uuid}-executor-${exIdx}-output-${outIdx}`,
-                "name": output.url || `Output file ${outIdx + 1}`,
-                "path": output.path || "Unknown path"
-            }))
-            } : {})
-        }))
-        } : {})
-    }))
-    ];
-
-    return {
-      "@context": "https://w3id.org/ro/crate/1.1/context",
-      "@graph": graph
-    };
+      const detailedItems = await fetchDetailedItems();
+      setTasks(detailedItems);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  fetchExperimentAndTasks();
+}, [creator, name, userDetails]);
+
+const generateRoCrateMetadata = () => {
+  if (!experimentDetails) return null;
+
+  const graph = [
+    {
+      "@id": "ro-crate-metadata.json",
+      "@type": "CreativeWork",
+      "conformsTo": { "@id": "https://w3id.org/ro/crate/1.1" },
+      "about": { "@id": "./" }
+    },
+    {
+      "@id": "./",
+      "@type": "Dataset",
+      "name": experimentDetails.name,
+      ...(experimentDetails.description && { description: experimentDetails.description }),
+      "creator": { "@id": "#creator" },
+      "hasPart": tasks.map(item => ({ "@id": item.uuid }))
+    },
+    {
+      "@id": "#creator",
+      "@type": "Person",
+      "name": experimentDetails.creator
+    },
+    ...tasks.map(item => ({
+      "@id": item.uuid,
+      "@type": item.type === "workflow" ? "Workflow" : "SoftwareApplication",
+      "name": item.name || item.uuid,
+      ...(item.state?.length > 0 && item.state[item.state.length - 1].updated_at ? {
+        "dateModified": new Date(item.state[item.state.length - 1].updated_at).toISOString()
+      } : {}),
+      ...(item.executors && item.executors.length > 0 ? {
+        "hasPart": item.executors.map((executor, exIdx) => ({
+          "@id": `${item.uuid}-executor-${exIdx}`,
+          "@type": "SoftwareApplication",
+          "name": executor.name || executor.id || `Executor ${exIdx + 1}`,
+          "commandLine": Array.isArray(executor.command) ? executor.command : [executor.command || "Unknown command"],
+          ...(executor.image ? { "image": { "@id": executor.image } } : {}),
+          ...(item.inputs && item.inputs.length > 0 ? {
+            "input": item.inputs.map((input, inIdx) => ({
+              "@type": input.type === "FILE" ? "File" : "Dataset",
+              "@id": `${item.uuid}-executor-${exIdx}-input-${inIdx}`,
+              "name": input.url || `Input file ${inIdx + 1}`,
+              "path": input.path || "Unknown path"
+            }))
+          } : {}),
+          ...(item.outputs && item.outputs.length > 0 ? {
+            "output": item.outputs.map((output, outIdx) => ({
+              "@type": output.type === "FILE" ? "File" : "Dataset",
+              "@id": `${item.uuid}-executor-${exIdx}-output-${outIdx}`,
+              "name": output.url || `Output file ${outIdx + 1}`,
+              "path": output.path || "Unknown path"
+            }))
+          } : {})
+        }))
+      } : {})
+    }))
+  ];
+
+  return { "@context": "https://w3id.org/ro/crate/1.1/context", "@graph": graph };
+};
+
 
   useEffect(() => {
     if (experimentDetails) {
