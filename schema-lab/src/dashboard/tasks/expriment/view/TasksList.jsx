@@ -21,7 +21,7 @@ const ExperimentTaskListing = ({ uuid, status, submitted_at, updated_at, isSelec
                 <OverlayTrigger
                     placement="top"
                     overlay={<Tooltip id="checkbox-tooltip">Select a task to be added in the experiment</Tooltip>}
-                    trigger={['hover']}
+                    trigger={['hover', 'focus']}
                 >
                     <input
                         className="form-check-input"
@@ -92,16 +92,34 @@ const ExperimentTaskList = () => {
     };
 
     const toggleRowSelection = (task) => {
-        const updatedSelectedTasks = selectedTasks.some(t => t.uuid === task.uuid)
-            ? selectedTasks.filter(t => t.uuid !== task.uuid)
-            : [...selectedTasks, task];
-        setSelectedTasks(updatedSelectedTasks);
-    };
+    const type = showWorkflowTasks ? "workflow" : "task";
+
+    const exists = selectedTasks.some(
+        (t) => t.uuid === task.uuid && t.type === type
+    );
+
+    if (exists) {
+        setSelectedTasks(selectedTasks.filter(t =>
+            !(t.uuid === task.uuid && t.type === type)
+        ));
+    } else {
+        setSelectedTasks([...selectedTasks, { ...task, type }]);
+    }
+};
+
 
     const handleSelectAll = (event) => {
-        if (event.target.checked && taskData?.results) setSelectedTasks(taskData.results);
-        else setSelectedTasks([]);
-    };
+    const type = showWorkflowTasks ? "workflow" : "task";
+
+    if (event.target.checked && taskData?.results) {
+        setSelectedTasks([
+            ...selectedTasks.filter(t => t.type !== type),
+            ...taskData.results.map(t => ({ ...t, type }))
+        ]);
+    } else {
+        setSelectedTasks(selectedTasks.filter(t => t.type !== type));
+    }
+};
 
     const findFilteredTokens = () => {
         if (taskData?.count === 0) return (
@@ -132,7 +150,7 @@ const ExperimentTaskList = () => {
                                     <OverlayTrigger
                                         placement="top"
                                         overlay={<Tooltip id="checkbox-tooltip">Select all tasks to be added in the experiment</Tooltip>}
-                                        trigger={['hover']}
+                                        trigger={['hover', 'focus']}
                                     >
                                         <input className="form-check-input" type="checkbox" onChange={handleSelectAll} />
                                     </OverlayTrigger>
@@ -190,7 +208,12 @@ const ExperimentTaskList = () => {
                                     status={task.current_status.status}
                                     submitted_at={task.submitted_at}
                                     updated_at={task.current_status.updated_at}
-                                    isSelected={selectedTasks.some(t => t.uuid === task.uuid)}
+                                    // isSelected={selectedTasks.some(t => t.uuid === task.uuid)}
+                                    isSelected={selectedTasks.some(
+                                        (t) =>
+                                            t.uuid === task.uuid &&
+                                            t.type === (showWorkflowTasks ? "workflow" : "task")
+                                    )}
                                     toggleSelection={() => toggleRowSelection(task)}
                                 />
                             ))}
