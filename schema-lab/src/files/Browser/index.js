@@ -1,45 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import FileBrowserCard from "./FileBrowserCard";
 import FileContainerInputField from "./FileContainerInputField";
-import {
-  getCommonDirectoryPrefix,
-  validateContainerPath,
-} from "../utils/paths";
+import { getCommonDirectoryPath, validateContainerPath } from "../utils/paths";
 import FileWorkflowNameInputs from "./FileWorkflowNameInputs";
-
-function validateEmptyInputs(inputs) {
-  // Inputs are given as an array of file input objects by the parent component. An empty array also contains one empty object that
-  // needs to be filtered out. This is done in order to avoid modifying the parent component logic.
-  if (!inputs || inputs?.length === 0) return true;
-
-  if (inputs?.length === 1) {
-    const input = inputs[0];
-    if (
-      (!input?.name || input?.name?.trim() === "") &&
-      (!input?.path || input?.path?.trim() === "") &&
-      (!input?.url || input?.url?.trim() === "") &&
-      (!input?.type || input?.type?.trim() === "") &&
-      (!input?.content || input?.content?.trim() === "")
-    ) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-function getCommonDirectoryPath(paths) {
-  // Given an array of input file objects, extract their paths and find the common directory prefix.
-  // This is necessary in task replication were multiple files have been selected and user must have specified a common container input path.
-  // This path is not stored in the input objects so we need to compute it here.
-  if (!paths || paths?.length === 0) return "";
-
-  const inputPaths = paths?.map((input) => input?.path).filter(Boolean);
-  if (inputPaths?.length > 0) {
-    return getCommonDirectoryPrefix(inputPaths);
-  }
-  return "";
-}
+import { validateEmptyInputs, hydratedFiles } from "../utils/files";
 
 export default function FileBrowser({
   inputs,
@@ -67,27 +31,19 @@ export default function FileBrowser({
   const onMountCall = useRef(true);
 
   useEffect(() => {
-    if (!isControlled) {
-      return;
-    }
-    if (validateEmptyInputs(inputs)) {
-      // Reset local state if clear all is triggered from parent
-      setSelectedFilesLocal([]);
-      setContainerInputsPath({
-        path: "",
-        isValid: true,
-        errorMsg: "",
-      });
-      return;
-    }
-    if (onMountCall?.current) {
-      if (validateEmptyInputs(inputs)) {
-        return;
-      }
-      const path = getCommonDirectoryPath(inputs);
+    if (!isControlled) return;
+
+    if (!validateEmptyInputs(inputs) && onMountCall.current) {
+      // hydrate selected files from inputs
+
+      const hydratedFilesList = hydratedFiles(inputs);
+
+      setSelectedFilesLocal(hydratedFilesList);
+
+      const path = getCommonDirectoryPath(hydratedFilesList);
       const errorMsg = validateContainerPath(path);
       setContainerInputsPath({
-        path: path,
+        path,
         isValid: !errorMsg,
         errorMsg: errorMsg || "",
       });
@@ -129,13 +85,13 @@ export default function FileBrowser({
   useEffect(() => {
     if (!isControlled) return;
 
-    if (!selectedFilesLocal || selectedFilesLocal.length === 0) {
+    if (!selectedFilesLocal || selectedFilesLocal?.length === 0) {
       if (validateEmptyInputs(inputs)) return;
       handleFileBrowserInputChange([]);
       return;
     }
 
-    const newInputs = selectedFilesLocal.map((file) => ({
+    const newInputs = selectedFilesLocal?.map((file) => ({
       name: file?.name || "",
       url: file?.path || "",
       path: containerInputsPath?.path
@@ -169,7 +125,12 @@ export default function FileBrowser({
           handleContainerInputsPathChange={onContainerInputsPathChange}
         />
       )}
-      {mode === "workflow" && <FileWorkflowNameInputs selectedFiles={selectedFilesLocal} handleSetSelectedFiles={onSelectedFilesChange}/>}
+      {mode === "workflow" && (
+        <FileWorkflowNameInputs
+          selectedFiles={selectedFilesLocal}
+          handleSetSelectedFiles={onSelectedFilesChange}
+        />
+      )}
       <FileBrowserCard
         selectedFiles={selectedFilesLocal}
         handleSetSelectedFiles={onSelectedFilesChange}
