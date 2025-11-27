@@ -1,25 +1,50 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import Button from 'react-bootstrap/Button';
 import Form from "react-bootstrap/Form";
 import Alert from 'react-bootstrap/Alert';
 import { UserDetailsContext } from "../utils/components/auth/AuthProvider";
+import { getProjectName } from "../api/v1/actions";
 
 const ApiKeyLogin = props => {
     const [apiKey, setApiKey] = useState('');
     const [error, setError] = useState(''); 
     const { userDetails, setUserDetails } = useContext(UserDetailsContext);
 
-    const validateApiKey = (key) => {
-        return key && key.length >= 128; // 128 is the length of the API_KEY. Now, it's a dummy value.
+
+    useEffect(() => {
+        if (!error) return;
+
+        const timer = setTimeout(() => {
+            setError("");
+        }, 4000);
+
+        return () => clearTimeout(timer);
+    }, [error]);
+
+    const validateApiKey = async (key) => {
+        try {
+            const response = await getProjectName(key);
+
+            if (response.ok) {
+                return null;
+            }
+
+            const data = await response.json();
+            return data?.reason;
+
+        } catch (err) {
+            return err?.message;
+        }
     };
 
-    const handleLogin = event => {
+    const handleLogin = async (event) => {
         event.preventDefault();
+        setError("");
 
-        if (!validateApiKey(apiKey)) {
-            setTimeout(() => {
-                setError('Invalid API key: Please check for typos or ensure your API key has not expired');
-            }, 2000);
+        const errorReason = await validateApiKey(apiKey);
+       
+        if (errorReason) {
+            setError(errorReason);
             return;
         }
 
@@ -37,7 +62,7 @@ const ApiKeyLogin = props => {
         <Form onSubmit={handleLogin}>
             {error && (
                 <Alert variant="danger" onClose={() => setError('')} dismissible>
-                    {error}
+                    Error: Your API key has been <b>{error}</b>!
                 </Alert>
             )}
             <Form.Group className="mb-3" controlId="apiKeyInput">
