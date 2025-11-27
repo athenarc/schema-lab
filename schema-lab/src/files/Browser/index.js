@@ -36,7 +36,7 @@ export default function FileBrowser({
     if (!validateEmptyInputs(inputs) && onMountCall.current) {
       // hydrate selected files from inputs
 
-      const hydratedFilesList = hydratedFiles(inputs);
+      const hydratedFilesList = hydratedFiles(inputs, mode);
 
       setSelectedFilesLocal(hydratedFilesList);
 

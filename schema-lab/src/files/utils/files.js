@@ -1,7 +1,10 @@
-export const hydratedFiles = (inputs) => {
+export const hydratedFiles = (inputs, mode = "picker") => {
   // Converts input objects to hydrated file objects
   return inputs.map((i) => ({
-    name: getBaseFilename(i?.url) || "",
+    name:
+      mode === "workflow"
+        ? removeFileExtension(getBaseFilename(i?.url))
+        : getBaseFilename(i?.url) || "",
     path: i?.url || "",
     fullPath: i?.url || "",
   }));
