@@ -29,11 +29,23 @@ const ApiKeyLogin = props => {
                 return null;
             }
 
-            const data = await response.json();
-            return data?.reason;
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                try {
+                    const data = await response.json();
+                    return data?.reason || `Invalid`;
+                } catch (jsonError) {
+                    return `Invalid`;
+                }
+            } else {
+                return `Invalid`;
+            }
 
         } catch (err) {
-            return err?.message;
+            if (err.status === 403) {
+                return err.message || "Invalid";
+            }
+            return "Unable to connect to server";
         }
     };
 
@@ -62,7 +74,7 @@ const ApiKeyLogin = props => {
         <Form onSubmit={handleLogin}>
             {error && (
                 <Alert variant="danger" onClose={() => setError('')} dismissible>
-                    Error: Your API key has been <b>{error}</b>!
+                    ERROR: <b>{error.toUpperCase()}</b> API key!
                 </Alert>
             )}
             <Form.Group className="mb-3" controlId="apiKeyInput">

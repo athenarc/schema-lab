@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import { Link, useNavigate } from "react-router-dom";
-import { Tooltip, OverlayTrigger, Dropdown, DropdownButton, Button, Alert, Modal, Form, Tabs, Tab } from 'react-bootstrap';
+import { Tooltip, OverlayTrigger, Dropdown, DropdownButton, Button, Alert, Modal, Tabs, Tab } from 'react-bootstrap';
 import { faArrowDownAZ, faArrowDownZA, faXmark, faArrowRotateRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Table from "react-bootstrap/Table";
@@ -18,10 +18,6 @@ const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggl
     const [isAlertActive, setIsAlertActive] = useState(false);
     const navigate = useNavigate();
     const [error, setError] = useState(null); 
-
-    const handleCheckboxChange = () => {
-        toggleSelection(uuid);
-    };
 
     const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
 

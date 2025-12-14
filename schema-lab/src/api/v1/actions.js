@@ -6,7 +6,7 @@ export const apiFetch = async (url, options = {}) => {
 
     if (response.status === 403) {
       const data = await safeParseJSON(response);
-      const message = data?.reason || "Unauthorized access";
+      const message = data?.reason || "Invalid";
       const error = new Error(message);
       error.status = 403;
       throw error;
