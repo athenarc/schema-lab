@@ -219,14 +219,14 @@ const WorkflowTaskForm = () => {
           setAlertMessage("The workflow task has been submitted successfully!");
           setShowAlert(true);
           setTimeout(() => {
-            navigate("/Dashboard"); // Navigate to /Dashboard after a delay
+            navigate("/dashboard");
           }, 2000);
         } else {
           setAlertMessage("Failed to submit task!");
           setAlertVariant("danger");
           setShowAlert(true);
           setTimeout(() => {
-            navigate("/Dashboard");
+            navigate("/dashboard");
           }, 2000);
         }
       })

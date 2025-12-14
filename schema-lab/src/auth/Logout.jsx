@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserDetailsContext } from "../utils/components/auth/AuthProvider";
 import { rmCookie } from "../utils/cookies";

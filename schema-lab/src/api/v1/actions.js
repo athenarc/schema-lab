@@ -1,21 +1,21 @@
 import config from "../../config";
 
-export const apiFetch = async (url, options = {}, navigate = () => {}) => {
-    try {
-        const response = await fetch(url, options);
+export const apiFetch = async (url, options = {}) => {
+  try {
+    const response = await fetch(url, options);
 
-        if (response.status === 403) {
-            const data = await safeParseJSON(response);
-            const message = data?.reason;
-
-            navigate("/");
-            throw new Error(message);
-        }
-
-        return response;
-    } catch (err) {
-        throw err;
+    if (response.status === 403) {
+      const data = await safeParseJSON(response);
+      const message = data?.reason || "Unauthorized access";
+      const error = new Error(message);
+      error.status = 403;
+      throw error;
     }
+
+    return response;
+  } catch (err) {
+    throw err;
+  }
 };
 
 // Safe JSON parsing helper

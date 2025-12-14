@@ -215,7 +215,7 @@ const TaskForm = () => {
           setAlertMessage("The task has been submitted successfully!");
           setShowAlert(true);
           setTimeout(() => {
-            navigate("/Dashboard"); // Navigate to /Dashboard after a delay
+            navigate("/dashboard"); // Navigate to /Dashboard after a delay
           }, 2000);
         } else {
           setAlertMessage("Failed to submit task!");
@@ -228,7 +228,7 @@ const TaskForm = () => {
         setAlertVariant("danger");
         setShowAlert(true);
         setTimeout(() => {
-          navigate("/Dashboard"); // Navigate to /Dashboard after a delay
+          navigate("/dashboard"); // Navigate to /Dashboard after a delay
         }, 2000);
       })
       .finally(() => {

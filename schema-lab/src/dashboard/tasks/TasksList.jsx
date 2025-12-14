@@ -103,7 +103,7 @@ const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggl
                 </tr>
             ) : (
                 <tr className={isSelected ? 'table-active' : ''}>
-                    <td><Link to={`/task-details/${uuid}/executors`}state={{ from: 'tasks' }}>{uuid}</Link></td>
+                    <td><Link to={`/task-details/${uuid}/executors`}state={{ from: 'tasks', isWorkflowTask: showWorkflowTasks }}>{uuid}</Link></td>
                     <td><TaskStatus status={status} /></td>
                     <td>{new Date(submitted_at).toLocaleString('en')}</td>
                     <td>{new Date(updated_at).toLocaleString('en')}</td>
