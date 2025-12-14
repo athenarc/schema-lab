@@ -1,6 +1,4 @@
 import React, { useRef } from "react";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
 import { useNavigate } from "react-router-dom";
@@ -51,18 +49,8 @@ const TasksFilterControls = () => {
                             disabled={selectedTasks.length === 0}
                             className="ms-auto"
                         >
-                        <div>
-                            <Button
-                                ref={elementRef}
-                                onClick={handleCreateExperiment}
-                                variant="outline-primary"
-                                disabled={selectedTasks.length === 0}
-                                className="ms-auto"
-                            >
-                                Create
-                            </Button>
-                        </div>
-                        </OverlayTrigger>
+                            Create
+                        </Button>
                     </div>
                 </OverlayTrigger>
             </Card.Body>

@@ -109,7 +109,7 @@ const Aboutus = () => {
                     </p>
                     <p className="mb-4"><FontAwesomeIcon icon={faLocationPin} /> 
                     <b> Address: </b> Athena RC, Artemidos 6 & Epidavrou, Maroussi 15125, Greece</p>
-                    <div className="embed-responsive embed-responsive-16by9 mb-5">
+                    <div className="embed-responsive embed-responsive-16by9 mb-3">
                         <iframe
                             className="embed-responsive-item"
                             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3142.509603373891!2d23.793915596789542!3d38.03521060000003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14a198deffffffff%3A0x1ce27455f146f478!2sAthena%20Research%20%26%20Innovation%20Center%20in%20Information%20Communication%20%26%20Knowledge%20Technologies!5e0!3m2!1sen!2sgr!4v1722461297988!5m2!1sen!2sgr"
@@ -119,6 +119,21 @@ const Aboutus = () => {
                             style={{ border: 0, width: '100%', height: '400px' }} 
                         ></iframe>
                     </div>
+                </Col>
+            </Row>
+
+            <Row className="justify-content-center mt-2 mb-3">
+                <Col className="text-center">
+                    <p className="text-muted mb-0">
+                        <a 
+                            href="/media/hypatia/hypatias-resource-management-access-policy-v2.pdf" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-decoration-none"
+                        >
+                            HYPATIA lab Resource Management & Access Policy
+                        </a>
+                    </p>
                 </Col>
             </Row>
         </Container>
