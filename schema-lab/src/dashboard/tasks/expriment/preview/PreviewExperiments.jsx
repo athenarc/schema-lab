@@ -34,7 +34,7 @@ const ExperimentListing = ({ name, creator, created_at, onActionSelect }) => (
                 >
                     <Dropdown.Item eventKey="edit">Edit</Dropdown.Item>
                     <Dropdown.Item eventKey="delete">Delete</Dropdown.Item>
-                    <Dropdown.Item eventKey="export" disabled>
+                    <Dropdown.Item eventKey="export">
                         Export RO-crates
                     </Dropdown.Item>
                     <Dropdown.Item eventKey="publish" disabled>
@@ -98,6 +98,10 @@ const PreviewExperiments = () => {
         }
         if (action === "edit") {
             navigate(`/edit/${creator}/${name}`);
+        }
+
+        if (action === "export") {
+            navigate(`/export/${creator}/${name}`);
         }
     };
 

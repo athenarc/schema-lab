@@ -11,12 +11,14 @@ const Experiment = ({ taskDetails }) => {
     return (
         <Row>
             <Col>
-                <TasksListProvider initialTasks={taskDetails}>
+                {/* Render only completed tasks */}
+                <TasksListProvider initialTasks={taskDetails}
+                        initialFilters={{ statuses: { completed: 'completed' } }}>
                     <TasksFilterControls />
                     <TasksPaginationControls />
                     <Row className="p-3 mb-5">
                         <Col>
-                            <ExperimentTaskList />
+                           <ExperimentTaskList />
                         </Col>
                     </Row>
                 </TasksListProvider>

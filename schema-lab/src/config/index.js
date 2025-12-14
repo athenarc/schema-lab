@@ -25,8 +25,8 @@ const parseLoginProviders = supportedLoginsProvidersDescription => {
     if (!supportedLoginsProvidersDescription) return [];
     const loginProviderIdentifiers = supportedLoginsProvidersDescription.split(",").map(identifier => identifier.trim());
     const loginProviders = loginProviderIdentifiers.map(identifier => SupportedLoginsMap[identifier])
-    const unknownLoginProvider = loginProviders.findIndex(loginProvider => loginProvider == undefined);
-    if (unknownLoginProvider == -1) return loginProviders;
+    const unknownLoginProvider = loginProviders.findIndex(loginProvider => loginProvider === undefined);
+    if (unknownLoginProvider === -1) return loginProviders;
     throw new Error(`Invalid configuration [LoginProviders]: Value "${loginProviderIdentifiers[unknownLoginProvider]}" is not a known login provider`)
 };
 

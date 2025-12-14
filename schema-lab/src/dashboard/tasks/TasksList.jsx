@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import { Link, useNavigate } from "react-router-dom";
-import { Tooltip, OverlayTrigger, Dropdown, DropdownButton, Button, Alert, Modal, Form, Tabs, Tab } from 'react-bootstrap';
+import { Tooltip, OverlayTrigger, Dropdown, DropdownButton, Button, Alert, Modal, Tabs, Tab } from 'react-bootstrap';
 import { faArrowDownAZ, faArrowDownZA, faXmark, faArrowRotateRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Table from "react-bootstrap/Table";
@@ -18,10 +18,6 @@ const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggl
     const [isAlertActive, setIsAlertActive] = useState(false);
     const navigate = useNavigate();
     const [error, setError] = useState(null); 
-
-    const handleCheckboxChange = () => {
-        toggleSelection(uuid);
-    };
 
     const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
 
@@ -103,7 +99,7 @@ const TaskListing = ({ uuid, status, submitted_at, updated_at, isSelected, toggl
                 </tr>
             ) : (
                 <tr className={isSelected ? 'table-active' : ''}>
-                    <td><Link to={`/task-details/${uuid}/executors`}state={{ from: 'tasks' }}>{uuid}</Link></td>
+                    <td><Link to={`/task-details/${uuid}/executors`}state={{ from: 'tasks', isWorkflowTask: showWorkflowTasks }}>{uuid}</Link></td>
                     <td><TaskStatus status={status} /></td>
                     <td>{new Date(submitted_at).toLocaleString('en')}</td>
                     <td>{new Date(updated_at).toLocaleString('en')}</td>
@@ -332,6 +328,7 @@ const TaskList = () => {
                                         <Dropdown.Item eventKey='submitted'><TaskStatus status='SUBMITTED' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='approved'><TaskStatus status='APPROVED' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='scheduled'><TaskStatus status='SCHEDULED' /></Dropdown.Item>
+                                        <Dropdown.Item eventKey='queued'><TaskStatus status='QUEUED' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='running'><TaskStatus status='RUNNING' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='completed'><TaskStatus status='COMPLETED' /></Dropdown.Item>
                                         <Dropdown.Item eventKey='error'><TaskStatus status='ERROR' /></Dropdown.Item>
@@ -351,9 +348,9 @@ const TaskList = () => {
                                 <TaskListing
                                     key={task.uuid}
                                     uuid={task.uuid}
-                                    status={task.state.status}
+                                    status={task.current_status.status}
                                     submitted_at={task.submitted_at}
-                                    updated_at={task.state.updated_at}
+                                    updated_at={task.current_status.updated_at}
                                     showWorkflowTasks={showWorkflowTasks}
                                 />
                             ))}
