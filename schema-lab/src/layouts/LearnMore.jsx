@@ -27,16 +27,16 @@ const LearnMore = () => {
         <Col>
           <ListGroup variant="flush">
             <ListGroup.Item className="border-0 text-muted">
-              <strong>Task Management</strong>
+              <strong>Task & Workflow Management</strong>
             </ListGroup.Item>
             <ListGroup.Item className="border-0 text-muted">
-              <strong>Submit and Run Tasks:</strong> Easily submit and run computational tasks.
+              <strong>Submit and Run Tasks & Workflows:</strong> Easily submit and run computational tasks.
             </ListGroup.Item>
             <ListGroup.Item className="border-0 text-muted">
-              <strong>Track Task Status:</strong> Stay informed with clear status indicators showing whether tasks are submitted, running, completed, or have encountered errors.
+              <strong>Track Task & Workflow Status:</strong> Stay informed with clear status indicators showing whether tasks are submitted, running, completed, or have encountered errors.
             </ListGroup.Item>
             <ListGroup.Item className="border-0 text-muted">
-              <strong>Manage with Ease:</strong> Cancel tasks with just a click, ensuring flexibility and control over your computational workflows.
+              <strong>Manage with Ease:</strong> Cancel tasks & workflows with just a click, ensuring flexibility and control over your computational workflows.
             </ListGroup.Item>
           </ListGroup>
         </Col>
