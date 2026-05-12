@@ -87,7 +87,7 @@ const Base = (props) => {
       getProjectName(userDetails.apiKey)
         .then((response) => response.json())
         .then((data) =>
-          setProjectName(data.name || "No project name available")
+          setProjectName(data.name || "No project name available"),
         );
     }
 
@@ -128,6 +128,7 @@ const Base = (props) => {
                       { to: "/dashboard", text: "Dashboard" },
                       { to: "/runtask", text: "Run a single task" },
                       { to: "/runworkflowtask", text: "Run a workflow task" },
+                      { to: "/runstreamingtask", text: "Run a streaming task" },
                     ]}
                   />
                   <ClickableNavDropdown

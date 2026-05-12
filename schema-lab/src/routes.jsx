@@ -1,17 +1,24 @@
-import React, {useContext} from "react";
-import {BrowserRouter, Navigate, Outlet, Route, Routes,} from "react-router-dom";
+import React, { useContext } from "react";
+import {
+  BrowserRouter,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+} from "react-router-dom";
 import Home from "./Home";
 import Auth from "./auth";
 import Logout from "./auth/Logout";
 import Dashboard from "./dashboard";
 import Base from "./layouts/Base";
-import {UserDetailsContext} from "./utils/components/auth/AuthProvider";
+import { UserDetailsContext } from "./utils/components/auth/AuthProvider";
 import UserPreferencesView from "./client/ClientPreferencesView";
 import Details from "./dashboard/tasks/details";
 import Executors from "./dashboard/tasks/details/Executors";
 import Outputs from "./dashboard/tasks/details/Outputs";
 import Inputs from "./dashboard/tasks/details/Inputs";
 import RunTask from "./runtask";
+import RunStreamingTask from "./streamingtask";
 import RunWorkflowTask from "./runworkflowtask";
 import LearnMore from "./layouts/LearnMore";
 import SelectTask from "./dashboard/tasks/expriment/create";
@@ -46,12 +53,16 @@ const AppRouter = () => {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/runtask" element={<RunTask />} />
             <Route path="/runworkflowtask" element={<RunWorkflowTask />} />
+            <Route path="/runstreamingtask" element={<RunStreamingTask />} />
             <Route path="/preferences" element={<UserPreferencesView />} />
             <Route path="/experiment" element={<Experiments />} />
             <Route path="/view" element={<Experiment />} />
             <Route path="/create" element={<SelectTask />} />
             <Route path="/preview" element={<ViewExperiments />} />
-            <Route path="/export/:creator/:name" element={<ExportExperiment />} />
+            <Route
+              path="/export/:creator/:name"
+              element={<ExportExperiment />}
+            />
             <Route path="/edit/:creator/:name" element={<EditExperiment />} />
             <Route
               path="/experiment-details/:creator/:name"
