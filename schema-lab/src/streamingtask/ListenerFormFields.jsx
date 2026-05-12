@@ -161,7 +161,7 @@ export default function ListenerFormFields({
         </Form.Group>
         <Form.Group as={Row} className="mb-3">
           <Form.Label column sm="3" className="fw-bold">
-            Department
+            Department <span className="text-danger">*</span>
           </Form.Label>
           <Col sm="9">
             <Form.Control
@@ -170,6 +170,7 @@ export default function ListenerFormFields({
               value={listener?.department}
               onChange={handleListenerChange}
               placeholder="Enter your department name..."
+              required
             />
           </Col>
         </Form.Group>
