@@ -1,16 +1,5 @@
 import React from "react";
-import { Card, Form, Row, Col, OverlayTrigger, Tooltip } from "react-bootstrap";
-
-// Basic fields for listener service configuration:
-// influx/timescaledb -> required locked to influxdb for now.
-// Base url for reading - required
-// (Base url for writing - might require additional fields)
-// Token - required (with JWT-like validation)
-// Organization - required
-// Department - optional
-// entity - optional
-// metric - required
-// Frequency
+import { Card, Form, Row, Col } from "react-bootstrap";
 
 function validateUrl(value) {
   try {

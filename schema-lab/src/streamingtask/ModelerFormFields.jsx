@@ -1,17 +1,5 @@
 import React from "react";
 import { Card, Form, Row, Col, OverlayTrigger, Tooltip } from "react-bootstrap";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
-
-// Fields for executor configuration:
-// Image (required)
-// Command (required)
-// Working directory (optional)
-// Stdout (optional)
-// Stderr (optional)
-// Env (optional - key:value pairs)
-// Port (modeller)
-// Endpoint (modeller) required (default = /model)
 
 export default function ModelerFormFields({ modelers, handleModelerChange }) {
   return (
