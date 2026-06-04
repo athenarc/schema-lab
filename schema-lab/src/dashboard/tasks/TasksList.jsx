@@ -29,6 +29,8 @@ import {
   cancelWorkflowTaskPost,
   retrieveTaskDetails,
   retrieveWorkflowTaskDetails,
+  cancelStreamingTask,
+  retrieveStreamingTaskDetails,
 } from "../../api/v1/actions";
 import { UserDetailsContext } from "../../utils/components/auth/AuthProvider";
 
@@ -39,7 +41,7 @@ const TaskListing = ({
   updated_at,
   isSelected,
   toggleSelection,
-  showWorkflowTasks,
+  taskType,
 }) => {
   const { userDetails } = useContext(UserDetailsContext);
   const [alertMessage, setAlertMessage] = useState(null);
@@ -51,14 +53,17 @@ const TaskListing = ({
 
   const confirmCancelTask = () => {
     // Execute the cancel task only when confirmed
-    handleCancelTask(uuid, userDetails.apiKey, showWorkflowTasks);
+    handleCancelTask(uuid, userDetails.apiKey, taskType);
     setShowCancelConfirmation(false); // Close the modal after confirmation
   };
 
-  const handleCancelTask = (taskUUID, auth, showWorkflowTasks) => {
-    const cancelTask = showWorkflowTasks
-      ? cancelWorkflowTaskPost
-      : cancelTaskPost;
+  const handleCancelTask = (taskUUID, auth, taskType) => {
+    const cancelTask =
+      taskType === "workflow"
+        ? cancelWorkflowTaskPost
+        : taskType === "tasks"
+          ? cancelTaskPost
+          : cancelStreamingTask;
     cancelTask({ taskUUID, auth })
       .then((response) => {
         if (!response.ok) {
@@ -91,16 +96,22 @@ const TaskListing = ({
 
   const handleRerunButtonClick = async () => {
     try {
-      // Use different API call based on showWorkflowTasks state
-      const response = showWorkflowTasks
-        ? await retrieveWorkflowTaskDetails({
-            taskUUID: uuid,
-            auth: userDetails.apiKey,
-          })
-        : await retrieveTaskDetails({
-            taskUUID: uuid,
-            auth: userDetails.apiKey,
-          });
+      // Use different API call based on taskType
+      const response =
+        taskType === "workflow"
+          ? await retrieveWorkflowTaskDetails({
+              taskUUID: uuid,
+              auth: userDetails.apiKey,
+            })
+          : taskType === "tasks"
+            ? await retrieveTaskDetails({
+                taskUUID: uuid,
+                auth: userDetails.apiKey,
+              })
+            : await retrieveStreamingTaskDetails({
+                taskUUID: uuid,
+                auth: userDetails.apiKey,
+              });
 
       if (!response.ok) {
         throw new Error(
@@ -110,10 +121,14 @@ const TaskListing = ({
 
       const data = await response.json();
 
-      // Navigate to different path based on showWorkflowTasks state
-      showWorkflowTasks
+      // Navigate to different path based on taskType
+      taskType === "workflow"
         ? navigate("/runworkflowtask", { state: { taskworkflowdata: data } })
-        : navigate("/runtask", { state: { taskData: data } });
+        : taskType === "tasks"
+          ? navigate("/runtask", { state: { taskData: data } })
+          : navigate("/runstreamingtask", {
+              state: { taskStreamingData: data },
+            });
     } catch (error) {
       setError(error.toString());
     }
@@ -142,7 +157,11 @@ const TaskListing = ({
           <td>
             <Link
               to={`/task-details/${uuid}/executors`}
-              state={{ from: "tasks", isWorkflowTask: showWorkflowTasks }}
+              state={{
+                from: "tasks",
+                isWorkflowTask: taskType === "workflow",
+                taskType,
+              }}
             >
               {uuid}
             </Link>
@@ -428,7 +447,7 @@ const TaskList = () => {
                   status={task.current_status.status}
                   submitted_at={task.submitted_at}
                   updated_at={task.current_status.updated_at}
-                  showWorkflowTasks={taskType === "workflow"}
+                  taskType={taskType}
                 />
               ))}
             </tbody>
