@@ -181,7 +181,6 @@ const StreamingTaskForm = () => {
 
   const handleConfirmSubmit = () => {
     const requestData = prepareRequestData();
-    console.log("Prepared Request Data:", requestData);
   };
 
   const handleModalClose = () => setShowModal(false);

@@ -204,11 +204,13 @@ const TaskList = () => {
             <tbody>
               {taskData.results.map((task) => (
                 <TaskListing
-                  key={task.uuid}
-                  uuid={task.uuid}
-                  status={task.current_status.status}
-                  submitted_at={task.submitted_at}
-                  updated_at={task.current_status.updated_at}
+                  key={task?.uuid ?? task?.id}
+                  uuid={task?.uuid ?? task?.id}
+                  status={task?.current_status?.status ?? task?.status}
+                  submitted_at={task?.submitted_at ?? task?.created_at}
+                  updated_at={
+                    task?.current_status?.updated_at ?? task?.updated_at
+                  }
                   taskType={taskType}
                 />
               ))}

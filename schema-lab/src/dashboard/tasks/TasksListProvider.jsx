@@ -132,14 +132,7 @@ const TasksListProvider = ({ children, initialFilters = {} }) => {
         limit: pageSize,
         offset: filtersToUse.page * pageSize,
       };
-      console.log(
-        "isWorkflowTasks:",
-        isWorkflowTasks,
-        "isStreamingTasks:",
-        isStreamingTasks,
-        "isTasks:",
-        isTasks,
-      );
+
       const fetchFunction = isTasks
         ? listTasks
         : isWorkflowTasks
@@ -153,6 +146,11 @@ const TasksListProvider = ({ children, initialFilters = {} }) => {
             : Promise.reject("Failed to fetch tasks"),
         )
         .then((data) => {
+          if (isStreamingTasks) {
+            setTaskData({ count: data?.length, results: data || [] });
+            setIsLoading(false);
+            return;
+          }
           setTaskData({ count: data.count, results: data.results });
           setIsLoading(false);
         })
