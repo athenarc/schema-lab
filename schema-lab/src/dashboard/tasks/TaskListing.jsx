@@ -139,6 +139,8 @@ const TaskListing = ({
               state={{
                 from: "tasks",
                 isWorkflowTask: taskType === "workflow",
+                isStreamingTask: taskType === "streaming",
+                isTasksTask: taskType === "tasks",
                 taskType,
               }}
             >

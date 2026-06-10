@@ -19,7 +19,14 @@ import ColumnOrderToggle from "./ColumnOrderToggle";
 
 const TaskList = () => {
   const [taskType, setTaskType] = useState("tasks"); // "tasks", "workflow", or "streaming"
-  const { taskData } = useTaskData(taskType === "workflow");
+  const showTasks = taskType === "tasks";
+  const showWorkflowTasks = taskType === "workflow";
+  const showStreamingTasks = taskType === "streaming";
+  const { taskData } = useTaskData(
+    showWorkflowTasks,
+    showStreamingTasks,
+    showTasks,
+  );
   const { taskFilters, setTaskFilters } = useTaskFilters();
   const [token, setToken] = useState(taskFilters.token);
   const [statuses, setStatuses] = useState({ ...taskFilters.statuses });
@@ -103,7 +110,7 @@ const TaskList = () => {
           <Tab eventKey="streaming" title="Streaming Tasks" />
         </Tabs>
 
-        {taskData && taskData.results && (
+        {taskData && taskData?.results && (
           <Table borderless responsive hover>
             <thead>
               <tr>

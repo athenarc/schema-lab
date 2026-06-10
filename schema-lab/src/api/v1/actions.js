@@ -282,6 +282,7 @@ export const listStreamingTasks = (options = {}) => {
     : {};
   const filters = options.filters || {};
   const queryParameters = [];
+  queryParameters.push(`streaming=leaf-influx`); // Streaming tasks always use detailed view
 
   if (filters.view) queryParameters.push(`view=${filters.view}`);
   if (filters.order) queryParameters.push(`order=${filters.order}`);
@@ -296,21 +297,21 @@ export const listStreamingTasks = (options = {}) => {
   const queryString = queryParameters.length
     ? `?${queryParameters.join("&")}`
     : "";
-  return apiFetch(`${config.api.url}/api/streaming-tasks${queryString}`, {
+  return apiFetch(`${config.api.url}/api/streaming${queryString}`, {
     method: "GET",
     headers,
   });
 };
 
 export const cancelStreamingTask = ({ taskUUID, auth }) => {
-  return apiFetch(`${config.api.url}/api/streaming-tasks/${taskUUID}/cancel`, {
+  return apiFetch(`${config.api.url}/api/streaming/${taskUUID}/cancel`, {
     method: "POST",
     headers: { Authorization: `Bearer ${auth}` },
   });
 };
 
 export const retrieveStreamingTaskDetails = ({ taskUUID, auth }) => {
-  return apiFetch(`${config.api.url}/api/streaming-tasks/${taskUUID}`, {
+  return apiFetch(`${config.api.url}/api/streaming/${taskUUID}`, {
     method: "GET",
     headers: { Authorization: `Bearer ${auth}` },
   });
