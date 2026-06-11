@@ -7,8 +7,7 @@ export default function ConfirmationModal({
   handleModalClose,
   handleConfirmSubmit,
   listener,
-  modelers,
-  resources,
+  modeler,
 }) {
   const [showJson, setShowJson] = useState(false);
 
@@ -55,7 +54,7 @@ export default function ConfirmationModal({
             {JSON.stringify(
               {
                 streaming: listener.streaming,
-                data: { source: { ...listener, modeler: modelers } },
+                data: { source: { ...listener, modeler } },
               },
               null,
               2,

@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Form, Button, Card, Container } from "react-bootstrap";
+import { Alert, Button, Card, Container, Form } from "react-bootstrap";
 import { UserDetailsContext } from "../utils/components/auth/AuthProvider";
 import ConfirmationModal from "./ConfirmationModal";
 import ListenerFormFields from "./ListenerFormFields";
@@ -10,14 +10,13 @@ import { runStreamingTaskPost } from "../api/v1/actions";
 const StreamingTaskForm = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
-  const taskData = state?.taskData || null;
+  const taskStreamingData = state?.taskStreamingData || null;
   const [showModal, setShowModal] = useState(false);
   const [listener, setListener] = useState({
     name: "",
     description: "",
     streaming: "leaf-influx",
     api_url: "",
-    baseWritingUrl: "",
     token: "",
     organisation: "",
     department: "",
@@ -25,24 +24,15 @@ const StreamingTaskForm = () => {
     metrics: "",
     everyTs: 10,
   });
-  const [modelers, setModelers] = useState([
-    {
-      image: "",
-      command: [],
-      endpoint: "/model",
-      port: "",
-      workdir: "",
-      stdout: "",
-      stderr: "",
-      env: {},
-    },
-  ]);
-  const [resources, setResources] = useState({
-    cpu_cores: 1,
-    zones: "",
-    preemptible: false,
-    disk_gb: 5.0,
-    ram_gb: 1.0,
+  const [modeler, setModeler] = useState({
+    image: "",
+    command: [],
+    endpoint: "/model",
+    port: "",
+    workdir: "",
+    stdout: "",
+    stderr: "",
+    env: {},
   });
   const { userDetails } = useContext(UserDetailsContext);
   const [showAlert, setShowAlert] = useState(false);
@@ -51,56 +41,24 @@ const StreamingTaskForm = () => {
 
   // Fill input boxes with data if UUID already exists
   useEffect(() => {
-    console.log("Received task data:", taskData);
-    if (taskData) {
+    if (taskStreamingData) {
       setListener({
-        name: taskData.name || "",
-        description: taskData.description || "",
-        streaming: "leaf-influx",
-        api_url: taskData.baseReadingUrl || "",
-        baseWritingUrl: taskData.baseWritingUrl || "",
-        token: taskData.token || "",
-        organisation: taskData.organisation || "",
-        department: taskData.department || "",
-        entity: taskData.entity || "",
-        metrics: taskData.metrics || "",
-        everyTs: taskData.everyTs || 10,
+        ...taskStreamingData?.source,
+        streaming: taskStreamingData?.streaming || "leaf-influx",
       });
 
-      setModelers(
-        Array.isArray(taskData.modelers) && taskData.modelers.length > 0
-          ? taskData.modelers.map((modeler) => ({
-              image: modeler?.image || "",
-              command: modeler?.command || [],
-              endpoint: modeler?.endpoint || "/model",
-              port: modeler?.port || "",
-              workdir: modeler?.workdir || "",
-              stdout: modeler?.stdout || "",
-              stderr: modeler?.stderr || "",
-              env: modeler?.env || {},
-            }))
-          : [
-              {
-                image: "",
-                command: [],
-                endpoint: "/model",
-                port: "",
-                workdir: "",
-                stdout: "",
-                stderr: "",
-                env: {},
-              },
-            ],
-      );
-      setResources({
-        cpu_cores: taskData?.resources?.cpu_cores || 1,
-        zones: taskData?.resources?.zones || "",
-        preemptible: taskData?.resources?.preemptible || false,
-        disk_gb: taskData?.resources?.disk_gb || 5.0,
-        ram_gb: taskData?.resources?.ram_gb || 1.0,
+      setModeler({
+        image: taskStreamingData?.modeler?.image || "",
+        command: taskStreamingData?.modeler?.command || [],
+        endpoint: taskStreamingData?.modeler?.endpoint || "/model",
+        port: taskStreamingData?.modeler?.port || "",
+        workdir: taskStreamingData?.modeler?.workdir || "",
+        stdout: taskStreamingData?.modeler?.stdout || "",
+        stderr: taskStreamingData?.modeler?.stderr || "",
+        env: taskStreamingData?.modeler?.env || {},
       });
     }
-  }, [taskData]);
+  }, [taskStreamingData]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -154,42 +112,14 @@ const StreamingTaskForm = () => {
   };
 
   const prepareRequestData = () => {
-    const {
-      name,
-      description,
-      tags,
-      api_url,
-      baseWritingUrl,
-      token,
-      organisation,
-      department,
-      entity,
-      metrics = "",
-      everyTs,
-    } = listener;
-    let modeler = modelers;
-    if (Array.isArray(modelers) && modelers.length === 1) {
-      modeler = modelers[0];
-    }
     const data = {
       streaming: listener.streaming,
       data: {
         source: {
-          name,
-          description,
-          tags,
-          api_url,
-          baseWritingUrl,
-          token,
-          organisation,
-          department,
-          entity,
-          metrics,
-          everyTs,
+          ...listener,
         },
-        modeler: modeler,
+        modeler,
       },
-      // resources,
     };
 
     return cleanEmptyValues(data);
@@ -242,12 +172,11 @@ const StreamingTaskForm = () => {
     });
   };
 
-  const handleModelerChange = (index, e) => {
+  const handleModelerChange = (e) => {
     const { name, value } = e.target;
 
-    setModelers((prevModelers) => {
-      const updatedModelers = [...prevModelers];
-      const updatedModeler = { ...updatedModelers[index] };
+    setModeler((prevModeler) => {
+      const updatedModeler = { ...prevModeler };
 
       if (name === "command") {
         updatedModeler.command = value.split(" ");
@@ -262,8 +191,7 @@ const StreamingTaskForm = () => {
         updatedModeler[name] = value;
       }
 
-      updatedModelers[index] = updatedModeler;
-      return updatedModelers;
+      return updatedModeler;
     });
   };
 
@@ -283,43 +211,29 @@ const StreamingTaskForm = () => {
       metrics: "",
       everyTs: 10,
     });
-    setModelers([
-      {
-        image: "",
-        command: [],
-        workdir: "",
-        stdout: "",
-        stderr: "",
-        env: {},
-        port: "",
-        endpoint: "/model",
-      },
-    ]);
-    setResources({
-      cpu_cores: 1,
-      zones: "",
-      preemptible: false,
-      disk_gb: 5.0,
-      ram_gb: 1.0,
+    setModeler({
+      image: "",
+      command: [],
+      workdir: "",
+      stdout: "",
+      stderr: "",
+      env: {},
+      port: "",
+      endpoint: "/model",
     });
-  };
-
-  const handleResourceChange = (event) => {
-    const { name, type, value, checked } = event.target;
-    const newValue =
-      name === "cpu_cores"
-        ? Number(value)
-        : type === "checkbox"
-          ? checked
-          : value;
-    setResources((prevResources) => ({
-      ...prevResources,
-      [name]: newValue,
-    }));
   };
 
   return (
     <Container className="py-5">
+      {showAlert && (
+        <Alert
+          variant={alertVariant}
+          onClose={() => setShowAlert(false)}
+          dismissible
+        >
+          {alertMessage}
+        </Alert>
+      )}
       <Card className="border-0 shadow-sm rounded-3 mb-4">
         <Card.Body>
           <p className="text-muted mb-4" style={{ fontSize: "0.875rem" }}>
@@ -331,7 +245,7 @@ const StreamingTaskForm = () => {
               handleListenerChange={handleListenerChange}
             />
             <ModelerFormFields
-              modelers={modelers}
+              modeler={modeler}
               handleModelerChange={handleModelerChange}
             />
 
@@ -358,8 +272,7 @@ const StreamingTaskForm = () => {
         handleModalClose={handleModalClose}
         handleConfirmSubmit={handleConfirmSubmit}
         listener={listener}
-        modelers={modelers}
-        resources={resources}
+        modeler={modeler}
       />
     </Container>
   );

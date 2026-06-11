@@ -115,7 +115,7 @@ export default function ListenerFormFields({
           </Col>
         </Form.Group>
         {/* Additional fields for writing URL, token, organization, etc. can be added here */}
-        <Form.Group as={Row} className="mb-3">
+        {/* <Form.Group as={Row} className="mb-3">
           <Form.Label column sm="3" className="fw-bold">
             Base Writing URL <span className="text-danger">*</span>
           </Form.Label>
@@ -129,7 +129,7 @@ export default function ListenerFormFields({
               required
             />
           </Col>
-        </Form.Group>
+        </Form.Group> */}
         <Form.Group as={Row} className="mb-3">
           <Form.Label column sm="3" className="fw-bold">
             Token <span className="text-danger">*</span>
