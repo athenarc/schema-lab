@@ -30,10 +30,22 @@ const TaskListing = ({
   const [error, setError] = useState(null);
 
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
-  const nonCancelableStatuses = ["COMPLETED", "ERROR", "CANCELED", "REJECTED", "TERMINATED"];
+  const nonCancelableStatuses = [
+    "COMPLETED",
+    "ERROR",
+    "CANCELED",
+    "REJECTED",
+    "TERMINATED",
+  ];
   const canCancel = !nonCancelableStatuses.includes(status.toUpperCase());
   // Handle runnable tasks
-  const rerunnableStatuses = ["COMPLETED", "ERROR", "CANCELED", "REJECTED", "TERMINATED"];
+  const rerunnableStatuses = [
+    "COMPLETED",
+    "ERROR",
+    "CANCELED",
+    "REJECTED",
+    "TERMINATED",
+  ];
   const nonRerunnableStatuses = ["SUBMITTED", "APPROVED", "RUNNING", "CREATED"];
   const canRerun = rerunnableStatuses.includes(status.toUpperCase());
   const cannotRerun = nonRerunnableStatuses.includes(status.toUpperCase());
@@ -138,8 +150,11 @@ const TaskListing = ({
           <td>
             <Link
               to={`/task-details/${uuid}/executors`}
+              style={{
+                pointerEvents: taskType === "streaming" ? "none" : "auto",
+              }}
               state={{
-                from: "tasks",
+                from: "streaming",
                 isWorkflowTask: taskType === "workflow",
                 isStreamingTask: taskType === "streaming",
                 isTasksTask: taskType === "tasks",
