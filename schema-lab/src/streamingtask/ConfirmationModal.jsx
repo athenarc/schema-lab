@@ -54,9 +54,8 @@ export default function ConfirmationModal({
           <pre>
             {JSON.stringify(
               {
-                listener,
-                modelers,
-                resources,
+                streaming: listener.streaming,
+                data: { source: { ...listener, modeler: modelers } },
               },
               null,
               2,

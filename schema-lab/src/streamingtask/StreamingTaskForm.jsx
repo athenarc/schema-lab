@@ -5,6 +5,7 @@ import { UserDetailsContext } from "../utils/components/auth/AuthProvider";
 import ConfirmationModal from "./ConfirmationModal";
 import ListenerFormFields from "./ListenerFormFields";
 import ModelerFormFields from "./ModelerFormFields";
+import { runStreamingTaskPost } from "../api/v1/actions";
 
 const StreamingTaskForm = () => {
   const navigate = useNavigate();
@@ -14,15 +15,15 @@ const StreamingTaskForm = () => {
   const [listener, setListener] = useState({
     name: "",
     description: "",
-    listenerDatabase: "InfluxDB",
-    baseReadingUrl: "",
+    streaming: "leaf-influx",
+    api_url: "",
     baseWritingUrl: "",
     token: "",
-    organization: "",
+    organisation: "",
     department: "",
     entity: "",
-    metric: "",
-    frequency: "",
+    metrics: "",
+    everyTs: 10,
   });
   const [modelers, setModelers] = useState([
     {
@@ -43,21 +44,27 @@ const StreamingTaskForm = () => {
     disk_gb: 5.0,
     ram_gb: 1.0,
   });
+  const { userDetails } = useContext(UserDetailsContext);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertVariant, setAlertVariant] = useState("danger");
+
   // Fill input boxes with data if UUID already exists
   useEffect(() => {
+    console.log("Received task data:", taskData);
     if (taskData) {
       setListener({
         name: taskData.name || "",
         description: taskData.description || "",
-        listenerDatabase: "InfluxDB",
-        baseReadingUrl: taskData.baseReadingUrl || "",
+        streaming: "leaf-influx",
+        api_url: taskData.baseReadingUrl || "",
         baseWritingUrl: taskData.baseWritingUrl || "",
         token: taskData.token || "",
-        organization: taskData.organization || "",
+        organisation: taskData.organisation || "",
         department: taskData.department || "",
         entity: taskData.entity || "",
-        metric: taskData.metric || "",
-        frequency: taskData.frequency || "",
+        metrics: taskData.metrics || "",
+        everyTs: taskData.everyTs || 10,
       });
 
       setModelers(
@@ -151,29 +158,38 @@ const StreamingTaskForm = () => {
       name,
       description,
       tags,
-      baseReadingUrl,
+      api_url,
       baseWritingUrl,
       token,
-      organization,
+      organisation,
       department,
       entity,
-      metric,
-      frequency,
+      metrics = "",
+      everyTs,
     } = listener;
+    let modeler = modelers;
+    if (Array.isArray(modelers) && modelers.length === 1) {
+      modeler = modelers[0];
+    }
     const data = {
-      name,
-      description,
-      tags,
-      baseReadingUrl,
-      baseWritingUrl,
-      token,
-      organization,
-      department,
-      entity,
-      metric,
-      frequency,
-      modelers,
-      resources,
+      streaming: listener.streaming,
+      data: {
+        source: {
+          name,
+          description,
+          tags,
+          api_url,
+          baseWritingUrl,
+          token,
+          organisation,
+          department,
+          entity,
+          metrics,
+          everyTs,
+        },
+        modeler: modeler,
+      },
+      // resources,
     };
 
     return cleanEmptyValues(data);
@@ -181,6 +197,34 @@ const StreamingTaskForm = () => {
 
   const handleConfirmSubmit = () => {
     const requestData = prepareRequestData();
+
+    runStreamingTaskPost(userDetails.apiKey, requestData)
+      .then((response) => {
+        if (response.ok) {
+          setAlertVariant("success");
+          setAlertMessage("The task has been submitted successfully!");
+          setShowAlert(true);
+          setTimeout(() => {
+            navigate("/dashboard"); // Navigate to /Dashboard after a delay
+          }, 2000);
+        } else {
+          setAlertMessage("Failed to submit task!");
+          setAlertVariant("danger");
+          setShowAlert(true);
+        }
+      })
+      .catch((error) => {
+        setAlertMessage("Failed to submit task!");
+        setAlertVariant("danger");
+        setShowAlert(true);
+        setTimeout(() => {
+          navigate("/dashboard"); // Navigate to /Dashboard after a delay
+        }, 2000);
+      })
+      .finally(() => {
+        setShowModal(false);
+        handleClear();
+      });
   };
 
   const handleModalClose = () => setShowModal(false);
@@ -189,9 +233,9 @@ const StreamingTaskForm = () => {
     const { name, value } = e.target;
 
     setListener((prevData) => {
-      if (name === "tags") {
-        const tagsArray = value.split(",");
-        return { ...prevData, tags: tagsArray };
+      if (name === "metrics") {
+        const metricsArray = value.split(",");
+        return { ...prevData, metrics: metricsArray };
       } else {
         return { ...prevData, [name]: value };
       }
@@ -228,15 +272,16 @@ const StreamingTaskForm = () => {
     setListener({
       name: "",
       description: "",
+      streaming: "leaf-influx",
       tags: [],
-      baseReadingUrl: "",
+      api_url: "",
       baseWritingUrl: "",
       token: "",
-      organization: "",
+      organisation: "",
       department: "",
       entity: "",
-      metric: "",
-      frequency: "",
+      metrics: "",
+      everyTs: 10,
     });
     setModelers([
       {

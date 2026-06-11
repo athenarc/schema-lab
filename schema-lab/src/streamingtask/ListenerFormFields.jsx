@@ -86,8 +86,8 @@ export default function ListenerFormFields({
           </Form.Label>
           <Col sm="9">
             <Form.Select
-              name="listenerDatabase"
-              value={listener?.listenerDatabase || ""}
+              name="streaming"
+              value={listener?.streaming || ""}
               onChange={handleListenerChange}
               disabled
               required
@@ -95,7 +95,7 @@ export default function ListenerFormFields({
               <option value="" disabled>
                 Select a streaming database...
               </option>
-              <option value="influxdb">InfluxDB</option>
+              <option value="leaf-influx">InfluxDB</option>
             </Form.Select>
           </Col>
         </Form.Group>
@@ -106,8 +106,8 @@ export default function ListenerFormFields({
           <Col sm="9">
             <Form.Control
               type="text"
-              name="baseReadingUrl"
-              value={listener?.baseReadingUrl}
+              name="api_url"
+              value={listener?.api_url}
               onChange={handleListenerChange}
               placeholder="e.g. http://localhost:8086"
               required
@@ -152,10 +152,10 @@ export default function ListenerFormFields({
           <Col sm="9">
             <Form.Control
               type="text"
-              name="organization"
-              value={listener?.organization}
+              name="organisation"
+              value={listener?.organisation}
               onChange={handleListenerChange}
-              placeholder="Enter your organization name..."
+              placeholder="Enter your organisation name..."
             />
           </Col>
         </Form.Group>
@@ -190,15 +190,15 @@ export default function ListenerFormFields({
         </Form.Group>
         <Form.Group as={Row} className="mb-3">
           <Form.Label column sm="3" className="fw-bold">
-            Metric <span className="text-danger">*</span>
+            Metrics <span className="text-danger">*</span>
           </Form.Label>
           <Col sm="9">
             <Form.Control
               type="text"
-              name="metric"
-              value={listener?.metric}
+              name="metrics"
+              value={listener?.metrics}
               onChange={handleListenerChange}
-              placeholder="Enter the metric name..."
+              placeholder="Enter the metrics' names..."
               required
             />
           </Col>
@@ -210,8 +210,8 @@ export default function ListenerFormFields({
           <Col sm="9">
             <Form.Control
               type="number"
-              name="frequency"
-              value={listener?.frequency}
+              name="everyTs"
+              value={listener?.everyTs}
               onChange={handleListenerChange}
               placeholder="Enter reading frequency in seconds..."
               min={1}
