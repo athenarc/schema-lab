@@ -160,6 +160,12 @@ const TaskList = () => {
                     <Dropdown.Item eventKey="all">
                       <TaskStatus status="ALL" />
                     </Dropdown.Item>
+                    <Dropdown.Item eventKey="created">
+                      <TaskStatus status="CREATED" />
+                    </Dropdown.Item>
+                    <Dropdown.Item eventKey="terminated">
+                      <TaskStatus status="TERMINATED" />
+                    </Dropdown.Item>
                     <Dropdown.Item eventKey="submitted">
                       <TaskStatus status="SUBMITTED" />
                     </Dropdown.Item>
@@ -206,7 +212,9 @@ const TaskList = () => {
                 <TaskListing
                   key={task?.uuid ?? task?.id}
                   uuid={task?.uuid ?? task?.id}
-                  status={task?.current_status?.status ?? task?.status}
+                  status={(
+                    task?.current_status?.status ?? task?.status
+                  ).toUpperCase()}
                   submitted_at={task?.submitted_at ?? task?.created_at}
                   updated_at={
                     task?.current_status?.updated_at ?? task?.updated_at

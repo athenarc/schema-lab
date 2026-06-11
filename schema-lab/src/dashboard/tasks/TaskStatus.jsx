@@ -40,6 +40,14 @@ const TaskStatus = (props) => {
             color = "text-dark"
             icon = faList;
             break;
+        case "CREATED":
+            color = "text-success";
+            icon = faCheck;
+            break;
+        case "TERMINATED":
+            color = "text-success";
+            icon = faCheck;
+            break;
         case "UNKNOWN":
         default:
             text = "UNKNOWN";

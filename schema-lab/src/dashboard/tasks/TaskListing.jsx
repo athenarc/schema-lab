@@ -30,11 +30,11 @@ const TaskListing = ({
   const [error, setError] = useState(null);
 
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
-  const nonCancelableStatuses = ["COMPLETED", "ERROR", "CANCELED", "REJECTED"];
+  const nonCancelableStatuses = ["COMPLETED", "ERROR", "CANCELED", "REJECTED", "TERMINATED"];
   const canCancel = !nonCancelableStatuses.includes(status.toUpperCase());
   // Handle runnable tasks
-  const rerunnableStatuses = ["COMPLETED", "ERROR", "CANCELED", "REJECTED"];
-  const nonRerunnableStatuses = ["SUBMITTED", "APPROVED", "RUNNING"];
+  const rerunnableStatuses = ["COMPLETED", "ERROR", "CANCELED", "REJECTED", "TERMINATED"];
+  const nonRerunnableStatuses = ["SUBMITTED", "APPROVED", "RUNNING", "CREATED"];
   const canRerun = rerunnableStatuses.includes(status.toUpperCase());
   const cannotRerun = nonRerunnableStatuses.includes(status.toUpperCase());
 
@@ -120,6 +120,8 @@ const TaskListing = ({
       setError(error.toString());
     }
   };
+  const updated_at_date = updated_at ? new Date(updated_at) : null;
+  const submitted_at_date = submitted_at ? new Date(submitted_at) : null;
 
   return (
     <>
@@ -150,8 +152,12 @@ const TaskListing = ({
           <td>
             <TaskStatus status={status} />
           </td>
-          <td>{new Date(submitted_at).toLocaleString("en")}</td>
-          <td>{new Date(updated_at).toLocaleString("en")}</td>
+          <td>
+            {submitted_at_date ? submitted_at_date.toLocaleString("en") : "N/A"}
+          </td>
+          <td>
+            {updated_at_date ? updated_at_date.toLocaleString("en") : "N/A"}
+          </td>
           <td>
             {canCancel && (
               <OverlayTrigger
