@@ -303,15 +303,39 @@ export const listStreamingTasks = (options = {}) => {
   });
 };
 
-export const cancelStreamingTask = ({ taskUUID, auth }) => {
-  return apiFetch(`${config.api.url}/api/streaming/${taskUUID}/cancel`, {
+export const runStreamingTaskPost = (apiKey, requestData) => {
+  return apiFetch(`${config.api.url}/api/streaming`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${auth}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(requestData),
   });
 };
 
+export const cancelStreamingTask = ({ taskUUID, auth }) => {
+  const queryParameters = [];
+  queryParameters.push(`streaming=leaf-influx`); // Streaming tasks always use detailed view
+  const queryString = queryParameters.length
+    ? `?${queryParameters.join("&")}`
+    : "";
+  return apiFetch(
+    `${config.api.url}/api/streaming/${taskUUID}/terminate${queryString}`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${auth}` },
+    },
+  );
+};
+
 export const retrieveStreamingTaskDetails = ({ taskUUID, auth }) => {
-  return apiFetch(`${config.api.url}/api/streaming/${taskUUID}`, {
+  const queryParameters = [];
+  queryParameters.push(`streaming=leaf-influx`);
+  const queryString = queryParameters.length
+    ? `?${queryParameters.join("&")}`
+    : "";
+  return apiFetch(`${config.api.url}/api/streaming/${taskUUID}${queryString}`, {
     method: "GET",
     headers: { Authorization: `Bearer ${auth}` },
   });
